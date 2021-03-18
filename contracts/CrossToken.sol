@@ -47,7 +47,7 @@ contract CrossToken is ERC20, AccessControl {
     ) public onlyCrosser whenNotMinted(_txid) {
         txMinted[_txid] = true;
         _mint(recepient, amount);
-        CrossMint(xToken, address(this), addrFromETH, recepient, amount, _txid);
+        emit CrossMint(xToken, address(this), addrFromETH, recepient, amount, _txid);
     }
 
     function crossBurn(address recipient, uint256 amount) public {

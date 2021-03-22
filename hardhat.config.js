@@ -1,6 +1,8 @@
 require("@nomiclabs/hardhat-waffle");
+require("hardhat-deploy");
+require("hardhat-deploy-ethers");
 
-const { privateKey } = require("./secret.json");
+const {mnemonic, projectId, privateKey} = require("./.secret.json");
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -23,16 +25,35 @@ module.exports = {
   networks: {
     hardhat: {},
     mainnet: {
-      url: "https://mainnet.infura.io/v3/f064dd62c6b646a788786d0dfb59623a",
+      url: `https://mainnet.infura.io/v3/${projectId}`,
       accounts: [privateKey],
     },
     ropsten: {
-      url: "https://ropsten.infura.io/v3/f064dd62c6b646a788786d0dfb59623a",
-      accounts: [privateKey],
+      url: `https://ropsten.infura.io/v3/${projectId}`,
+      accounts: {
+        mnemonic: mnemonic,
+      },
     },
     kovan: {
-      url: "https://kovan.infura.io/v3/f064dd62c6b646a788786d0dfb59623a",
+      url: `https://kovan.infura.io/v3/${projectId}`,
       accounts: [privateKey],
     },
+    bsc_test: {
+      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+      accounts: {
+        mnemonic: mnemonic
+      }
+    }
   },
+  namedAccounts: {
+    deployer: {
+      default: 0,
+    },
+    crosser1: {
+      default: 1,
+    },
+    crosser2: {
+      default: 2
+    }
+  }
 };

@@ -59,13 +59,13 @@ contract Bridge is ProposalVote, Toll, AccessControl {
         bool result = _vote(address(token1), from, to, amount, txid);
         if (result) {
             // mint token
+            txMinted[txid] = true;
             (uint256 feeAmount, uint256 remainAmount) = calculateFee(amount, 0);
             token1.mint(to, remainAmount);
             uint256 feeToLen = feeToLength();
             for (uint256 i; i < feeToLen; i++) {
                 token1.mint(getFeeTo(i), feeAmount.div(feeToLen));
             }
-            txMinted[txid] = true;
             emit CrossMint(token0, address(token1), from, to, amount, txid);
         }
     }

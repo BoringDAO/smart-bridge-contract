@@ -3,6 +3,7 @@
 //
 // When running the script with `hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
+const { ethers } = require("hardhat");
 const hre = require("hardhat");
 
 async function main() {
@@ -14,10 +15,14 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const Greeter = await hre.ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
+  // const Greeter = await hre.ethers.getContractFactory("Greeter");
+  // const greeter = await Greeter.deploy("Hello, Hardhat!");
 
-  await greeter.deployed();
+  // await greeter.deployed();
+  const key = ethers.utils.formatBytes32String("BTC")
+  const key2 = ethers.utils.formatBytes32String("pledge_rate")
+  console.log(key)
+  console.log(key2)
 
   console.log("Greeter deployed to:", greeter.address);
 }

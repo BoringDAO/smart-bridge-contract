@@ -18,11 +18,17 @@ contract PegSwapPair is ERC20, Ownable {
     uint256 private reserve0;
     uint256 private reserve1;
 
+    address public pegSwap;
+
     event Mint(address indexed sender, uint256 amount);
     event Burn(address indexed sender, uint256 amount0, uint256 amount1, address indexed to);
     event Swap(address indexed sender, uint256 amountIn, uint256 amountOut, address indexed to);
 
-    constructor(string memory _name, string memory _symbol) public ERC20(_name, _symbol) {}
+    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
+
+    function setPegSwap(address _pegSwap) external onlyOwner {
+        pegSwap = _pegSwap;
+    }
 
     // called once by the owner at time of deployment
     function initialize(address _token0, address _token1) external onlyOwner {
@@ -35,13 +41,13 @@ contract PegSwapPair is ERC20, Ownable {
     }
 
     function mint(address to) external returns (uint256 liquidity) {
-        (uint256 _reserve0,) = getReserves();
+        (uint256 _reserve0, ) = getReserves();
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
         uint256 amount0 = balance0.sub(_reserve0);
 
         // x + y = k, obtaining liquidity is equal to amount
         liquidity = amount0;
-        require(liquidity > 0, 'Insufficient liquidity minted');
+        require(liquidity > 0, "PegSwapPair: insufficient liquidity minted");
 
         _mint(to, liquidity);
 
@@ -62,8 +68,8 @@ contract PegSwapPair is ERC20, Ownable {
         amount0 = liquidity.mul(_reserve0).div(_totalSupply);
         amount1 = liquidity.mul(_reserve1).div(_totalSupply);
 
-        require(amount0 > 0, "Insufficient liquidity burned");
-        if (_reserve1 > 0) require(amount1 > 0, "Insufficient liquidity burned");
+        require(amount0 > 0, "PegSwapPair: insufficient liquidity burned");
+        if (_reserve1 > 0) require(amount1 > 0, "PegSwapPair: insufficient liquidity burned");
 
         IERC20(_token0).transfer(to, amount0);
         if (_reserve1 > 0) IERC20(_token1).transfer(to, amount1);
@@ -81,7 +87,39 @@ contract PegSwapPair is ERC20, Ownable {
         emit Burn(msg.sender, amount0, amount1, to);
     }
 
-    function swap(address to) external {
+    function swap(address to, bool direction) public onlyPegSwap {
+        // token0 -> token1
+        if (direction) {
+            _swapToken0ForToken1(to);
+        } else {
+            _swapToken1ForToken0(to);
+        }
+    }
+
+    function _swapToken0ForToken1(address to) internal {
+        (uint256 _reserve0, uint256 _reserve1) = getReserves();
+
+        address _token0 = token0;
+        address _token1 = token1;
+
+        uint256 balance0 = IERC20(_token0).balanceOf(address(this));
+        uint256 amount0 = balance0.sub(_reserve0);
+
+        require(amount0 > 0, "PegSwapPair: swap amount should be greater than 0");
+        require(_reserve1 >= amount0, "PegSwapPair: insuffient liquidity");
+
+        IERC20(_token1).transfer(to, amount0);
+
+        // current balance
+        uint256 balance1 = IERC20(_token1).balanceOf(address(this));
+
+        reserve0 = balance0;
+        reserve1 = balance1;
+
+        emit Swap(msg.sender, amount0, amount0, to);
+    }
+
+    function _swapToken1ForToken0(address to) internal {
         (uint256 _reserve0, uint256 _reserve1) = getReserves();
 
         address _token0 = token0;
@@ -101,5 +139,10 @@ contract PegSwapPair is ERC20, Ownable {
         reserve1 = balance1;
 
         emit Swap(msg.sender, amount1, amount1, to);
+    }
+
+    modifier onlyPegSwap {
+        require(msg.sender == pegSwap, "PegSwapPair: only pegSwap can invoke it");
+        _;
     }
 }

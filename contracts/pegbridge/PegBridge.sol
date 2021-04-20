@@ -12,27 +12,35 @@ import "../interface/IPegSwap.sol";
 import "../interface/IPegSwapPair.sol";
 import "../interface/IBoringToken.sol";
 import "../ProposalVote.sol";
+import "../Toll.sol";
 
-contract PegProxy is ProposalVote, AccessControl {
+contract PegBridge is ProposalVote, AccessControl, Toll {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
     using Math for uint256;
 
     bytes32 public constant CROSSER_ROLE = "CROSSER_ROLE";
 
+    bool public collectToll;
     address public pegSwap;
     mapping(address => address) public supportToken; // eg.ethToken => bscToke
     mapping(string => bool) public txMinted;
     mapping(string => bool) public txUnlocked;
+    mapping(string => bool) public txRollbacked;
 
     //================= Event ==================//
     event CrossBurn(address srcToken, address destToken, address from, address to, uint256 amount);
     event Lock(address srcToken, address destToken, address from, address to, uint256 amount);
     event Unlock(address srcToken, address destToken, address from, address to, uint256 amount, string txid);
-    event Rollback(address srcToken, address destToken, address from, address to, uint amount, string txid);
+    event Rollback(address srcToken, address destToken, address from, address to, uint256 amount, string txid);
 
-    constructor(uint256 _threshold) ProposalVote(_threshold) {
+    constructor(
+        uint256 _threshold,
+        address[] memory _feeTo,
+        bool _collectToll
+    ) ProposalVote(_threshold) Toll(_feeTo) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        collectToll = _collectToll;
     }
 
     function crossOut(
@@ -43,16 +51,26 @@ contract PegProxy is ProposalVote, AccessControl {
         require(amount > 0, "PegProxy: amount must be greater than 0");
         require(to != address(0), "PegProxy: to is empty");
 
-        IERC20(token).transferFrom(msg.sender, address(this), amount);
+        uint256 remainAmount = amount;
+        if (collectToll) {
+            (uint256 feeAmount, uint256 _remainAmount) = calculateFee(amount, 1);
+            uint256 feeToLen = feeToLength();
+            for (uint256 i; i < feeToLen; i++) {
+                IERC20(token).transferFrom(msg.sender, getFeeTo(i), feeAmount.div(feeToLen));
+            }
+            remainAmount = _remainAmount;
+        }
+
+        IERC20(token).transferFrom(msg.sender, address(this), remainAmount);
 
         uint256 out = IPegSwap(pegSwap).getMaxToken1AmountOut(token);
-        uint256 burnAmount = amount.min(out);
+        uint256 burnAmount = remainAmount.min(out);
         if (burnAmount > 0) {
             IPegSwap(pegSwap).swapToken0ForToken1(token, burnAmount, address(this));
             burnBoringToken(token, to, burnAmount);
         }
 
-        uint256 lockAmount = amount.sub(burnAmount);
+        uint256 lockAmount = remainAmount.sub(burnAmount);
 
         if (lockAmount > 0) {
             lock(token, to, lockAmount);
@@ -65,23 +83,44 @@ contract PegProxy is ProposalVote, AccessControl {
         address to,
         uint256 amount,
         string memory txid
-    ) public onlyCrosser whenNotMinted(txid) {
+    ) public onlyCrosser onlySupportToken(token) whenNotMinted(txid) {
         bool result = _vote(token, from, to, amount, txid);
         if (result) {
             // mint token
             txMinted[txid] = true;
             address pair = IPegSwap(pegSwap).getPair(token);
             address token1 = IPegSwapPair(pair).token1();
-            // TODO: (check failure and throw event)
-            IBoringToken(token1).mint(address(this), amount);
-            IPegSwap(pegSwap).swapToken1ForToken0(token, amount, to);
+            uint256 out = IPegSwap(pegSwap).getMaxToken0AmountOut(token);
+            if (out < amount) {
+                emit Rollback(token, supportToken[token], to, from, amount, txid);
+            } else {
+                IBoringToken(token1).mint(address(this), amount);
+
+                uint256 remainAmount = amount;
+                if (collectToll) {
+                    (uint256 feeAmount, uint256 _remainAmount) = calculateFee(amount, 0);
+                    uint256 feeToLen = feeToLength();
+                    for (uint256 i; i < feeToLen; i++) {
+                        IPegSwap(pegSwap).swapToken1ForToken0(token, feeAmount.div(feeToLen), getFeeTo(i));
+                    }
+                    remainAmount = _remainAmount;
+                }
+                IPegSwap(pegSwap).swapToken1ForToken0(token, remainAmount, to);
+            }
         }
     }
 
-    // 1. fee dynamicly
-    // 2. 
-    function rollback() public  {
-
+    function rollback(
+        address token,
+        address from,
+        address to,
+        uint256 amount,
+        string memory txid
+    ) public onlyCrosser onlySupportToken(token) whenNotRollbacked(txid) {
+        bool result = _vote(token, from, to, amount, txid);
+        if (result) {
+            IERC20(token).transferFrom(address(this), to, amount);
+        }
     }
 
     function lock(
@@ -103,7 +142,18 @@ contract PegProxy is ProposalVote, AccessControl {
         bool result = _vote(token, from, to, amount, txid);
         if (result) {
             txUnlocked[txid] = true;
-            IERC20(token).safeTransfer(to, amount);
+
+            uint256 remainAmount = amount;
+            if (collectToll) {
+                (uint256 feeAmount, uint256 _remainAmount) = calculateFee(amount, 0);
+                uint256 feeToLen = feeToLength();
+                for (uint256 i; i < feeToLen; i++) {
+                    IERC20(token).safeTransfer(getFeeTo(i), feeAmount.div(feeToLen));
+                }
+                remainAmount = _remainAmount;
+            }
+
+            IERC20(token).safeTransfer(to, remainAmount);
             emit Unlock(token, supportToken[token], from, to, amount, txid);
         }
     }
@@ -123,6 +173,23 @@ contract PegProxy is ProposalVote, AccessControl {
     }
 
     //================ Setter ==================//
+    function addFeeTo(address account) external onlyAdmin {
+        _addFeeTo(account);
+    }
+
+    function removeFeeTo(address account) external onlyAdmin {
+        _removeFeeTo(account);
+    }
+
+    function setFee(
+        uint256 _lockFeeAmount,
+        uint256 _lockFeeRatio,
+        uint256 _unlockFeeAmount,
+        uint256 _unlockFeeRatio
+    ) external onlyAdmin {
+        _setFee(_lockFeeAmount, _lockFeeRatio, _unlockFeeAmount, _unlockFeeRatio);
+    }
+
     function setThreshold(uint256 _threshold) public onlyAdmin {
         _setThreshold(_threshold);
     }
@@ -177,6 +244,11 @@ contract PegProxy is ProposalVote, AccessControl {
 
     modifier whenNotUnlocked(string memory _txid) {
         require(txUnlocked[_txid] == false, "PegProxy: tx unlocked");
+        _;
+    }
+
+    modifier whenNotRollbacked(string memory _txid) {
+        require(txRollbacked[_txid] == false, "PegProxy: tx rollbacked");
         _;
     }
 }

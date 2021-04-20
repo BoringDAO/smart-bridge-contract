@@ -90,6 +90,13 @@ contract PegSwap is Ownable {
         return _reserve1;
     }
 
+    function getMaxToken0AmountOut(address token0) public view returns (uint256) {
+        address pair = getPair(token0);
+        (uint256 _reserve0, ) = IPegSwapPair(pair).getReserves();
+
+        return _reserve0;
+    }
+
     modifier onlySupportToken(address token) {
         require(pairs[token] != address(0), "PegSwap: not support this token");
         _;

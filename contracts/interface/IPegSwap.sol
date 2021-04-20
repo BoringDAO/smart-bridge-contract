@@ -17,5 +17,7 @@ interface IPegSwap {
 
     function getPair(address token) external view returns (address);
 
+    function getMaxToken0AmountOut(address token0) external view returns (uint256);
+
     function getMaxToken1AmountOut(address token0) external view returns (uint256);
 }

@@ -7,4 +7,3 @@ artifacts
 .secret.json
 secret.json
 abi.json
-deployments

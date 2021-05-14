@@ -2,7 +2,7 @@ require("@nomiclabs/hardhat-waffle");
 require("hardhat-deploy");
 require("hardhat-deploy-ethers");
 
-const { mnemonic, projectId, privateKey } = require("./.secret.json");
+const { mnemonic, projectId, privateKey, privateKeyOkex} = require("./.secret.json");
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -43,14 +43,28 @@ module.exports = {
       accounts: {
         mnemonic: mnemonic
       }
+    },
+    okex_test: {
+      url: "https://exchaintestrpc.okex.org",
+      chainId: 65,
+      accounts: {
+        mnemonic: mnemonic
+      }
+    },
+    okex: {
+      url: "https://exchainrpc.okex.org",
+      chainId: 66,
+      accounts: [privateKeyOkex]
     }
   },
   namedAccounts: {
     deployer: {
       default: 0,
+      66: 0
     },
     crosser1: {
       default: 1,
+      66: 0
     },
     crosser2: {
       default: 2

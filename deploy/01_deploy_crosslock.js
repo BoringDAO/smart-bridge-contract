@@ -30,18 +30,17 @@ module.exports = async ({
     console.log(`deployer:${deployer.address} at ${network.name}`)
     let result = await deploy('CrossLock', {
         from: deployer.address,
-        args: [2],
         log: true,
     });
-    const test_role = "test"
+    const test_role = "FTA"
     const roleFlag = ethers.utils.formatBytes32String(test_role)
     console.log(`${roleFlag}`)
     // await execute("CrossLock", {
     //     from: deployer.address,
     //     log: true
     // }, "addSupportToken", fromToken, toToken, roleFlag)
-    await execute("CrossLock", {from: deployer.address, log: true}, "grantRole", roleFlag, crosser1.address)
-    await execute("CrossLock", {from: deployer.address, log: true}, "grantRole", roleFlag, crosser2.address)
+    // await execute("CrossLock", { from: deployer.address, log: true }, "grantRole", roleFlag, crosser1.address)
+    // await execute("CrossLock", { from: deployer.address, log: true }, "grantRole", roleFlag, crosser2.address)
 };
 
 module.exports.tags = ["CrossLock"]

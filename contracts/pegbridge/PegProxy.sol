@@ -29,9 +29,9 @@ contract PegProxy is ProposalVote, AccessControl {
     event CrossBurn(address srcToken, address destToken, address from, address to, uint256 amount);
     event Lock(address srcToken, address destToken, address from, address to, uint256 amount);
     event Unlock(address srcToken, address destToken, address from, address to, uint256 amount, string txid);
-    event Rollback(address srcToken, address destToken, address from, address to, uint amount, string txid);
+    event Rollback(address srcToken, address destToken, address from, address to, uint256 amount, string txid);
 
-    constructor(uint256 _threshold) ProposalVote(_threshold) {
+    constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -79,10 +79,8 @@ contract PegProxy is ProposalVote, AccessControl {
     }
 
     // 1. fee dynamicly
-    // 2. 
-    function rollback() public  {
-
-    }
+    // 2.
+    function rollback() public {}
 
     function lock(
         address token,
@@ -123,8 +121,8 @@ contract PegProxy is ProposalVote, AccessControl {
     }
 
     //================ Setter ==================//
-    function setThreshold(uint256 _threshold) public onlyAdmin {
-        _setThreshold(_threshold);
+    function setThreshold(address token, uint256 _threshold) public onlyAdmin {
+        _setThreshold(token, _threshold);
     }
 
     function setPegSwap(address _pegSwap) public onlyAdmin {

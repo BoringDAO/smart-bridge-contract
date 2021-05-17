@@ -21,19 +21,20 @@ module.exports = async ({
     let token_eth;
     let token_bsc;
     if (network.name === "ropsten") {
-        // let result = await deploy("TestITokenETH", {
-        //     from: deployer.address,
-        //     args: ['TestToken', 'TT']
-        // })
-
-    } else if (network.name == "mainnet") {
-
-    } else if (network.name == "bsc_test" || network.name == "okex_test" || network.name == "okex") {
-        await deploy("TokenBor", {
+        await deploy("TokenNsure", {
             contract: "Token",
             from: deployer,
             log: true,
-            args: ['BoringDAO Token', 'BOR', 18, deployer]
+            args: ['Nsure Token', 'Nsure', 18, deployer],
+        })
+    } else if (network.name == "mainnet") {
+
+    } else if (network.name == "bsc_test" || network.name == "okex_test" || network.name == "okex") {
+        await deploy("TokenNsure", {
+            contract: "Token",
+            from: deployer,
+            log: true,
+            args: ['Nsure Token', 'Nsure', 18, deployer]
         })
     }
 }

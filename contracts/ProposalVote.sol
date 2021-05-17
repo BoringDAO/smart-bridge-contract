@@ -10,9 +10,10 @@ contract ProposalVote {
 
     mapping(bytes32 => Proposal) public proposalOf;
 
-    uint256 public threshold;
+    mapping(address => uint256) public threshold;
 
     event ProposalVoted(
+        address token,
         address from,
         address to,
         uint256 amount,
@@ -21,19 +22,12 @@ contract ProposalVote {
         uint256 threshold
     );
 
-    event ThresholdChanged(
-        uint256 oldThreshold,
-        uint256 newThreshold
-    );
+    event ThresholdChanged(address token, uint256 oldThreshold, uint256 newThreshold);
 
-    constructor(uint256 _threshold) {
-        threshold = _threshold;
-    }
-
-    function _setThreshold(uint256 _threshold) internal virtual {
-        uint256 oldThreshold = threshold;
-        threshold = _threshold;
-        emit ThresholdChanged(oldThreshold, threshold);
+    function _setThreshold(address token, uint256 _threshold) internal virtual {
+        uint256 oldThreshold = threshold[token];
+        threshold[token] = _threshold;
+        emit ThresholdChanged(token, oldThreshold, _threshold);
     }
 
     function _vote(
@@ -42,7 +36,9 @@ contract ProposalVote {
         address to,
         uint256 amount,
         string memory txid
-    ) internal virtual returns(bool result){
+    ) internal virtual returns (bool result) {
+        require(threshold[tokenTo] > 0, "ProposalVote: threshold should be greater than 0");
+        uint256 count = threshold[tokenTo];
         bytes32 mid = keccak256(abi.encodePacked(tokenTo, from, to, amount, txid));
         Proposal storage p = proposalOf[mid];
         if (proposalOf[mid].isExist == false) {
@@ -61,10 +57,10 @@ contract ProposalVote {
             p.count = p.count.add(1);
             p.isVoted[msg.sender] = true;
         }
-        if (p.count >= threshold) {
+        if (p.count >= count) {
             p.isFinished = true;
             result = true;
         }
-        emit ProposalVoted(from, to, amount, msg.sender, p.count, threshold);
+        emit ProposalVoted(tokenTo, from, to, amount, msg.sender, p.count, count);
     }
 }

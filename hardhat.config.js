@@ -1,8 +1,9 @@
 require("@nomiclabs/hardhat-waffle");
 require("hardhat-deploy");
 require("hardhat-deploy-ethers");
+require("@nomiclabs/hardhat-etherscan");
 
-const { mnemonic, projectId, privateKey, privateKeyOkex} = require("./.secret.json");
+const { mnemonic, projectId, privateKey, privateKeyOkex, etherscanKey } = require("./.secret.json");
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -22,6 +23,9 @@ task("accounts", "Prints the list of accounts", async () => {
  */
 module.exports = {
   solidity: "0.7.6",
+  etherscan: {
+    apiKey: etherscanKey
+  },
   networks: {
     hardhat: {},
     // mainnet: {

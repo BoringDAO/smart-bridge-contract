@@ -14,36 +14,28 @@ contract Toll {
 
     // fee
     // leave ethereum
-    uint256 public lockFeeRatio;
-    uint256 public lockFeeAmount;
+    mapping(address => uint256) public lockFeeRatio;
+    mapping(address => uint256) public lockFeeAmount;
     // back ethereum
-    uint256 public unlockFeeRatio;
-    uint256 public unlockFeeAmount;
+    mapping(address => uint256) public unlockFeeRatio;
+    mapping(address => uint256) public unlockFeeAmount;
 
-    EnumerableSet.AddressSet internal feeToSet;
+    mapping(address => EnumerableSet.AddressSet) internal feeToSet;
 
     event FeeChange(
+        address token,
         uint256 lockFeeAmount,
         uint256 lockFeeRatio,
         uint256 unlockFeeAmount,
         uint256 unlockFeeRatio
     );
 
-    event FeeToRemoved(
-        address account
-    );
+    event FeeToRemoved(address token, address account);
 
-    event FeeToAdded (
-        address account
-    );
-
-    constructor(address[] memory _feeToSet) {
-        for (uint i; i < _feeToSet.length; i++) {
-            feeToSet.add(_feeToSet[i]);
-        }
-    }
+    event FeeToAdded(address token, address account);
 
     function _setFee(
+        address token,
         uint256 _lockFeeAmount,
         uint256 _lockFeeRatio,
         uint256 _unlockFeeAmount,
@@ -51,26 +43,28 @@ contract Toll {
     ) internal virtual {
         require(_lockFeeRatio <= 1e18, "fee ratio not correct");
         require(_unlockFeeRatio <= 1e18, "fee ratio not correct");
-        lockFeeAmount = _lockFeeAmount;
-        lockFeeRatio = _lockFeeRatio;
-        unlockFeeAmount = _unlockFeeAmount;
-        unlockFeeRatio = _unlockFeeRatio;
-        emit FeeChange(_lockFeeAmount, _lockFeeRatio, _unlockFeeAmount, _unlockFeeRatio);
+
+        lockFeeAmount[token] = _lockFeeAmount;
+        lockFeeRatio[token] = _lockFeeRatio;
+        unlockFeeAmount[token] = _unlockFeeAmount;
+        unlockFeeRatio[token] = _unlockFeeRatio;
+        emit FeeChange(token, _lockFeeAmount, _lockFeeRatio, _unlockFeeAmount, _unlockFeeRatio);
     }
 
-    function _addFeeTo(address account) internal virtual {
-        require(feeToSet.contains(account) == false, "Toll::account was feeTo already");
-        feeToSet.add(account);
-        emit FeeToAdded(account);
+    function _addFeeTo(address token, address account) internal virtual {
+        require(feeToSet[token].contains(account) == false, "Toll::account was feeTo already");
+        feeToSet[token].add(account);
+        emit FeeToAdded(token, account);
     }
 
-    function _removeFeeTo(address account) internal virtual {
-        require(feeToSet.contains(account) == true, "Toll::account is not feeTo");
-        feeToSet.remove(account);
-        emit FeeToRemoved(account);
+    function _removeFeeTo(address token, address account) internal virtual {
+        require(feeToSet[token].contains(account) == true, "Toll::account is not feeTo");
+        feeToSet[token].remove(account);
+        emit FeeToRemoved(token, account);
     }
 
     function calculateFee(
+        address token,
         uint256 amount,
         uint256 crossType
     ) public view virtual returns (uint256 feeAmount, uint256 remainAmount) {
@@ -78,25 +72,22 @@ contract Toll {
         uint256 _feeRatio;
         if (crossType == 0) {
             // leave ethereum
-            _feeMinAmount = lockFeeAmount;
-            _feeRatio = lockFeeRatio;
+            _feeMinAmount = lockFeeAmount[token];
+            _feeRatio = lockFeeRatio[token];
         } else {
             // back ethereum
-            _feeMinAmount = unlockFeeAmount;
-            _feeRatio = unlockFeeRatio;
+            _feeMinAmount = unlockFeeAmount[token];
+            _feeRatio = unlockFeeRatio[token];
         }
         feeAmount = _feeMinAmount.add(amount.multiplyDecimal(_feeRatio));
         remainAmount = amount.sub(feeAmount);
     }
 
-    function feeToLength() public view returns(uint256 len) {
-        len = feeToSet.length();
+    function feeToLength(address token) public view returns (uint256 len) {
+        len = feeToSet[token].length();
     }
 
-    function getFeeTo(uint256 i) public view returns(address account) {
-        account = feeToSet.at(i);
+    function getFeeTo(address token, uint256 i) public view returns (address account) {
+        account = feeToSet[token].at(i);
     }
-
 }
-
-

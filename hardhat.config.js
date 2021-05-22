@@ -38,28 +38,30 @@ module.exports = {
         mnemonic: mnemonic,
       },
     },
-    // kovan: {
-    //   url: `https://kovan.infura.io/v3/${projectId}`,
-    //   accounts: [privateKey],
-    // },
+    kovan: {
+      url: `https://kovan.infura.io/v3/${projectId}`,
+      accounts: {
+        mnemonic: mnemonic,
+      },
+    },
     bsc_test: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545",
       accounts: {
         mnemonic: mnemonic
       }
     },
-    okex_test: {
-      url: "https://exchaintestrpc.okex.org",
-      chainId: 65,
-      accounts: {
-        mnemonic: mnemonic
-      }
-    },
-    okex: {
-      url: "https://exchainrpc.okex.org",
-      chainId: 66,
-      accounts: [privateKeyOkex]
-    }
+    // okex_test: {
+    //   url: "https://exchaintestrpc.okex.org",
+    //   chainId: 65,
+    //   accounts: {
+    //     mnemonic: mnemonic
+    //   }
+    // },
+    // okex: {
+    //   url: "https://exchainrpc.okex.org",
+    //   chainId: 66,
+    //   accounts: [privateKeyOkex]
+    // }
   },
   namedAccounts: {
     deployer: {

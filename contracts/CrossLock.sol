@@ -16,8 +16,6 @@ contract CrossLock is ProposalVote, AccessControl {
 
     // eg.ethToken => other
     mapping(address => mapping(uint256 => address)) public supportToken;
-    mapping(address => mapping(uint256 => bytes32)) public roleFlag;
-
     mapping(string => bool) public txUnlocked;
 
     event Lock(address token0, address token1, uint256 chainID, address locker, address to, uint256 amount);
@@ -27,17 +25,18 @@ contract CrossLock is ProposalVote, AccessControl {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
+    function getRoleKey(address token0, address token1, uint256 chainID) public pure returns (bytes32) {
+        bytes32 key = keccak256(abi.encodePacked(token0, token1, chainID));
+        return key;
+    }
+
     function addSupportToken(
         address token0,
         address token1,
-        uint256 chainID,
-        bytes32 _roleFlag
+        uint256 chainID
     ) public onlyAdmin {
         require(supportToken[token0][chainID] == address(0), "Toke already Supported");
-        require(_roleFlag != bytes32(0), "role falg should not bytes32(0)");
-        require(roleFlag[token0][chainID] == bytes32(0), "role flag already exist");
         supportToken[token0][chainID] = token1;
-        roleFlag[token0][chainID] = _roleFlag;
     }
 
     function removeSupportToken(address token0, uint256 chainID) public onlyAdmin {
@@ -45,22 +44,15 @@ contract CrossLock is ProposalVote, AccessControl {
         delete supportToken[token0][chainID];
     }
 
-    function removeRoleFlag(address token0, uint256 chainID) public onlyAdmin {
-        require(roleFlag[token0][chainID] != bytes32(0), "roleFlag not Supported");
-        delete roleFlag[token0][chainID];
-    }
-
     function addSupportTokens(
         address[] memory token0Addrs,
         address[] memory token1Addrs,
-        uint256[] memory chainIDs,
-        bytes32[] memory _roleFlags
+        uint256[] memory chainIDs
     ) public {
         require(token0Addrs.length == token1Addrs.length, "Token length not match");
-        require(token0Addrs.length == _roleFlags.length, "Token length not match");
         require(token0Addrs.length == chainIDs.length, "Token length not match");
         for (uint256 i; i < token0Addrs.length; i++) {
-            addSupportToken(token0Addrs[i], token1Addrs[i], chainIDs[i], _roleFlags[i]);
+            addSupportToken(token0Addrs[i], token1Addrs[i], chainIDs[i]);
         }
     }
 
@@ -68,7 +60,6 @@ contract CrossLock is ProposalVote, AccessControl {
         require(addrs.length == chainIDs.length, "Token length not match");
         for (uint256 i; i < addrs.length; i++) {
             removeSupportToken(addrs[i], chainIDs[i]);
-            removeRoleFlag(addrs[i], chainIDs[i]);
         }
     }
 
@@ -94,7 +85,8 @@ contract CrossLock is ProposalVote, AccessControl {
         if (result) {
             txUnlocked[txid] = true;
             IERC20(token0).safeTransfer(to, amount);
-            emit Unlock(token0, supportToken[token0][chainID], chainID, from, to, amount, txid);
+            address token1 = supportToken[token0][chainID];
+            emit Unlock(token0, token1, chainID, from, to, amount, txid);
         }
     }
 
@@ -113,7 +105,8 @@ contract CrossLock is ProposalVote, AccessControl {
     }
 
     modifier onlyCrosser(address token0, uint256 chainID) {
-        require(hasRole(roleFlag[token0][chainID], msg.sender), "caller is not crosser");
+        bytes32 key = getRoleKey(token0, supportToken[token0][chainID], chainID);
+        require(hasRole(key, msg.sender), "caller is not crosser");
         _;
     }
 

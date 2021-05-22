@@ -11,28 +11,30 @@ import "./Toll.sol";
 contract Bridge is ProposalVote, Toll, AccessControl {
     using SafeMath for uint256;
 
+    uint256 public chainID;
     // eg.ethToken => other
     mapping(address => IToken) public supportToken;
-    mapping(address => bytes32) public roleFlag;
     mapping(string => bool) public txMinted;
 
-    event CrossBurn(address token0, address token1, address from, address to, uint256 amount);
-    event CrossMint(address token0, address token1, address from, address to, uint256 amount, string txid);
+    event CrossBurn(address token0, address token1, uint256 chainID, address from, address to, uint256 amount);
+    event CrossMint(address token0, address token1, uint256 chainID, address from, address to, uint256 amount, string txid);
 
-    constructor() {
+    constructor(uint256 _chainID) {
+        chainID = _chainID;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    function getRoleKey(address token0, address token1) public pure returns (bytes32) {
+        bytes32 key = keccak256(abi.encodePacked(token0, token1));
+        return key;
     }
 
     function addSupportToken(
         address token0,
-        address token1,
-        bytes32 _roleFlag
+        address token1
     ) public onlyAdmin {
         require(address(supportToken[token0]) == address(0), "Toke already Supported");
-        require(_roleFlag != bytes32(0), "role falg should not bytes32(0)");
-        require(roleFlag[token0] == bytes32(0), "role flag already exist");
         supportToken[token0] = IToken(token1);
-        roleFlag[token0] = _roleFlag;
     }
 
     function removeSupportToken(address token0) public onlyAdmin {
@@ -40,27 +42,19 @@ contract Bridge is ProposalVote, Toll, AccessControl {
         delete supportToken[token0];
     }
 
-    function removeRoleFlag(address token0) public onlyAdmin {
-        require(roleFlag[token0] != bytes32(0), "roleFlag not Supported");
-        delete roleFlag[token0];
-    }
-
     function addSupportTokens(
         address[] memory token0Addrs,
-        address[] memory token1Addrs,
-        bytes32[] memory _roleFlags
+        address[] memory token1Addrs
     ) public {
         require(token0Addrs.length == token1Addrs.length, "Token length not match");
-        require(token0Addrs.length == _roleFlags.length, "Token length not match");
         for (uint256 i; i < token0Addrs.length; i++) {
-            addSupportToken(token0Addrs[i], token1Addrs[i], _roleFlags[i]);
+            addSupportToken(token0Addrs[i], token1Addrs[i]);
         }
     }
 
     function removeSupportTokens(address[] memory addrs) public {
         for (uint256 i; i < addrs.length; i++) {
             removeSupportToken(addrs[i]);
-            removeRoleFlag(addrs[i]);
         }
     }
 
@@ -70,18 +64,23 @@ contract Bridge is ProposalVote, Toll, AccessControl {
         address to,
         uint256 amount,
         string memory txid
-    ) public onlyCrosser(token0) whenNotMinted(txid) onlySupportToken(token0) {
+    ) public onlySupportToken(token0) onlyCrosser(token0) whenNotMinted(txid) {
         bool result = _vote(address(supportToken[token0]), from, to, amount, txid);
         if (result) {
             // mint token
             txMinted[txid] = true;
             (uint256 feeAmount, uint256 remainAmount) = calculateFee(token0, amount, 0);
             supportToken[token0].mint(to, remainAmount);
-            uint256 feeToLen = feeToLength(token0);
-            for (uint256 i; i < feeToLen; i++) {
-                supportToken[token0].mint(getFeeTo(token0, i), feeAmount.div(feeToLen));
-            }
-            emit CrossMint(token0, address(supportToken[token0]), from, to, amount, txid);
+            _mintToFeeTo(token0, feeAmount);
+            emit CrossMint(token0, address(supportToken[token0]), chainID, from, to, amount, txid);
+        }
+    }
+
+    function _mintToFeeTo(address token0, uint256 feeAmount) internal {
+        uint256 feeToLen = feeToLength(token0);
+        for (uint256 i; i < feeToLen; i++) {
+            address feeTo = getFeeTo(token0, i);
+            supportToken[token0].mint(feeTo, feeAmount.div(feeToLen));
         }
     }
 
@@ -99,7 +98,7 @@ contract Bridge is ProposalVote, Toll, AccessControl {
             token1.transferFrom(msg.sender, getFeeTo(token0, i), feeAmount.div(feeToLen));
         }
         token1.burn(msg.sender, remainAmount);
-        emit CrossBurn(token0, address(token1), msg.sender, to, remainAmount);
+        emit CrossBurn(token0, address(token1), chainID, msg.sender, to, remainAmount);
     }
 
     function setThreshold(address token1, uint256 _threshold) external onlyAdmin {
@@ -130,7 +129,8 @@ contract Bridge is ProposalVote, Toll, AccessControl {
     }
 
     modifier onlyCrosser(address token0) {
-        require(hasRole(roleFlag[token0], msg.sender), "Bridge::caller is not crosser");
+        bytes32 key = getRoleKey(token0, address(supportToken[token0]));
+        require(hasRole(key, msg.sender), "Bridge::caller is not crosser");
         _;
     }
 

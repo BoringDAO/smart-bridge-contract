@@ -36,6 +36,7 @@ module.exports = async ({
     await deploy('Bridge', {
         from: deployer.address,
         log: true,
+        args: [97]
     })
     // await execute("Bridge", { from: deployer.address, log: true }, "setFee", ethers.utils.parseEther("0.1"), ethers.utils.parseEther("0.1"), ethers.utils.parseEther("0.1"), ethers.utils.parseEther("0.1"))
 }

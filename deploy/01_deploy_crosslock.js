@@ -32,9 +32,6 @@ module.exports = async ({
         from: deployer.address,
         log: true,
     });
-    const test_role = "FTA"
-    const roleFlag = ethers.utils.formatBytes32String(test_role)
-    console.log(`${roleFlag}`)
     // await execute("CrossLock", {
     //     from: deployer.address,
     //     log: true

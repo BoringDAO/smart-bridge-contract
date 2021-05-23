@@ -24,8 +24,8 @@ contract Bridge is ProposalVote, Toll, AccessControl {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function getRoleKey(address token0, address token1) public pure returns (bytes32) {
-        bytes32 key = keccak256(abi.encodePacked(token0, token1));
+    function getRoleKey(address token0, address token1) public view returns (bytes32) {
+        bytes32 key = keccak256(abi.encodePacked(token0, token1, chainID));
         return key;
     }
 

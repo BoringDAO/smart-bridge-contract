@@ -2,6 +2,7 @@ require("@nomiclabs/hardhat-waffle");
 require("hardhat-deploy");
 require("hardhat-deploy-ethers");
 require("@nomiclabs/hardhat-etherscan");
+require("./tasks/bridge")
 
 const { mnemonic, projectId, privateKey, privateKeyOkex, etherscanKey } = require("./.secret.json");
 
@@ -50,13 +51,13 @@ module.exports = {
         mnemonic: mnemonic
       }
     },
-    // okex_test: {
-    //   url: "https://exchaintestrpc.okex.org",
-    //   chainId: 65,
-    //   accounts: {
-    //     mnemonic: mnemonic
-    //   }
-    // },
+    okex_test: {
+      url: "https://exchaintestrpc.okex.org",
+      chainId: 65,
+      accounts: {
+        mnemonic: mnemonic
+      }
+    }
     // okex: {
     //   url: "https://exchainrpc.okex.org",
     //   chainId: 66,

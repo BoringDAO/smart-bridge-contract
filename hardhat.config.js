@@ -1,8 +1,10 @@
 require("@nomiclabs/hardhat-waffle");
 require("hardhat-deploy");
 require("hardhat-deploy-ethers");
+require("@nomiclabs/hardhat-etherscan");
+require("./tasks/bridge")
 
-const { mnemonic, projectId, privateKey, privateKeyOkex} = require("./.secret.json");
+const { mnemonic, projectId, privateKey, privateKeyOkex, etherscanKey } = require("./.secret.json");
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -22,6 +24,9 @@ task("accounts", "Prints the list of accounts", async () => {
  */
 module.exports = {
   solidity: "0.7.6",
+  etherscan: {
+    apiKey: etherscanKey
+  },
   networks: {
     hardhat: {},
     // mainnet: {
@@ -34,10 +39,12 @@ module.exports = {
         mnemonic: mnemonic,
       },
     },
-    // kovan: {
-    //   url: `https://kovan.infura.io/v3/${projectId}`,
-    //   accounts: [privateKey],
-    // },
+    kovan: {
+      url: `https://kovan.infura.io/v3/${projectId}`,
+      accounts: {
+        mnemonic: mnemonic,
+      },
+    },
     bsc_test: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545",
       accounts: {
@@ -50,12 +57,12 @@ module.exports = {
       accounts: {
         mnemonic: mnemonic
       }
-    },
-    okex: {
-      url: "https://exchainrpc.okex.org",
-      chainId: 66,
-      accounts: [privateKeyOkex]
     }
+    // okex: {
+    //   url: "https://exchainrpc.okex.org",
+    //   chainId: 66,
+    //   accounts: [privateKeyOkex]
+    // }
   },
   namedAccounts: {
     deployer: {

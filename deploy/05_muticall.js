@@ -21,12 +21,7 @@ module.exports = async ({
     let token_eth;
     let token_bsc;
     if (network.name === "ropsten" || network.name === "kovan") {
-        await deploy("TokenBoring", {
-            contract: "Token",
-            from: deployer,
-            log: true,
-            args: ['Boring Token', 'BORING', 18, deployer],
-        })
+       
     } else if (network.name == "bsc") {
         await deploy("TokenBoring", {
             contract: "Token",
@@ -35,13 +30,11 @@ module.exports = async ({
             args: ['BoringDAO', 'BORING', 18, deployer],
         })
     } else if (network.name == "bsc_test" || network.name == "okex_test" || network.name == "okex") {
-        await deploy("TokenBoring", {
-            contract: "Token",
+        await deploy("Multicall", {
             from: deployer,
-            log: true,
-            args: ['BoringDAO', 'BORING', 18, deployer]
+            log: true
         })
     }
 }
 
-module.exports.tags = ['00']
+module.exports.tags = ['05']

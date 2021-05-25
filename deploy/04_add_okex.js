@@ -27,7 +27,7 @@ module.exports = async ({
         // just for test 
         fromToken = "0xBC19712FEB3a26080eBf6f2F7849b417FdD792CA"
         // fromToken = "0x78e1d16ba607c61bccfe23ba3b3369ad44df960f"
-        toToken = '0xffEecbf8D7267757c2dc3d13D730E97E15BfdF7F'
+        toToken = '0x555B326dBc2a9634E4E82ab644e72296A8f3E9b9'
     }
     console.log(`deployer:${deployer.address} at ${network.name}`)
     let result = await deploy('CrossLock', {
@@ -37,16 +37,11 @@ module.exports = async ({
     await execute("CrossLock", {
         from: deployer.address,
         log: true
-    }, "removeSupportToken", "0x78e1d16ba607c61bccfe23ba3b3369ad44df960f", 56
-    )
-    await execute("CrossLock", {
-        from: deployer.address,
-        log: true
-    }, "addSupportToken", fromToken, toToken, 56)
-    let roleKey = await read("CrossLock", "getRoleKey", fromToken, toToken, 56)
+    }, "addSupportToken", fromToken, toToken, 66)
+    let roleKey = await read("CrossLock", "getRoleKey", fromToken, toToken, 66)
     console.log(`role key ${roleKey}`)
     await execute("CrossLock", { from: deployer.address, log: true }, "grantRole", roleKey, "0xbC41ef18DfaE72b665694B034f608E6Dfe170149")
     await execute("CrossLock", { from: deployer.address, log: true }, "setThreshold", fromToken, 1)
 };
 
-module.exports.tags = ["01"]
+module.exports.tags = ["04"]

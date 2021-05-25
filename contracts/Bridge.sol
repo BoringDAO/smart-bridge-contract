@@ -15,9 +15,11 @@ contract Bridge is ProposalVote, Toll, AccessControl {
     // eg.ethToken => other
     mapping(address => IToken) public supportToken;
     mapping(string => bool) public txMinted;
+    mapping(address => uint256) public minBurn;
 
     event CrossBurn(address token0, address token1, uint256 chainID, address from, address to, uint256 amount);
     event CrossMint(address token0, address token1, uint256 chainID, address from, address to, uint256 amount, string txid);
+    event MinBurnChanged(address token1, uint256 preMin, uint256 nowMin);
 
     constructor(uint256 _chainID) {
         chainID = _chainID;
@@ -29,10 +31,7 @@ contract Bridge is ProposalVote, Toll, AccessControl {
         return key;
     }
 
-    function addSupportToken(
-        address token0,
-        address token1
-    ) public onlyAdmin {
+    function addSupportToken(address token0, address token1) public onlyAdmin {
         require(address(supportToken[token0]) == address(0), "Toke already Supported");
         supportToken[token0] = IToken(token1);
     }
@@ -42,10 +41,7 @@ contract Bridge is ProposalVote, Toll, AccessControl {
         delete supportToken[token0];
     }
 
-    function addSupportTokens(
-        address[] memory token0Addrs,
-        address[] memory token1Addrs
-    ) public {
+    function addSupportTokens(address[] memory token0Addrs, address[] memory token1Addrs) public {
         require(token0Addrs.length == token1Addrs.length, "Token length not match");
         for (uint256 i; i < token0Addrs.length; i++) {
             addSupportToken(token0Addrs[i], token1Addrs[i]);
@@ -99,6 +95,12 @@ contract Bridge is ProposalVote, Toll, AccessControl {
         }
         token1.burn(msg.sender, remainAmount);
         emit CrossBurn(token0, address(token1), chainID, msg.sender, to, remainAmount);
+    }
+
+    function setMinBurn(address token1, uint256 amount) public onlyAdmin {
+        uint256 preMin = minBurn[token1];
+        minBurn[token1] = amount;
+        emit MinBurnChanged(token1, preMin, amount);
     }
 
     function setThreshold(address token1, uint256 _threshold) external onlyAdmin {

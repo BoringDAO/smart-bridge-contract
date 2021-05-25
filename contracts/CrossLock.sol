@@ -25,9 +25,12 @@ contract CrossLock is ProposalVote, AccessControl {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function getRoleKey(address token0, address token1, uint256 chainID) public pure returns (bytes32) {
-        bytes32 key = keccak256(abi.encodePacked(token0, token1, chainID));
-        return key;
+    function getRoleKey(
+        address token0,
+        address token1,
+        uint256 chainID
+    ) public pure returns (bytes32 key) {
+        key = keccak256(abi.encodePacked(token0, token1, chainID));
     }
 
     function addSupportToken(
@@ -56,10 +59,10 @@ contract CrossLock is ProposalVote, AccessControl {
         }
     }
 
-    function removeSupportTokens(address[] memory addrs, uint256[] memory chainIDs) public {
-        require(addrs.length == chainIDs.length, "Token length not match");
-        for (uint256 i; i < addrs.length; i++) {
-            removeSupportToken(addrs[i], chainIDs[i]);
+    function removeSupportTokens(address[] memory token1s, uint256[] memory chainIDs) public {
+        require(token1s.length == chainIDs.length, "Token length not match");
+        for (uint256 i; i < token1s.length; i++) {
+            removeSupportToken(token1s[i], chainIDs[i]);
         }
     }
 

@@ -3,14 +3,16 @@
 pragma solidity ^0.7.0;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "./Structs.sol";
 
 contract ProposalVote {
     using SafeMath for uint256;
 
-    mapping(bytes32 => Proposal) public proposalOf;
-
     mapping(address => uint256) public threshold;
+
+    mapping(bytes32 => bool) isExist;
+    mapping(bytes32 => bool) isFinished;
+    mapping(bytes32 => mapping(address => bool)) isVoted;
+    mapping(bytes32 => uint256) counter;
 
     event ProposalVoted(
         address token,
@@ -40,27 +42,22 @@ contract ProposalVote {
         require(threshold[tokenTo] > 0, "ProposalVote: threshold should be greater than 0");
         uint256 count = threshold[tokenTo];
         bytes32 mid = keccak256(abi.encodePacked(tokenTo, from, to, amount, txid));
-        Proposal storage p = proposalOf[mid];
-        if (proposalOf[mid].isExist == false) {
-            // create proposal
-            p.tokenTo = tokenTo;
-            p.from = from;
-            p.to = to;
-            p.amount = amount;
-            p.count = 1;
-            p.txid = txid;
-            p.isExist = true;
-            p.isVoted[msg.sender] = true;
+        if (isExist[mid] == false) {
+            counter[mid] = 1;
+            isExist[mid] = true;
+            isVoted[mid][msg.sender] = true;
         } else {
-            require(p.isFinished == false, "_vote::proposal finished");
-            require(p.isVoted[msg.sender] == false, "_vote::msg.sender voted");
-            p.count = p.count.add(1);
-            p.isVoted[msg.sender] = true;
+            require(isFinished[mid] == false, "_vote::proposal finished");
+            require(isVoted[mid][msg.sender] == false, "_vote::msg.sender voted");
+            counter[mid] = counter[mid].add(1);
+            isVoted[mid][msg.sender] = true;
         }
-        if (p.count >= count) {
-            p.isFinished = true;
+
+        if (counter[mid] >= count) {
+            isFinished[mid] = true;
             result = true;
         }
-        emit ProposalVoted(tokenTo, from, to, amount, msg.sender, p.count, count);
+
+        emit ProposalVoted(tokenTo, from, to, amount, msg.sender, counter[mid], count);
     }
 }

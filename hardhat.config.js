@@ -4,7 +4,7 @@ require("hardhat-deploy-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("./tasks/bridge")
 
-const { mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC} = require("./.secret.json");
+const { mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC } = require("./.secret.json");
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -39,7 +39,7 @@ module.exports = {
     hardhat: {},
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,
-      gasPrice: 40 * 10**9,
+      gasPrice: 40 * 10 ** 9,
       accounts: [privateKeyETH],
     },
     ropsten: {

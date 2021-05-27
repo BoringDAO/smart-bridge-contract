@@ -9,7 +9,6 @@ contract ProposalVote {
 
     mapping(address => uint256) public threshold;
 
-    mapping(bytes32 => bool) isExist;
     mapping(bytes32 => bool) isFinished;
     mapping(bytes32 => mapping(address => bool)) isVoted;
     mapping(bytes32 => uint256) counter;
@@ -42,16 +41,10 @@ contract ProposalVote {
         require(threshold[tokenTo] > 0, "ProposalVote: threshold should be greater than 0");
         uint256 count = threshold[tokenTo];
         bytes32 mid = keccak256(abi.encodePacked(tokenTo, from, to, amount, txid));
-        if (isExist[mid] == false) {
-            counter[mid] = 1;
-            isExist[mid] = true;
-            isVoted[mid][msg.sender] = true;
-        } else {
-            require(isFinished[mid] == false, "_vote::proposal finished");
-            require(isVoted[mid][msg.sender] == false, "_vote::msg.sender voted");
-            counter[mid] = counter[mid].add(1);
-            isVoted[mid][msg.sender] = true;
-        }
+        require(isFinished[mid] == false, "_vote::proposal finished");
+        require(isVoted[mid][msg.sender] == false, "_vote::msg.sender voted");
+        counter[mid] = counter[mid].add(1);
+        isVoted[mid][msg.sender] = true;
 
         if (counter[mid] >= count) {
             isFinished[mid] = true;

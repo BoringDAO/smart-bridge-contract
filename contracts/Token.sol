@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -13,11 +13,13 @@ contract Token is ERC20, IToken, AccessControl {
     constructor(
         string memory _name,
         string memory _symbol,
-        uint8 _decimal,
         address admin
     ) ERC20(_name, _symbol) {
-        _setupDecimals(_decimal);
         _setupRole(DEFAULT_ADMIN_ROLE, admin);
+    }
+
+    function decimals() public view virtual override returns (uint8) {
+        return 18;
     }
 
     function mint(address to, uint256 amount) public override onlyMinter returns (bool) {

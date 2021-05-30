@@ -24,7 +24,7 @@ task("accounts", "Prints the list of accounts", async () => {
  */
 module.exports = {
   solidity: {
-    version: "0.7.6",
+    version: "0.8.0",
     settings: {
       optimizer: {
         enabled: true,
@@ -37,11 +37,11 @@ module.exports = {
   },
   networks: {
     hardhat: {},
-    mainnet: {
-      url: `https://mainnet.infura.io/v3/${projectId}`,
-      gasPrice: 40 * 10 ** 9,
-      accounts: [privateKeyETH],
-    },
+    // mainnet: {
+    //   url: `https://mainnet.infura.io/v3/${projectId}`,
+    //   gasPrice: 40 * 10 ** 9,
+    //   accounts: [privateKeyETH],
+    // },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${projectId}`,
       accounts: {
@@ -60,10 +60,10 @@ module.exports = {
         mnemonic: mnemonic
       }
     },
-    bsc: {
-      url: "https://bsc-dataseed.binance.org",
-      accounts: [privateKeyBSC]
-    },
+    // bsc: {
+    //   url: "https://bsc-dataseed.binance.org",
+    //   accounts: [privateKeyBSC]
+    // },
     okex_test: {
       url: "https://exchaintestrpc.okex.org",
       chainId: 65,
@@ -71,11 +71,11 @@ module.exports = {
         mnemonic: mnemonic
       }
     },
-    okex: {
-      url: "https://exchainrpc.okex.org",
-      chainId: 66,
-      accounts: [privateKeyOkex]
-    }
+    // okex: {
+    //   url: "https://exchainrpc.okex.org",
+    //   chainId: 66,
+    //   accounts: [privateKeyOkex]
+    // }
   },
   namedAccounts: {
     deployer: {

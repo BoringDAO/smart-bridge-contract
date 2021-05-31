@@ -3,14 +3,12 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "./lib/SafeDecimalMath.sol";
 
 contract Toll {
-    using SafeMath for uint256;
     using SafeDecimalMath for uint256;
-    using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
     // fee
     // leave ethereum
@@ -20,7 +18,7 @@ contract Toll {
     mapping(address => uint256) public unlockFeeRatio;
     mapping(address => uint256) public unlockFeeAmount;
 
-    mapping(address => EnumerableSet.AddressSet) internal feeToSet;
+    mapping(address => EnumerableSetUpgradeable.AddressSet) internal feeToSet;
 
     event FeeChange(
         address token,
@@ -79,8 +77,8 @@ contract Toll {
             _feeMinAmount = unlockFeeAmount[token];
             _feeRatio = unlockFeeRatio[token];
         }
-        feeAmount = _feeMinAmount.add(amount.multiplyDecimal(_feeRatio));
-        remainAmount = amount.sub(feeAmount);
+        feeAmount = _feeMinAmount + amount.multiplyDecimal(_feeRatio);
+        remainAmount = amount - feeAmount;
     }
 
     function feeToLength(address token) public view returns (uint256 len) {

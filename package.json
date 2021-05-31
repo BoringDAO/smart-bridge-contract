@@ -13,6 +13,7 @@
     "@nomiclabs/hardhat-etherscan": "^2.1.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/contracts": "^4.1.0",
+    "@openzeppelin/hardhat-upgrades": "^1.8.2",
     "chai": "^4.3.4",
     "ethereum-waffle": "^3.3.0",
     "ethers": "^5.0.32",
@@ -21,5 +22,8 @@
     "hardhat-deploy-ethers": "^0.3.0-beta.7",
     "prettier": "^2.2.1",
     "prettier-plugin-solidity": "^1.0.0-beta.9"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts-upgradeable": "^4.1.0"
   }
 }

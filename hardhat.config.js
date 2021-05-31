@@ -3,6 +3,7 @@ require("hardhat-deploy");
 require("hardhat-deploy-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("./tasks/bridge")
+require('@openzeppelin/hardhat-upgrades');
 
 const { mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC } = require("./.secret.json");
 
@@ -24,7 +25,7 @@ task("accounts", "Prints the list of accounts", async () => {
  */
 module.exports = {
   solidity: {
-    version: "0.8.0",
+    version: "0.8.4",
     settings: {
       optimizer: {
         enabled: true,

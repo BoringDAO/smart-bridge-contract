@@ -21,7 +21,7 @@ module.exports = async ({
     let token_eth;
     let token_bsc;
     if (network.name === "ropsten" || network.name === "kovan") {
-       
+
     } else if (network.name == "bsc") {
         await deploy("TokenBoring", {
             contract: "Token",
@@ -35,6 +35,11 @@ module.exports = async ({
             log: true
         })
     }
+
+    await deploy("Multicall", {
+        from: deployer,
+        log: true
+    })
 }
 
 module.exports.tags = ['05']

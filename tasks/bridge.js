@@ -46,10 +46,11 @@ task("bridge:grantRole", "Set threshold")
 
 task("token:grantRole", "Grant role")
     .setAction(async function (args, { ethers }, runSuper) {
-        const token = await ethers.getContract("TokenBoring")
+        const Token = await ethers.getContractFactory("Token")
+        const token = Token.attach("0x26Ec036Be42907eA15a273833816539B26d2BE53")
         const minter = "0x4d494e5445525f524f4c45000000000000000000000000000000000000000000"
         const burner = "0x4255524e45525f524f4c45000000000000000000000000000000000000000000"
-        const bridge = "0x26Ec036Be42907eA15a273833816539B26d2BE53"
+        const bridge = "0x34fbE21c1d94084697C5Cc0cbCe2eFA1418f4384"
         await (await token.grantRole(minter, bridge)).wait()
         await (await token.grantRole(burner, bridge)).wait()
     });

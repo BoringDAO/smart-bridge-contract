@@ -21,7 +21,7 @@ contract Bridge is Initializable, UUPSUpgradeable, ProposalVote, Toll, AccessCon
     event CrossMint(address token0, address token1, uint256 chainID, address from, address to, uint256 amount, string txid);
     event MinBurnChanged(address token1, uint256 preMin, uint256 nowMin);
 
-    function initialize(uint256 _chainID) initializer public {
+    function initialize(uint256 _chainID) public initializer {
         chainID = _chainID;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }

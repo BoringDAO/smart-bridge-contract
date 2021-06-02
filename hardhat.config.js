@@ -3,6 +3,7 @@ require("hardhat-deploy");
 require("hardhat-deploy-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("./tasks/bridge")
+require("./tasks/crosslock")
 require('@openzeppelin/hardhat-upgrades');
 
 const { mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC } = require("./.secret.json");
@@ -72,6 +73,21 @@ module.exports = {
         mnemonic: mnemonic
       }
     },
+
+    avax_test: {
+      url: "https://api.avax-test.network/ext/bc/C/rpc",
+      chainId: 43113,
+      accounts: {
+        mnemonic: mnemonic
+      }
+    },
+    harmony0_test: {
+      url: `https://api.s0.b.hmny.io`,
+      chainId: 1666700000,
+      accounts: {
+        mnemonic: mnemonic
+      }
+    }
     // okex: {
     //   url: "https://exchainrpc.okex.org",
     //   chainId: 66,

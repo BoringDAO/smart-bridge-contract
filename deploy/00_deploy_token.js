@@ -34,12 +34,12 @@ module.exports = async ({
             log: true,
             args: ['BoringDAO', 'BORING', 18, deployer],
         })
-    } else if (network.name == "bsc_test" || network.name == "okex_test" || network.name == "okex") {
+    } else if (network.name == "bsc_test" || network.name == "okex_test" || network.name == "okex", network.name == "harmony0_test") {
         await deploy("TokenBoring", {
             contract: "Token",
             from: deployer,
             log: true,
-            args: ['BoringDAO', 'BORING', 18, deployer]
+            args: ['BoringDAO', 'BORING', deployer]
         })
     }
 }

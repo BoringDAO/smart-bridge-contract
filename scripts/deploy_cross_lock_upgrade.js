@@ -6,23 +6,21 @@ async function main() {
 
   // We get the contract to deploy
   const CrossLock = await ethers.getContractFactory("CrossLock");
-  const crossLock = await upgrades.deployProxy(CrossLock, {kind: 'uups'})
-//   const crossLock = await CrossLock.deploy(2);
+  const crossLock = await upgrades.deployProxy(CrossLock, { kind: 'uups' })
+  //   const crossLock = await CrossLock.deploy(2);
   await crossLock.deployed();
-
   console.log("CrossLock deployed to:", crossLock.address);
 
   // add supporting token
-  const fromToken = "0xA9da1aF46322d2F6257CA9cEe02f2418B5DE5041"
-  const toToken = "0xD6Ff436ddD8E87Aa368715F1E1C873fbECccfD2f"
-  const test_role = "test"
-  const roleFlag = ethers.utils.formatBytes32String(test_role)
-  console.log(`${roleFlag}`)
-  await crossLock.addSupportToken(fromToken, toToken, roleFlag);
-  await crossLock.grantRole(roleFlag, "0xC63573cB77ec56e0A1cb40199bb85838D71e4dce")
-  await crossLock.grantRole(roleFlag, "0xF927Bb571eAaB8c9a361AB405c9e4891c5024380")
-
-  
+  const token0 = "0xa9C744B12AB13Cd4cAC6f3cbbE33113d5DBB09Ee"
+  const token1 = "0x9a40dB98775015EB2452754e905e22E087ad3842"
+  const crosser = "0xC38068D89B16A1dAe117974F30230F4AFd654B3C"
+  const chainID = 97
+  const roleKey = await crossLock.getRoleKey(token0, token1, chainID)
+  console.log(`role key ${roleKey}`)
+  await crossLock.addSupportToken(token0, token1, chainID)
+  await crossLock.grantRole(roleKey, crosser)
+  await crossLock.setThreshold(token0, 1)
 }
 
 main()

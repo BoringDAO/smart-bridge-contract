@@ -7,3 +7,4 @@ artifacts
 .secret.json
 secret.json
 abi.json
+contracts.json

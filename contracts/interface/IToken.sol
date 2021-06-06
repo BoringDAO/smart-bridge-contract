@@ -8,3 +8,8 @@ interface IToken is IERC20{
     function mint(address to, uint amount) external returns(bool);
     function burn(address from, uint amount) external returns(bool);
 }
+
+interface IMB {
+    function mint(address to, uint amount) external returns(bool);
+    function burn(address from, uint amount) external returns(bool);
+}

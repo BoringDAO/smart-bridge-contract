@@ -37,8 +37,8 @@ contract Token is ERC20, IToken, AccessControl {
         address to,
         uint256 amount
     ) internal override {
-        super._beforeTokenTransfer(from, to, amount);
         require(to != address(this), "Token::to should not be token contract");
+        super._beforeTokenTransfer(from, to, amount);
     }
 
     modifier onlyMinter {

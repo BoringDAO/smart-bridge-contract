@@ -2,16 +2,16 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "./lib/SafeDecimalMath.sol";
 import "./ProposalVote.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract CrossLock is ProposalVote, AccessControl {
-    using SafeERC20 for IERC20;
-    using SafeMath for uint256;
+contract CrossLock is Initializable, UUPSUpgradeable, ProposalVote, AccessControlUpgradeable {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
     using SafeDecimalMath for uint256;
 
     // eg.ethToken => other
@@ -21,9 +21,12 @@ contract CrossLock is ProposalVote, AccessControl {
     event Lock(address token0, address token1, uint256 chainID, address locker, address to, uint256 amount);
     event Unlock(address token0, address token1, uint256 chainID, address from, address to, uint256 amount, string txid);
 
-    constructor() {
+    function initialize() initializer public {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
+
+    function _authorizeUpgrade(address) internal override onlyAdmin {}
+
 
     function getRoleKey(
         address token0,
@@ -72,7 +75,7 @@ contract CrossLock is ProposalVote, AccessControl {
         address to,
         uint256 amount
     ) public onlySupportToken(token0, chainID) {
-        IERC20(token0).safeTransferFrom(msg.sender, address(this), amount);
+        IERC20Upgradeable(token0).safeTransferFrom(msg.sender, address(this), amount);
         emit Lock(token0, supportToken[token0][chainID], chainID, msg.sender, to, amount);
     }
 
@@ -87,7 +90,7 @@ contract CrossLock is ProposalVote, AccessControl {
         bool result = _vote(token0, from, to, amount, txid);
         if (result) {
             txUnlocked[txid] = true;
-            IERC20(token0).safeTransfer(to, amount);
+            IERC20Upgradeable(token0).safeTransfer(to, amount);
             address token1 = supportToken[token0][chainID];
             emit Unlock(token0, token1, chainID, from, to, amount, txid);
         }

@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./interface/IToken.sol";
 import "./ProposalVote.sol";
 import "./Toll.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract Bridge is ProposalVote, Toll, AccessControl {
-    using SafeMath for uint256;
+contract Bridge is Initializable, UUPSUpgradeable, ProposalVote, Toll, AccessControlUpgradeable {
 
     uint256 public chainID;
     // eg.ethToken => other
@@ -21,10 +21,13 @@ contract Bridge is ProposalVote, Toll, AccessControl {
     event CrossMint(address token0, address token1, uint256 chainID, address from, address to, uint256 amount, string txid);
     event MinBurnChanged(address token1, uint256 preMin, uint256 nowMin);
 
-    constructor(uint256 _chainID) {
+    function initialize(uint256 _chainID) initializer public {
         chainID = _chainID;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
+
+    function _authorizeUpgrade(address) internal override onlyAdmin {}
+
 
     function getRoleKey(address token0, address token1) public view returns (bytes32) {
         bytes32 key = keccak256(abi.encodePacked(token0, token1, chainID));
@@ -76,7 +79,7 @@ contract Bridge is ProposalVote, Toll, AccessControl {
         uint256 feeToLen = feeToLength(token0);
         for (uint256 i; i < feeToLen; i++) {
             address feeTo = getFeeTo(token0, i);
-            supportToken[token0].mint(feeTo, feeAmount.div(feeToLen));
+            supportToken[token0].mint(feeTo, feeAmount / feeToLen);
         }
     }
 
@@ -91,7 +94,7 @@ contract Bridge is ProposalVote, Toll, AccessControl {
         (uint256 feeAmount, uint256 remainAmount) = calculateFee(token0, amount, 1);
         uint256 feeToLen = feeToLength(token0);
         for (uint256 i; i < feeToLen; i++) {
-            token1.transferFrom(msg.sender, getFeeTo(token0, i), feeAmount.div(feeToLen));
+            token1.transferFrom(msg.sender, getFeeTo(token0, i), feeAmount / feeToLen);
         }
         token1.burn(msg.sender, remainAmount);
         emit CrossBurn(token0, address(token1), chainID, msg.sender, to, remainAmount);

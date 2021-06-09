@@ -9,8 +9,11 @@ contract BoringToken is ERC20, AccessControl {
     bytes32 public constant MINTER_ROLE = "MINTER_ROLE";
     bytes32 public constant BURNER_ROLE = "BURNER_ROLE";
 
-    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {
+    uint8 private _decimals;
+
+    constructor(string memory _name, string memory _symbol, uint8 decimals_) ERC20(_name, _symbol) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _decimals = decimals_;
     }
 
     function mint(address to, uint256 amount) public onlyMinter {
@@ -19,6 +22,10 @@ contract BoringToken is ERC20, AccessControl {
 
     function burn(address from, uint256 amount) public onlyBurner {
         _burn(from, amount);
+    }
+
+    function decimals() public view virtual override returns (uint8) {
+        return _decimals;
     }
 
     modifier onlyAdmin {

@@ -1,21 +1,22 @@
 
 module.exports = async function ({ getNamedAccounts, deployments }) {
-    const { deploy } = deployments
+    const { deploy, execute } = deployments
 
     const { deployer } = await getNamedAccounts()
 
-    await deploy("PegSwapPair", {
+    await deploy("USDT-PegSwapPair", {
+        contract: "PegSwapPair",
         from: deployer,
-        args: ["DAI PegSwapPair", "DAI-PSP"],
+        args: ["USDT PegSwapPair", "USDT-PSP"],
         log: true,
     })
 
-    const token0 = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
-    const token1 = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
-    await execute("PegSwapPair", {
-        from: deployer.address, log: true
+    const token0 = "0x337610d27c682E347C9cD60BD4b3b107C9d34dDd"
+    const token1 = "0x6a69A5D445F6FE876ebcb9BE72A3fe7Cda84a65E"
+    await execute("USDT-PegSwapPair", {
+        contract: "PegSwapPair",
+        from: deployer, log: true
     }, "initialize", token0, token1)
-
 }
 
-module.exports.tags = ["TestERC20"]
+module.exports.tags = ["PegSwapPair"]

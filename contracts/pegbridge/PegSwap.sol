@@ -16,7 +16,7 @@ contract PegSwap is Ownable {
     // example: dai => pair(token0=dai, token1=borDAI)
     mapping(address => address) public pairs;
 
-    function setPegProxy(address _pegProxy) public {
+    function setPegProxy(address _pegProxy) public onlyOwner {
         pegProxy = _pegProxy;
     }
 

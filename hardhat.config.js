@@ -3,6 +3,8 @@ require("hardhat-deploy");
 require("hardhat-deploy-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("./tasks/bridge")
+require("./tasks/index")
+require("./tasks/pegbridge")
 require('@openzeppelin/hardhat-upgrades');
 
 const { mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX } = require("./.secret.json");
@@ -38,11 +40,11 @@ module.exports = {
   },
   networks: {
     hardhat: {},
-    mainnet: {
-      url: `https://mainnet.infura.io/v3/${projectId}`,
-      gasPrice: 35 * 10 ** 9,
-      accounts: [privateKeyETH],
-    },
+    // mainnet: {
+    //   url: `https://mainnet.infura.io/v3/${projectId}`,
+    //   gasPrice: 35 * 10 ** 9,
+    //   accounts: [privateKeyETH],
+    // },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${projectId}`,
       accounts: {
@@ -61,11 +63,11 @@ module.exports = {
         mnemonic: mnemonic
       }
     },
-    bsc: {
-      url: "https://bsc-dataseed.binance.org",
-      chainId: 56,
-      accounts: [privateKeyBSC]
-    },
+    // bsc: {
+    //   url: "https://bsc-dataseed.binance.org",
+    //   chainId: 56,
+    //   accounts: [privateKeyBSC]
+    // },
     okex_test: {
       url: "https://exchaintestrpc.okex.org",
       chainId: 65,
@@ -73,11 +75,11 @@ module.exports = {
         mnemonic: mnemonic
       }
     },
-    avax: {
-      url: "https://api.avax.network/ext/bc/C/rpc",
-      chainId: 43114,
-      accounts: [privateKeyAVAX]
-    },
+    // avax: {
+    //   url: "https://api.avax.network/ext/bc/C/rpc",
+    //   chainId: 43114,
+    //   accounts: [privateKeyAVAX]
+    // },
     avax_test: {
       url: "https://api.avax-test.network/ext/bc/C/rpc",
       chainId: 43113,

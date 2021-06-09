@@ -21,11 +21,11 @@ module.exports = async ({
     let token_eth;
     let token_bsc;
     if (network.name === "ropsten" || network.name === "kovan") {
-        await deploy("TokenBoring", {
+        await deploy("FIN", {
             contract: "Token",
             from: deployer,
             log: true,
-            args: ['Boring Token', 'BORING', 18, deployer],
+            args: ['DeFiner Token', 'FIN', deployer],
         })
     } else if (network.name == "bsc") {
         await deploy("TokenBoring", {

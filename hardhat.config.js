@@ -3,6 +3,7 @@ require("hardhat-deploy");
 require("hardhat-deploy-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("./tasks/bridge")
+require("./tasks/pegbridge")
 require('@openzeppelin/hardhat-upgrades');
 
 const { mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX } = require("./.secret.json");

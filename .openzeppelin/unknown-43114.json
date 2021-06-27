@@ -2,15 +2,15 @@
   "manifestVersion": "3.2",
   "proxies": [
     {
-      "address": "0x68D97B7A961a5239B9F911DA8dEb57F6eF6e5e28",
-      "txHash": "0xa8110d8563d4c09c540986707026beddefa3cdb79b2562140a34a87a2ddfa49a",
+      "address": "0x020bC28dF8904Bba7f432519D5fc86D494e708dD",
+      "txHash": "0x8aee7430e93abf84ae53b3c820cf5b52a549fb31979ad0edd5f83b97f45861d6",
       "kind": "uups"
     }
   ],
   "impls": {
     "911a4570d41e434b22f6b7cb6f8e0da03e81023f780da5e20c72f3802b06a496": {
-      "address": "0x87DD4a7Ad23B95cD9fF9C26B5cF325905CaF8663",
-      "txHash": "0x992d91f50db3f5f4ab2b6ce59ffcca1018add4305866e4082c8e2f4793df5eb4",
+      "address": "0x225247882FD7396c62E29707DA0890151208161a",
+      "txHash": "0x80adb503705eeccce8729c079fdf1a7ed5fd2d57aaab0169cb56408ab13eab0d",
       "layout": {
         "storage": [
           {
@@ -124,7 +124,7 @@
           {
             "contract": "Bridge",
             "label": "supportToken",
-            "type": "t_mapping(t_address,t_contract(IToken)6723)",
+            "type": "t_mapping(t_address,t_contract(IToken)6878)",
             "src": "contracts/Bridge.sol:16"
           },
           {
@@ -144,13 +144,13 @@
           "t_uint256": {
             "label": "uint256"
           },
-          "t_mapping(t_address,t_contract(IToken)6723)": {
+          "t_mapping(t_address,t_contract(IToken)6878)": {
             "label": "mapping(address => contract IToken)"
           },
           "t_address": {
             "label": "address"
           },
-          "t_contract(IToken)6723": {
+          "t_contract(IToken)6878": {
             "label": "contract IToken"
           },
           "t_mapping(t_string_memory_ptr,t_bool)": {

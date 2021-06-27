@@ -1,14 +1,16 @@
 const { ethers, upgrades } = require("hardhat");
-const {crossLockAddr} = require("../contracts.json")
+// const {crossLockAddr} = require("../contracts.json")
 
-const fromToken = "0xBC19712FEB3a26080eBf6f2F7849b417FdD792CA"
-const toToken = "0xffEecbf8D7267757c2dc3d13D730E97E15BfdF7F"
-const chainId = 56;
+// const fromToken = "0xBC19712FEB3a26080eBf6f2F7849b417FdD792CA"
+const fromToken = "0x054f76beed60ab6dbeb23502178c52d6c5debe40"
+const toToken = "0x8D3573f24c0aa3819A2f5b02b2985dD82B487715"
+const chainId = 1666600000;
 const crossers = ["0xbC41ef18DfaE72b665694B034f608E6Dfe170149"]
 
 let crossLock;
 
 async function init() {
+    let crossLockAddr = process.env.crossLockAddrMainnet
     crossLock = await ethers.getContractAt("CrossLock", crossLockAddr)
 }
 
@@ -28,9 +30,17 @@ async function addToken() {
     }
 }
 
+async function setThreshold() {
+    let tx = await crossLock.setThreshold(fromToken, 1);
+    console.log(`setThreshold Pending ${tx.hash}`)
+    await tx.wait()
+}
+
 async function main() {
+    await init()
     // await deploy()
-    await addToken()
+    // await addToken()
+    await setThreshold()
 }
 
 main()

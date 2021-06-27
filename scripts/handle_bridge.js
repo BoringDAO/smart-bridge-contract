@@ -1,8 +1,9 @@
 const { ethers, upgrades } = require("hardhat");
-const {bridgeAddr} = require("../contracts.json")
+const {avax_bridge, okex_bridge, harmony_bridge} = require("../contracts.json")
 
+let bridgeAddr = harmony_bridge
 const fromToken = "0xBC19712FEB3a26080eBf6f2F7849b417FdD792CA"
-const toToken = "0xffEecbf8D7267757c2dc3d13D730E97E15BfdF7F"
+const toToken = "0x017Ff87AB312301aDE54f7cf9Cc5AEA28C9De024"
 const lockFeeAmount = ethers.utils.parseEther("50")
 const lockFeeRatio = ethers.utils.parseEther("0.005")
 const unlockFeeAmount = ethers.utils.parseEther("500")
@@ -21,19 +22,19 @@ async function init() {
 async function addToken() {
     await init()
 
-    const result = await bridge.addSupportToken(fromToken, toToken)
+    const result = await (await bridge.addSupportToken(fromToken, toToken)).wait()
 
     for (const f of feeTo) {
-        await bridge.addFeeTo(fromToken, f)
+        await (await bridge.addFeeTo(fromToken, f)).wait()
     }
 
-    await bridge.setFee(fromToken, lockFeeAmount, lockFeeRatio, unlockFeeAmount, unlockFeeRatio)
+    await (await bridge.setFee(fromToken, lockFeeAmount, lockFeeRatio, unlockFeeAmount, unlockFeeRatio)).wait()
 
-    await bridge.setThreshold(toToken, threshold)
+    await (await bridge.setThreshold(toToken, threshold)).wait()
 
     const roleKey = await bridge.getRoleKey(fromToken, toToken)
     for ( const c of crossers) {
-        await bridge.grantRole(roleKey, c)
+        await (await bridge.grantRole(roleKey, c)).wait()
     }
 }
 

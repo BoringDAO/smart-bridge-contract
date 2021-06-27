@@ -1,9 +1,10 @@
 const { ethers } = require("hardhat");
-const {avax_oltc, bridgeAddr, bsc_boring} = require("../contracts.json")
+const {avax_oltc, avax_bridge, bsc_boring, avax_boring, okex_bridge, okex_boring, harmony_boring, harmony_bridge} = require("../contracts.json")
 
-const tokenName = "BoringDAO LTC"
-const symbol = "oLTC"
-const token_addr = bsc_boring
+const tokenName = "BoringDAO"
+const symbol = "BORING"
+const token_addr = harmony_boring
+let bridgeAddr = harmony_bridge
 let admin
 
 async function init() {
@@ -18,8 +19,8 @@ async function grantRole() {
     const minter = ethers.utils.formatBytes32String("MINTER_ROLE")
     const burner = ethers.utils.formatBytes32String("BURNER_ROLE")
     const token = await ethers.getContractAt("Token", token_addr)
-    await token.grantRole(minter, bridgeAddr)
-    await token.grantRole(burner, bridgeAddr)
+    await (await token.grantRole(minter, bridgeAddr)).wait()
+    await (await token.grantRole(burner, bridgeAddr)).wait()
 }
 
 async function deploy() {
@@ -33,6 +34,7 @@ async function deploy() {
 async function main() {
     await init()
     await grantRole()
+    // await deploy()
 }
 
 main()

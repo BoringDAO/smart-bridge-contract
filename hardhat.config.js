@@ -41,7 +41,7 @@ module.exports = {
     hardhat: {},
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,
-      gasPrice: 35 * 10 ** 9,
+      gasPrice: 25 * 10 ** 9,
       accounts: [privateKeyETH],
     },
     ropsten: {
@@ -85,12 +85,17 @@ module.exports = {
       accounts: {
         mnemonic: mnemonic
       }
-    }
-    // okex: {
-    //   url: "https://exchainrpc.okex.org",
-    //   chainId: 66,
-    //   accounts: [privateKeyOkex]
-    // }
+    },
+    okex: {
+      url: "https://exchainrpc.okex.org",
+      chainId: 66,
+      accounts: [privateKeyOkex]
+    },
+    harmony0: {
+      url: "https://api.harmony.one",
+      chainId: 1666600000,
+      accounts: [privateKeyAVAX]
+    },
   },
   namedAccounts: {
     deployer: {

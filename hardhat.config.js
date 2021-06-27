@@ -5,6 +5,10 @@ require("@nomiclabs/hardhat-etherscan");
 require("./tasks/bridge")
 require("./tasks/index")
 require("./tasks/pegbridge")
+require("./tasks/pair")
+require("./tasks/swap")
+require("./tasks/crosslock")
+require("./tasks/wrap_token")
 require('@openzeppelin/hardhat-upgrades');
 
 const { mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX } = require("./.secret.json");

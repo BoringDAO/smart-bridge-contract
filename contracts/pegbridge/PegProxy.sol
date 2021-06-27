@@ -48,7 +48,8 @@ contract PegProxy is ProposalVote, AccessControl {
         uint256 out = IPegSwap(pegSwap).getMaxToken1AmountOut(token);
         uint256 burnAmount = amount.min(out);
         if (burnAmount > 0) {
-            IPegSwap(pegSwap).swapToken0ForToken1(token, burnAmount, address(this));
+            IERC20(token).approve(pegSwap, burnAmount);
+            IPegSwap(pegSwap).swapToken0ForToken1(token, burnAmount, msg.sender);
             burnBoringToken(token, to, burnAmount);
         }
 
@@ -58,6 +59,7 @@ contract PegProxy is ProposalVote, AccessControl {
             lock(token, to, lockAmount);
         }
     }
+
 
     function crossIn(
         address token,
@@ -74,6 +76,7 @@ contract PegProxy is ProposalVote, AccessControl {
             address token1 = IPegSwapPair(pair).token1();
             // TODO: (check failure and throw event)
             IBoringToken(token1).mint(address(this), amount);
+            IBoringToken(token1).approve(pegSwap, amount);
             IPegSwap(pegSwap).swapToken1ForToken0(token, amount, to);
         }
     }

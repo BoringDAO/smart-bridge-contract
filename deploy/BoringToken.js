@@ -7,7 +7,7 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     await deploy("BoringUSDT", {
         contract: "BoringToken",
         from: deployer,
-        args: ["Tether USD Token", "USDT", 8],
+        args: ["Boring Tether USD Token", "BoringUSDT", 18],
         log: true,
     })
 }

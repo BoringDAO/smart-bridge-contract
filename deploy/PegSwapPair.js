@@ -11,8 +11,8 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
         log: true,
     })
 
-    const token0 = "0x337610d27c682E347C9cD60BD4b3b107C9d34dDd"
-    const token1 = "0x6a69A5D445F6FE876ebcb9BE72A3fe7Cda84a65E"
+    const token0 = "0x58976823450D3AeF1D63E883D106FAca41973321"
+    const token1 = "0x1867a7B29342F2157DB8948C9F2e59dB18E6481E"
     await execute("USDT-PegSwapPair", {
         contract: "PegSwapPair",
         from: deployer, log: true

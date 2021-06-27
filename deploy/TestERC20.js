@@ -4,9 +4,10 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
 
     const { deployer } = await getNamedAccounts()
 
-    await deploy("TestERC20", {
+    await deploy("FIN", {
+        contract: "TestERC20",
         from: deployer,
-        args: ["DAI Token", "DAI"],
+        args: ["DeFiner Token", "FIN"],
         log: true,
     })
 }

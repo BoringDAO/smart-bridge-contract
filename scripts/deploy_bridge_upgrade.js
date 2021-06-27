@@ -7,7 +7,7 @@ async function main() {
 
   // We get the contract to deploy
   const Bridge = await ethers.getContractFactory("Bridge");
-  const bridge = await upgrades.deployProxy(Bridge, [55])
+  const bridge = await upgrades.deployProxy(Bridge, [65])
   const crossers = [
     "0xC63573cB77ec56e0A1cb40199bb85838D71e4dce",
     "0xF927Bb571eAaB8c9a361AB405c9e4891c5024380",
@@ -19,7 +19,7 @@ async function main() {
     "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
   ];
 
-//   const bridge = await Bridge.deploy(crossers, token0, token1, feeTo);
+  //   const bridge = await Bridge.deploy(crossers, token0, token1, feeTo);
   await bridge.deployed();
 
   console.log("Bridge deployed to:", bridge.address);

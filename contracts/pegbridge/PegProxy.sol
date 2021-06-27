@@ -25,105 +25,110 @@ contract PegProxy is ProposalVote, AccessControl {
     mapping(address => mapping(uint => address)) public supportToken;
     mapping(string => bool) public txMinted;
     mapping(string => bool) public txUnlocked;
+    mapping(string => bool) public txRollbacked;
 
     //================= Event ==================//
-    event CrossBurn(address srcToken, address destToken, uint chainID, address from, address to, uint256 amount);
-    event Lock(address srcToken, address destToken, uint256 chainID,  address from, address to, uint256 amount);
-    event Unlock(address srcToken, address destToken, uint256 chianID, address from, address to, uint256 amount, string txid);
-    event Rollback(address srcToken, address destToken, uint256 chainID, address from, address to, uint256 amount, string txid);
+    event CrossBurn(address token0, address token1, uint256 chainID0, uint256 chainID1, address from, address to, uint256 amount);
+    event Lock(address token0, address token1, uint256 chainID0, uint256 chainID1, address from, address to, uint256 amount);
+    event Unlock(address token0, address token1, uint256 chianID0, uint256 chainID1, address from, address to, uint256 amount, string txid);
+    event Rollback(address token0, address token1, uint256 chainID0, uint256 chainID1, address from, address to, uint256 amount, string txid);
+    event Rollbacked(address token0, address from, uint256 amount, string txid);
 
     constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function crossOut(
-        address token,
+        address token0,
         uint256 chainID,
         address to,
         uint256 amount
-    ) public onlySupportToken(token, chainID) {
+    ) public onlySupportToken(token0, chainID) {
         require(amount > 0, "PegProxy: amount must be greater than 0");
         require(to != address(0), "PegProxy: to is empty");
 
-        IERC20(token).transferFrom(msg.sender, address(this), amount);
+        IERC20(token0).transferFrom(msg.sender, address(this), amount);
 
-        uint256 out = pegSwap.getMaxToken1AmountOut(token, chainID);
+        uint256 out = pegSwap.getMaxToken1AmountOut(token0, chainID);
         uint256 burnAmount = amount.min(out);
-        pegSwap.swapToken0ForToken1(token, chainID, burnAmount, address(this));
-        burnBoringToken(token, chainID, to, burnAmount);
+        IERC20(token0).approve(address(pegSwap), burnAmount);
+        pegSwap.swapToken0ForToken1(token0, chainID, burnAmount, address(this));
+        burnBoringToken(token0, chainID, to, burnAmount);
         if (amount > out) {
             uint256 lockAmount = amount.sub(burnAmount);
-            lock(token, chainID, to, lockAmount);
+            emit Lock(token0, supportToken[token0][chainID], block.chainid, chainID, msg.sender, to, lockAmount);
         }
     }
 
     function crossIn(
-        address token,
+        address token0,
         uint256 chainID,
         address from,
         address to,
         uint256 amount,
         string memory txid
     ) public onlyCrosser whenNotMinted(txid) {
-        bool result = _vote(token, from, to, amount, txid);
+        bool result = _vote(token0, from, to, amount, txid);
         if (result) {
             // mint token
             txMinted[txid] = true;
-            address pair = pegSwap.getPair(token, chainID);
-            address token1 = IPegSwapPair(pair).token1();
-            uint token0Amount = pegSwap.getMaxToken0AmountOut(token, chainID);
+            address pair = pegSwap.getPair(token0, chainID);
+            address borToken = IPegSwapPair(pair).token1();
+            uint token0Amount = pegSwap.getMaxToken0AmountOut(token0, chainID);
             if (amount > token0Amount) {
-                emit Rollback(token, token1, chainID, from, to, amount, txid);
+                emit Rollback(token0, supportToken[token0][chainID], block.chainid, chainID, from, to, amount, txid);
             } else {
-                IBoringToken(token1).mint(address(this), amount);
-                pegSwap.swapToken1ForToken0(token, chainID, amount, to);
+                IBoringToken(borToken).mint(address(this), amount);
+                IBoringToken(borToken).approve(address(pegSwap), amount);
+                pegSwap.swapToken1ForToken0(token0, chainID, amount, to);
             }
         }
     }
 
-    // 1. fee dynamicly
-    // 2.
-    function rollback() public {}
-
-    function lock(
-        address token,
+    function rollback(
+        address token0,
         uint256 chainID,
-        address to,
-        uint256 amount
-    ) internal {
-        // IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-        emit Lock(token, supportToken[token][chainID], chainID, msg.sender, to, amount);
+        address from,
+        uint256 amount,
+        string memory txid
+    ) public onlySupportToken(token0, chainID) onlyCrosser whenNotRollbacked(txid) {
+        bool result = _vote(token0, from, from, amount, txid);
+        if (result) {
+            txRollbacked[txid] = true;
+            IERC20(token0).transfer(from, amount);
+            emit Rollbacked(token0, from, amount, txid);
+        }
     }
 
     function unlock(
-        address token,
+        address token0,
         uint256 chainID,
         address from,
         address to,
         uint256 amount,
         string memory txid
-    ) public onlySupportToken(token, chainID) onlyCrosser whenNotUnlocked(txid) {
-        bool result = _vote(token, from, to, amount, txid);
+    ) public onlySupportToken(token0, chainID) onlyCrosser whenNotUnlocked(txid) {
+        bool result = _vote(token0, from, to, amount, txid);
         if (result) {
             txUnlocked[txid] = true;
-            IERC20(token).safeTransfer(to, amount);
-            emit Unlock(token, supportToken[token][chainID], chainID, from, to, amount, txid);
+            IERC20(token0).safeTransfer(to, amount);
+            emit Unlock(token0, supportToken[token0][chainID], block.chainid, chainID, from, to, amount, txid);
         }
     }
 
     function burnBoringToken(
-        address token,
+        address token0,
         uint256 chainID,
         address to,
         uint256 amount
-    ) public onlySupportToken(token, chainID) {
-        address pair = pegSwap.getPair(token, chainID);
+    ) public onlySupportToken(token0, chainID) {
+        address pair = pegSwap.getPair(token0, chainID);
         address token1 = IPegSwapPair(pair).token1();
 
         require(IERC20(token1).balanceOf(msg.sender) >= amount, "PegProxy: msg.sender not enough token to burn");
 
         IBoringToken(token1).burn(msg.sender, amount);
-        emit CrossBurn(token, supportToken[token][chainID], chainID,  msg.sender, to, amount);
+        emit CrossBurn(token0, supportToken[token0][chainID], block.chainid, chainID,  msg.sender, to, amount);
     }
 
     //================ Setter ==================//
@@ -183,6 +188,11 @@ contract PegProxy is ProposalVote, AccessControl {
 
     modifier whenNotUnlocked(string memory _txid) {
         require(txUnlocked[_txid] == false, "PegProxy: tx unlocked");
+        _;
+    }
+
+    modifier whenNotRollbacked(string memory _txid) {
+        require(txRollbacked[_txid] == false, "PegProxy: tx rollbacked");
         _;
     }
 }

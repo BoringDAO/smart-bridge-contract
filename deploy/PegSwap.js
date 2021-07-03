@@ -10,10 +10,6 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
         from: deployer,
         log: true,
     })
-
-    // await execute("PegSwapPair", {
-    //     from: deployer.address, log: true
-    // }, "initialize", token0, token1)
 }
 
 module.exports.tags = ["PegSwap"]

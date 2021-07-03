@@ -51,9 +51,11 @@ contract PegProxy is ProposalVote, AccessControl {
 
         uint256 out = pegSwap.getMaxToken1AmountOut(token0, chainID);
         uint256 burnAmount = amount.min(out);
-        IERC20(token0).approve(address(pegSwap), burnAmount);
-        pegSwap.swapToken0ForToken1(token0, chainID, burnAmount, address(this));
-        burnBoringToken(token0, chainID, to, burnAmount);
+        if (burnAmount > 0) {
+            IERC20(token0).approve(address(pegSwap), burnAmount);
+            pegSwap.swapToken0ForToken1(token0, chainID, burnAmount, msg.sender);
+            burnBoringToken(token0, chainID, to, burnAmount);
+        }
         if (amount > out) {
             uint256 lockAmount = amount.sub(burnAmount);
             emit Lock(token0, supportToken[token0][chainID], block.chainid, chainID, msg.sender, to, lockAmount);

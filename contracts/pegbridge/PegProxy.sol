@@ -12,8 +12,9 @@ import "../interface/IPegSwap.sol";
 import "../interface/IPegSwapPair.sol";
 import "../interface/IBoringToken.sol";
 import "../ProposalVote.sol";
+import "./Toll.sol";
 
-contract PegProxy is ProposalVote, AccessControl {
+contract PegProxy is ProposalVote, AccessControl, Toll {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
     using Math for uint256;
@@ -47,17 +48,23 @@ contract PegProxy is ProposalVote, AccessControl {
         require(amount > 0, "PegProxy: amount must be greater than 0");
         require(to != address(0), "PegProxy: to is empty");
 
-        IERC20(token0).transferFrom(msg.sender, address(this), amount);
+        (uint256 feeAmount, uint256 remainAmount) = calculateFee(token0, chainID, amount);
+        uint256 feeToLen = feeToLength(token0, chainID);
+        for (uint256 i; i < feeToLen; i++) {
+            IERC20(token0).transferFrom(msg.sender, getFeeTo(token0, chainID, i), feeAmount / feeToLen);
+        }
+
+        IERC20(token0).transferFrom(msg.sender, address(this), remainAmount);
 
         uint256 out = pegSwap.getMaxToken1AmountOut(token0, chainID);
-        uint256 burnAmount = amount.min(out);
+        uint256 burnAmount = remainAmount.min(out);
         if (burnAmount > 0) {
             IERC20(token0).approve(address(pegSwap), burnAmount);
             pegSwap.swapToken0ForToken1(token0, chainID, burnAmount, msg.sender);
             burnBoringToken(token0, chainID, to, burnAmount);
         }
         if (amount > out) {
-            uint256 lockAmount = amount.sub(burnAmount);
+            uint256 lockAmount = remainAmount.sub(burnAmount);
             emit Lock(token0, supportToken[token0][chainID], block.chainid, chainID, msg.sender, to, lockAmount);
         }
     }
@@ -165,6 +172,19 @@ contract PegProxy is ProposalVote, AccessControl {
         for (uint256 i; i < token0s.length; i++) {
             removeSupportToken(token0s[i], chainIDs[i]);
         }
+    }
+
+    //================ Toll =====================//
+    function addFeeTo(address token0, uint256 chainID, address account) external onlyAdmin {
+        _addFeeTo(token0, chainID, account);
+    }
+
+    function removeFeeTo(address token0, uint256 chainID, address account) external onlyAdmin {
+        _removeFeeTo(token0, chainID, account);
+    }
+
+    function setFee(address token0, uint256 chainID, uint256 feeAmount, uint256 feeRatio) external onlyAdmin {
+        _setFee(token0, chainID, feeAmount, feeRatio);
     }
 
     //================ Modifier =================//

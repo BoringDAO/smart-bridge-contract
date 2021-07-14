@@ -4,16 +4,18 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
 
     const { deployer } = await getNamedAccounts()
 
-    await deploy("USDT-PegSwapPair", {
+    const name = "USDT-PSP-ETH"
+
+    await deploy(name, {
         contract: "PegSwapPair",
         from: deployer,
-        args: ["USDT PegSwapPair", "USDT-PSP"],
+        args: ["USDT PegSwapPair", name],
         log: true,
     })
 
-    const token0 = "0x337610d27c682E347C9cD60BD4b3b107C9d34dDd"
-    const token1 = "0x6a69A5D445F6FE876ebcb9BE72A3fe7Cda84a65E"
-    await execute("USDT-PegSwapPair", {
+    const token0 = "0x6D2F93F83ECCA6d6Dc0A72426a55A5CE83819a35"
+    const token1 = "0xFB36234069a9b06f8931E77b4ba91C620ba05267"
+    await execute(name, {
         contract: "PegSwapPair",
         from: deployer, log: true
     }, "initialize", token0, token1)

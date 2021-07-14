@@ -68,11 +68,12 @@ contract PegSwapPair is ERC20, Ownable {
         amount0 = liquidity.mul(_reserve0).div(_totalSupply);
         amount1 = liquidity.mul(_reserve1).div(_totalSupply);
 
-        require(amount0 > 0, "PegSwapPair: insufficient liquidity burned");
-        if (_reserve1 > 0) require(amount1 > 0, "PegSwapPair: insufficient liquidity burned");
+        // require(amount0 > 0, "PegSwapPair: insufficient liquidity burned");
+        // if (_reserve1 > 0) require(amount1 > 0, "PegSwapPair: insufficient liquidity burned");
 
         IERC20(_token0).transfer(to, amount0);
-        if (_reserve1 > 0) IERC20(_token1).transfer(to, amount1);
+        // if (_reserve1 > 0) IERC20(_token1).transfer(to, amount1);
+        IERC20(_token1).transfer(to, amount1);
 
         _burn(address(this), liquidity);
 

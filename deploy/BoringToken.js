@@ -4,10 +4,10 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
 
     const { deployer } = await getNamedAccounts()
 
-    await deploy("BoringUSDT", {
+    await deploy("BoringUSDT-ETH", {
         contract: "BoringToken",
         from: deployer,
-        args: ["Tether USD Token", "USDT", 8],
+        args: ["Boring Tether USD Token", "BoringUSDT-ETH", 6],
         log: true,
     })
 }

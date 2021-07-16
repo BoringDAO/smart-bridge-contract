@@ -61,7 +61,7 @@ contract PegProxy is ProposalVote, AccessControl, Toll {
         if (burnAmount > 0) {
             IERC20(token0).approve(address(pegSwap), burnAmount);
             pegSwap.swapToken0ForToken1(token0, chainID, burnAmount, msg.sender);
-            burnBoringToken(token0, chainID, to, burnAmount);
+            _burnBoringToken(msg.sender, token0, chainID, to, burnAmount);
         }
         if (amount > out) {
             uint256 lockAmount = remainAmount.sub(burnAmount);
@@ -125,19 +125,31 @@ contract PegProxy is ProposalVote, AccessControl, Toll {
         }
     }
 
-    function burnBoringToken(
+    function _burnBoringToken(
+        address sender,
         address token0,
         uint256 chainID,
         address to,
         uint256 amount
-    ) public onlySupportToken(token0, chainID) {
+    ) internal {
         address pair = pegSwap.getPair(token0, chainID);
         address token1 = IPegSwapPair(pair).token1();
 
-        require(IERC20(token1).balanceOf(msg.sender) >= amount, "PegProxy: msg.sender not enough token to burn");
+        require(IERC20(token1).balanceOf(sender) >= amount, "PegProxy: msg.sender not enough token to burn");
 
-        IBoringToken(token1).burn(msg.sender, amount);
-        emit CrossBurn(token0, supportToken[token0][chainID], block.chainid, chainID,  msg.sender, to, amount);
+        IBoringToken(token1).burn(sender, amount);
+        emit CrossBurn(token0, supportToken[token0][chainID], block.chainid, chainID,  sender, to, amount);
+    }
+
+
+    function burnBoringToken(
+        address sender,
+        address token0,
+        uint256 chainID,
+        address to,
+        uint256 amount
+    ) public onlySupportToken(token0, chainID) onlyPegSwap {
+        _burnBoringToken(sender, token0, chainID, to, amount);
     }
 
     //================ Setter ==================//
@@ -190,6 +202,11 @@ contract PegProxy is ProposalVote, AccessControl, Toll {
     //================ Modifier =================//
     modifier onlySupportToken(address token, uint256 chainID) {
         require(supportToken[token][chainID] != address(0), "PegProxy: not support this token");
+        _;
+    }
+
+    modifier onlyPegSwap {
+        require(msg.sender == address(pegSwap), "PegSwap: caller is not pegSwap");
         _;
     }
 

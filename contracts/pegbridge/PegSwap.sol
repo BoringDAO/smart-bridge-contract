@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interface/IPegSwapPair.sol";
+import "../interface/IPegProxy.sol";
 
 contract PegSwap is Ownable {
     using SafeMath for uint256;
@@ -16,6 +17,12 @@ contract PegSwap is Ownable {
     // example: dai => pair(token0=dai, token1=borDAI)
     // mapping(address => address) public pairs;
     mapping(address => mapping(uint256 => address)) public pairs;
+
+    mapping(address => uint256) removalMinimum;
+
+    function setRemovalMinimum(address token0, uint256 minimum) public onlyOwner {
+        removalMinimum[token0] = minimum;
+    }
 
     function setPegProxy(address _pegProxy) public onlyOwner {
         pegProxy = _pegProxy;
@@ -52,9 +59,14 @@ contract PegSwap is Ownable {
         uint256 liquidity,
         address to
     ) public onlySupportToken(token0, chainID) returns (uint256 amount0, uint256 amount1) {
+        require(removalMinimum[token0] < liquidity, "PegSwap: liquidity is less than minimum");
         address pair = getPair(token0, chainID);
         IERC20(pair).transferFrom(msg.sender, pair, liquidity);
-        (amount0, amount1) = IPegSwapPair(pair).burn(to);
+        (amount0, amount1) = IPegSwapPair(pair).burn(msg.sender);
+
+        if (amount1 > 0) {
+            IPegProxy(pegProxy).burnBoringToken(msg.sender, token0, chainID, to, amount1);
+        }
     }
 
     // token0 -> token1

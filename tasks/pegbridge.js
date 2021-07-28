@@ -1,25 +1,43 @@
 const { task } = require("hardhat/config")
 
-const token0 = "0x6D2F93F83ECCA6d6Dc0A72426a55A5CE83819a35"
-const token1 = "0x9A204A98fa6A8ac990d7FB3D98245a997622e122"
-const chainID = 42
+let token0, token1, chainID, boringTokenName;
 const role = "0x43524f535345525f524f4c450000000000000000000000000000000000000000"
 const node = "0xc38068d89b16a1dae117974f30230f4afd654b3c"
 const mintRole = "0x4d494e5445525f524f4c45000000000000000000000000000000000000000000"
 const burnRole = "0x4255524e45525f524f4c45000000000000000000000000000000000000000000"
 
 task("pegproxy:prepare", "Prepare")
-    .setAction(async function (args, { ethers, run }, runSuper) {
+    .setAction(async function (args, { ethers, network, run }, runSuper) {
+        if (network.name === 'kovan') {
+            token0 = "0x9A204A98fa6A8ac990d7FB3D98245a997622e122"
+            token1 = "0x6D2F93F83ECCA6d6Dc0A72426a55A5CE83819a35"
+            boringTokenName = "BoringUSDT-BSC"
+            chainID = 97
+        } else if (network.name === 'bsc_test') {
+            token0 = "0x6D2F93F83ECCA6d6Dc0A72426a55A5CE83819a35"
+            token1 = "0x9A204A98fa6A8ac990d7FB3D98245a997622e122"
+            chainID = 42
+            boringTokenName = "BoringUSDT-ETH"
+        }
         // await run("pegproxy:setPegSwap")
-        await run("pegproxy:add")
+        // await run("pegproxy:add")
         // await run("pegproxy:setThreshold")
         // await run("pegproxy:grant")
         // await run("boring:grant")
+        await run("pegproxy:setFee")
     })
 
+task("pegproxy:setFee", "Set fee")
+    .setAction(async function (args, { ethers }, runSuper) {
+        const pegProxy = await ethers.getContract("PegProxy")
+        console.log(`PegProxy address: ${pegProxy.address}`)
+        await (await pegProxy.setFee(token0, chainID, "1000000", ethers.utils.parseEther("0.1"))).wait()
+        // await (await pegProxy.addFeeTo(token0, chainID, node)).wait()
+
+    })
 task("boring:grant", "Grant role")
     .setAction(async function (args, { ethers }, runSuper) {
-        const boringToken = await ethers.getContract("BoringUSDT-ETH")
+        const boringToken = await ethers.getContract(boringTokenName)
         const pegProxy = await ethers.getContract("PegProxy")
         console.log(`BoringToken: ${boringToken.address}`)
         console.log(`PegProxy address: ${pegProxy.address}`)

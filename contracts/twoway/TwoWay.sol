@@ -11,15 +11,17 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../interface/IPegSwap.sol";
 import "../interface/IPegSwapPair.sol";
 import "../interface/IBoringToken.sol";
+import "../interface/ITwoWayFeePool.sol";
 import "../ProposalVote.sol";
 import "./Toll.sol";
 
-contract PegProxy is ProposalVote, AccessControl, Toll {
+contract TwoWay is ProposalVote, AccessControl, Toll {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
     using Math for uint256;
 
     bytes32 public constant CROSSER_ROLE = "CROSSER_ROLE";
+
 
     IPegSwap public pegSwap;
     // mapping(address => address) public supportToken; // eg.ethToken => bscToke
@@ -28,6 +30,8 @@ contract PegProxy is ProposalVote, AccessControl, Toll {
     mapping(string => bool) public txUnlocked;
     mapping(string => bool) public txRollbacked;
 
+    ITwoWayFeePool public twoWayFeePool;
+
     //================= Event ==================//
     event CrossBurn(address token0, address token1, uint256 chainID0, uint256 chainID1, address from, address to, uint256 amount);
     event Lock(address token0, address token1, uint256 chainID0, uint256 chainID1, address from, address to, uint256 amount);
@@ -35,7 +39,7 @@ contract PegProxy is ProposalVote, AccessControl, Toll {
     event Rollback(address token0, address token1, uint256 chainID0, uint256 chainID1, address from, address to, uint256 amount, string txid);
     event Rollbacked(address token0, address from, uint256 amount, string txid);
 
-    constructor() {
+    constructor(address _feeToDev) Toll(_feeToDev) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -48,10 +52,12 @@ contract PegProxy is ProposalVote, AccessControl, Toll {
         require(amount > 0, "PegProxy: amount must be greater than 0");
         require(to != address(0), "PegProxy: to is empty");
 
-        (uint256 feeAmount, uint256 remainAmount) = calculateFee(token0, chainID, amount);
-        uint256 feeToLen = feeToLength(token0, chainID);
-        for (uint256 i; i < feeToLen; i++) {
-            IERC20(token0).transferFrom(msg.sender, getFeeTo(token0, chainID, i), feeAmount / feeToLen);
+        (uint256 feeAmountFix, uint256 feeAmountRatio, uint256 remainAmount) = calculateFee(token0, chainID, amount);
+        IERC20(token0).safeTransferFrom(msg.sender, feeTo[token0][chainID], feeAmountRatio);
+        twoWayFeePool.notify(feeAmountRatio);
+
+        if (feeAmountFix > 0) {
+            IERC20(token0).safeTransferFrom(msg.sender, feeToDev, feeAmountFix);
         }
 
         IERC20(token0).transferFrom(msg.sender, address(this), remainAmount);
@@ -187,16 +193,16 @@ contract PegProxy is ProposalVote, AccessControl, Toll {
     }
 
     //================ Toll =====================//
-    function addFeeTo(address token0, uint256 chainID, address account) external onlyAdmin {
-        _addFeeTo(token0, chainID, account);
-    }
-
-    function removeFeeTo(address token0, uint256 chainID, address account) external onlyAdmin {
-        _removeFeeTo(token0, chainID, account);
+    function setFeeTo(address token0, uint256 chainID, address account) external onlyAdmin {
+        _setFeeTo(token0, chainID, account);
     }
 
     function setFee(address token0, uint256 chainID, uint256 feeAmount, uint256 feeRatio) external onlyAdmin {
         _setFee(token0, chainID, feeAmount, feeRatio);
+    }
+
+    function setFeeToDev(address account) external {
+        _setFeeToDev(account);
     }
 
     //================ Modifier =================//

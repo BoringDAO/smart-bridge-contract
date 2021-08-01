@@ -4,14 +4,16 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interface/IPegSwapPair.sol";
-import "../interface/IPegProxy.sol";
+import "../interface/ITwoWay.sol";
 
 contract PegSwap is Ownable {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
-    address public pegProxy;
+    ITwoWay public twoWay;
 
     // origin token address => pair address
     // example: dai => pair(token0=dai, token1=borDAI)
@@ -24,8 +26,8 @@ contract PegSwap is Ownable {
         removalMinimum[token0] = minimum;
     }
 
-    function setPegProxy(address _pegProxy) public onlyOwner {
-        pegProxy = _pegProxy;
+    function setTwoWay(address _twoWay) public onlyOwner {
+        twoWay = ITwoWay(_twoWay);
     }
 
     function getPair(address token, uint256 chainID) public view onlySupportToken(token, chainID) returns (address) {
@@ -49,7 +51,7 @@ contract PegSwap is Ownable {
         address to
     ) public onlySupportToken(token0, chainID) returns (uint256 liquidity) {
         address pair = getPair(token0, chainID);
-        IERC20(token0).transferFrom(msg.sender, pair, amount);
+        IERC20(token0).safeTransferFrom(msg.sender, pair, amount);
         liquidity = IPegSwapPair(pair).mint(to);
     }
 
@@ -65,7 +67,7 @@ contract PegSwap is Ownable {
         (amount0, amount1) = IPegSwapPair(pair).burn(msg.sender);
 
         if (amount1 > 0) {
-            IPegProxy(pegProxy).burnBoringToken(msg.sender, token0, chainID, to, amount1);
+            twoWay.burnBoringToken(msg.sender, token0, chainID, to, amount1);
         }
     }
 
@@ -75,7 +77,7 @@ contract PegSwap is Ownable {
         uint256 chainID,
         uint256 amountIn,
         address to
-    ) public onlySupportToken(token0, chainID) onlyPegProxy {
+    ) public onlySupportToken(token0, chainID) onlyTwoWay {
         require(amountIn > 0, "PegSwap: input must be greater than 0");
         address pair = getPair(token0, chainID);
 
@@ -90,7 +92,7 @@ contract PegSwap is Ownable {
         uint256 chainID,
         uint256 amountIn,
         address to
-    ) public onlySupportToken(token0, chainID) onlyPegProxy {
+    ) public onlySupportToken(token0, chainID) onlyTwoWay {
         require(amountIn > 0, "PegSwap: input must be greater than 0");
         address pair = getPair(token0, chainID);
         address token1 = IPegSwapPair(pair).token1();
@@ -119,8 +121,8 @@ contract PegSwap is Ownable {
         _;
     }
 
-    modifier onlyPegProxy {
-        require(msg.sender == pegProxy, "PegSwap: caller is not pegProxy");
+    modifier onlyTwoWay {
+        require(msg.sender == address(twoWay), "PegSwap: caller is not pegProxy");
         _;
     }
 }

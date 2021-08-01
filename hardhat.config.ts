@@ -1,32 +1,23 @@
-require("@nomiclabs/hardhat-waffle");
-require("hardhat-deploy");
-require("hardhat-deploy-ethers");
-require("@nomiclabs/hardhat-etherscan");
-require("./tasks/bridge")
-require("./tasks/pegbridge")
-require("./tasks/pegswap")
-require("./tasks/pair")
-require('@openzeppelin/hardhat-upgrades');
+// import { HardhatUserConfig} from "hardhat/config";
+import { HardhatUserConfig } from 'hardhat/types'
+import '@typechain/hardhat';
+import '@nomiclabs/hardhat-ethers';
+import "@nomiclabs/hardhat-waffle";
+import "hardhat-deploy";
+import "hardhat-deploy-ethers";
+import "@nomiclabs/hardhat-etherscan";
+// require("./tasks/bridge")
+// require("./tasks/pegbridge")
+// require("./tasks/pegswap")
+// require("./tasks/pair")
+// require('@openzeppelin/hardhat-upgrades');
+import "@openzeppelin/hardhat-upgrades";
+
+import { ethers } from "hardhat";
 
 const { mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX } = require("./.secret.json");
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async () => {
-  const accounts = await ethers.getSigners();
-
-  for (const account of accounts) {
-    console.log(account.address);
-  }
-});
-
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
-module.exports = {
+const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.4",
     settings: {
@@ -60,6 +51,7 @@ module.exports = {
     },
     bsc_test: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+      chainId: 97,
       accounts: {
         mnemonic: mnemonic
       }
@@ -111,5 +103,13 @@ module.exports = {
     crosser2: {
       default: 2
     }
-  }
+  },
+  typechain: {
+    outDir: 'src/types',
+    target: 'ethers-v5',
+    alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
+    externalArtifacts: ['externalArtifacts/*.json'], // optional array of glob patterns with external artifacts to process (for example external libs from node_modules)
+  },
 };
+
+export default config;

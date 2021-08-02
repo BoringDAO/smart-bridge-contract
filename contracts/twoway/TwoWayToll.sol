@@ -5,11 +5,12 @@ pragma experimental ABIEncoderV2;
 
 import "../lib/SafeDecimalMath.sol";
 
-contract Toll {
+contract TwoWayToll {
     using SafeDecimalMath for uint256;
 
-    mapping(address => mapping(uint256 => uint256)) feeAmountM;
-    mapping(address => mapping(uint256 => uint256)) feeRatioM;
+    mapping(address => mapping(uint256 => uint256)) public feeAmountM;
+    mapping(address => mapping(uint256 => uint256)) public feeRatioM;
+    mapping(address => mapping(uint256 => uint256)) public removeFeeAmount;
     // mapping(address => mapping(uint256 => EnumerableSet.AddressSet)) internal feeToSet;
     mapping(address => mapping(uint256 => address)) public feeTo;
     address public feeToDev;
@@ -39,6 +40,14 @@ contract Toll {
         emit FeeChange(token, chainID, _feeAmount, _feeRatio);
     }
 
+    function _setRemoveFee(
+        address token,
+        uint256 chainID,
+        uint256 _feeAmount
+    ) internal virtual {
+        removeFeeAmount[token][chainID] = _feeAmount;
+    }
+
     function _setFeeTo(address token, uint256 chainID, address account) internal virtual {
         require(feeTo[token][chainID] == account, "Toll::account was feeTo already");
         feeTo[token][chainID] = account;
@@ -55,4 +64,10 @@ contract Toll {
         feeAmountRatio = amount.multiplyDecimal(_feeRatio);
         remainAmount = amount - feeAmountFix - feeAmountRatio;
     }
+
+    function calculateRemoveFee(address token, uint256 chainID, uint256 amount) public view virtual returns (uint256 feeAmount, uint256 remainAmount) {
+        require(amount > removeFeeAmount[token][chainID], "not enough token");
+        feeAmount = removeFeeAmount[token][chainID];
+        remainAmount = amount - feeAmount;
+    } 
 }

@@ -1,19 +1,22 @@
 // import { DeployFunction } from "hardhat-deploy/dist/types";
 import { DeployFunction } from "hardhat-deploy/types";
-import {HardhatRuntimeEnvironment} from 'hardhat/types';
-import {ERC20} from '../src/types/ERC20'
-import {PegSwapPair} from '../src/types/PegSwapPair'
-import {PegSwap} from '../src/types/PegSwap'
-import {TwoWay} from '../src/types/TwoWay'
-import {TwoWayFeePool} from '../src/types/TwoWayFeePool'
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { ERC20 } from '../src/types/ERC20'
+import { SwapPair } from '../src/types/SwapPair'
+import { TwoWay } from '../src/types/TwoWay'
+import { TwoWayFeePool } from '../src/types/TwoWayFeePool'
+import { BoringToken } from '../src/types/BoringToken'
 import { ethers } from "ethers";
-import {attach} from '../scripts/helper'
+import { attach } from '../scripts/helper'
+
+let feeToDev;
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-	const {deployments, getNamedAccounts} = hre;	
-	const {deploy} = deployments;
+	const { deployments, getNamedAccounts } = hre;
+	const { deploy } = deployments;
 
-	const {deployer} = await getNamedAccounts();
+	const { deployer } = await getNamedAccounts();
+	feeToDev = deployer
 	const result = await deploy('TestERC20USDT', {
 		from: deployer,
 		contract: 'TestERC20',
@@ -22,49 +25,57 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	})
 	const usdtAddr = result.address
 
+	const boringUSDTResult = await deploy('BoringToken', {
+		from: deployer,
+		args: ['boirngUSDT', 'boringUSDT', 6],
+		log: true
+	})
+	const boringUSDTAddr = boringUSDTResult.address
+
 	const pairResult = await deploy('PegSwapPairUSDT', {
 		from: deployer,
-		contract: 'PegSwapPair',
-		args: ['TwoWay LP', 'TLP'],
+		contract: 'SwapPair',
+		args: ['TwoWay LP', 'TLP', 6, usdtAddr, boringUSDTAddr],
 		log: true
 	})
 	const pairAddr = pairResult.address
 
-	const swapResult = await deploy('PegSwap', {
-		from: deployer,
-		contract: 'PegSwap',
-		log: true
-	})
-	const swapAddr = swapResult.address
-
 	const twoWayResult = await deploy('TwoWay', {
 		from: deployer,
+		args: [deployer],
 		log: true
 	})
 
 	const feePoolResult = await deploy('TwoWayFeePool', {
 		from: deployer,
 		args: [pairAddr, usdtAddr, twoWayResult.address],
-		log:  true
+		log: true
 	})
 
 	const usdt = (await attach("TestERC20", usdtAddr)) as ERC20
 	const twoWay = (await attach("TwoWay", twoWayResult.address)) as TwoWay
-	const pegSwap = (await attach('PegSwap', swapAddr)) as PegSwap
-	const PegSwapPair = (await attach('PegSwapPair', pairAddr)) as PegSwapPair
+	const PegSwapPair = (await attach('PegSwapPair', pairAddr)) as SwapPair
 	const feePool = (await attach('TwoWayFeePool', feePoolResult.address)) as TwoWayFeePool
-	await setting(usdt, twoWay, pegSwap, PegSwapPair, feePool, 65)
+	const boringUSDT = (await attach('BoringToken', boringUSDTAddr)) as BoringToken
+	await setting(usdt, boringUSDT, twoWay, PegSwapPair, feePool, 65)
 }
 
-async function setting(usdt: ERC20, tw: TwoWay, pegSwap: PegSwap, pegSwapPair: PegSwapPair, feePool: TwoWayFeePool, chainID: number) {
-	await pegSwap.setTwoWay(tw.address)
-	await pegSwap.addPair(usdt.address, pegSwapPair.address, chainID)
-
+async function setting(usdt: ERC20, boringUSDT: BoringToken, tw: TwoWay, swapPair: SwapPair, feePool: TwoWayFeePool, chainID: number) {
 	// TwoWay
-	await tw.setPegSwap(pegSwap.address)
-	await tw.addFeeTo(usdt.address, chainID, feePool.address)
-	await tw.setThreshold(usdt.address, 1)
+	await tw.addPair(usdt.address, swapPair.address, chainID)
+
+	await tw.setFeeTo(usdt.address, chainID, feePool.address)
+	// await tw.setFeeToDev(feeToDev)
 	await tw.setFee(usdt.address, chainID, ethers.utils.parseUnits("1", 6), ethers.utils.parseEther('0.003'))
+	await tw.setRemoveFee(usdt.address, chainID, ethers.utils.parseUnits("0.5", 6))
+
+	await tw.setThreshold(usdt.address, 1)
+
+	await boringUSDT.grantRole(ethers.utils.formatBytes32String("MINTER"), tw.address)
+	await boringUSDT.grantRole(ethers.utils.formatBytes32String("BURNER"), tw.address)
+
+	await swapPair.setTwoWay(tw.address)
+	
 }
 
 export default func;

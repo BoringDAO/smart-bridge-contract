@@ -12,6 +12,7 @@ import "@nomiclabs/hardhat-etherscan";
 // require("./tasks/pair")
 // require('@openzeppelin/hardhat-upgrades');
 import "@openzeppelin/hardhat-upgrades";
+import "hardhat-abi-exporter"
 
 import { ethers } from "hardhat";
 
@@ -112,6 +113,12 @@ const config: HardhatUserConfig = {
     alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
     externalArtifacts: ['externalArtifacts/*.json'], // optional array of glob patterns with external artifacts to process (for example external libs from node_modules)
   },
+  abiExporter: {
+    path: './data/abi',
+    clear: true,
+    flat: true,
+    spacing: 2
+  }
 };
 
 export default config;

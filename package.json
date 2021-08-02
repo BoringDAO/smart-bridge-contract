@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts-upgradeable": "^4.1.0",
-    "@typechain/ethers-v5": "^7.0.1"
+    "@typechain/ethers-v5": "^7.0.1",
+    "hardhat-abi-exporter": "^2.2.1"
   }
 }

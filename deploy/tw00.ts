@@ -10,6 +10,7 @@ import { ethers } from "ethers";
 import { attach } from '../scripts/helper'
 
 let feeToDev;
+let crosser = "0xc38068d89b16a1dae117974f30230f4afd654b3c"
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const { deployments, getNamedAccounts } = hre;
@@ -32,7 +33,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	})
 	const boringUSDTAddr = boringUSDTResult.address
 
-	const pairResult = await deploy('PegSwapPairUSDT', {
+	const pairResult = await deploy('SwapPairUSDT', {
 		from: deployer,
 		contract: 'SwapPair',
 		args: ['TwoWay LP', 'TLP', 6, usdtAddr, boringUSDTAddr],
@@ -54,27 +55,50 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	const usdt = (await attach("TestERC20", usdtAddr)) as ERC20
 	const twoWay = (await attach("TwoWay", twoWayResult.address)) as TwoWay
-	const PegSwapPair = (await attach('PegSwapPair', pairAddr)) as SwapPair
+	const swapPair = (await attach('SwapPair', pairAddr)) as SwapPair
 	const feePool = (await attach('TwoWayFeePool', feePoolResult.address)) as TwoWayFeePool
 	const boringUSDT = (await attach('BoringToken', boringUSDTAddr)) as BoringToken
-	await setting(usdt, boringUSDT, twoWay, PegSwapPair, feePool, 65)
+	
+	// await setting(usdt, boringUSDT, twoWay, swapPair, feePool, 65)
+	// await setting(usdt, boringUSDT, twoWay, swapPair, feePool, 97)
+
+	// await addSupportToken(twoWay, usdtAddr, 65, "0x1Da3F386115fD780Aa9A928B1965dE6a7514EAE8")
+	await addSupportToken(twoWay, usdtAddr, 97, "0xd6F3C2A963e15Ee5A1ac54e989c27614573C74EB")
+}
+
+async function addSupportToken(tw: TwoWay, token0: string, chainID: number, token1: string) {
+	const tx = await tw.addSupportToken(token0, token1, chainID)	
+	await tx.wait()
 }
 
 async function setting(usdt: ERC20, boringUSDT: BoringToken, tw: TwoWay, swapPair: SwapPair, feePool: TwoWayFeePool, chainID: number) {
 	// TwoWay
-	await tw.addPair(usdt.address, swapPair.address, chainID)
+	const tx = await tw.addPair(usdt.address, swapPair.address, chainID)
+	await tx.wait()
 
-	await tw.setFeeTo(usdt.address, chainID, feePool.address)
+	const tx1 = await tw.setFeeTo(usdt.address, chainID, feePool.address)
+	await tx1.wait()
 	// await tw.setFeeToDev(feeToDev)
-	await tw.setFee(usdt.address, chainID, ethers.utils.parseUnits("1", 6), ethers.utils.parseEther('0.003'))
-	await tw.setRemoveFee(usdt.address, chainID, ethers.utils.parseUnits("0.5", 6))
+	const tx2 = await tw.setFee(usdt.address, chainID, ethers.utils.parseUnits("1", 6), ethers.utils.parseEther('0.003'))
+	await tx2.wait()
+	
+	const tx3 = await tw.setRemoveFee(usdt.address, chainID, ethers.utils.parseUnits("0.5", 6))
+	await tx3.wait()
 
-	await tw.setThreshold(usdt.address, 1)
+	const tx4 = await tw.setThreshold(usdt.address, 1)
+	await tx4.wait()
+	
+	const tx5 = await tw.grantRole(ethers.utils.formatBytes32String("CROSSER_ROLE"), crosser)
+	await tx5.wait()
 
-	await boringUSDT.grantRole(ethers.utils.formatBytes32String("MINTER"), tw.address)
-	await boringUSDT.grantRole(ethers.utils.formatBytes32String("BURNER"), tw.address)
+	const tx6 = await boringUSDT.grantRole(ethers.utils.formatBytes32String("MINTER_ROLE"), tw.address)
+	await tx6.wait()
 
-	await swapPair.setTwoWay(tw.address)
+	const tx7 = await boringUSDT.grantRole(ethers.utils.formatBytes32String("BURNER_ROLE"), tw.address)
+	await tx7.wait()
+
+	const tx8 = await swapPair.setTwoWay(tw.address)
+	await tx8.wait()
 	
 }
 

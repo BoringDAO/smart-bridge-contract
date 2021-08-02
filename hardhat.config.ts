@@ -54,7 +54,8 @@ const config: HardhatUserConfig = {
       chainId: 97,
       accounts: {
         mnemonic: mnemonic
-      }
+      },
+      gas: 10000000
     },
     bsc: {
       url: "https://bsc-dataseed.binance.org",
@@ -66,7 +67,8 @@ const config: HardhatUserConfig = {
       chainId: 65,
       accounts: {
         mnemonic: mnemonic
-      }
+      },
+      gas: 10000000
     },
     avax: {
       url: "https://api.avax.network/ext/bc/C/rpc",

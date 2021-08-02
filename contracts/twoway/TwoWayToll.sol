@@ -49,7 +49,7 @@ contract TwoWayToll {
     }
 
     function _setFeeTo(address token, uint256 chainID, address account) internal virtual {
-        require(feeTo[token][chainID] == account, "Toll::account was feeTo already");
+        require(feeTo[token][chainID] != account, "Toll::account was feeTo already");
         feeTo[token][chainID] = account;
         emit FeeToChanged(token, chainID, account);
     }

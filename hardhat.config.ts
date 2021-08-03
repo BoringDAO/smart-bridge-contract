@@ -6,11 +6,6 @@ import "@nomiclabs/hardhat-waffle";
 import "hardhat-deploy";
 import "hardhat-deploy-ethers";
 import "@nomiclabs/hardhat-etherscan";
-// require("./tasks/bridge")
-// require("./tasks/pegbridge")
-// require("./tasks/pegswap")
-// require("./tasks/pair")
-// require('@openzeppelin/hardhat-upgrades');
 import "@openzeppelin/hardhat-upgrades";
 import "hardhat-abi-exporter"
 

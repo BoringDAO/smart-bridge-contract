@@ -17,6 +17,6 @@ contract TestERC20 is ERC20 {
     }
 
     function faucet() external {
-        _mint(msg.sender, 100000);
+        _mint(msg.sender, 100000 * 10**_decimals);
     }
 }

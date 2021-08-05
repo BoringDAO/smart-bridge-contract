@@ -15,4 +15,6 @@ interface ISwapPair {
     function swapIn(address to, uint256 amount, uint256 feeAmountFix, uint256 remainAmount, address feeToDev) external;
 
     function getReserves() external view returns (uint256, uint256);
+
+    function update() external;
 }

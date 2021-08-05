@@ -28,11 +28,6 @@ contract BoringToken is ERC20, AccessControl {
         return _decimals;
     }
 
-    modifier onlyAdmin {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "BoringToken: msg.sender is not admin");
-        _;
-    }
-
     modifier onlyMinter {
         require(hasRole(MINTER_ROLE, msg.sender), "BoringToken: msg.sender is not minter");
         _;

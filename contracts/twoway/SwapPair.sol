@@ -8,10 +8,11 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interface/IBoringToken.sol";
+import "../interface/ISwapPair.sol";
 import "../lib/SafeDecimalMath.sol";
 
 
-contract SwapPair is ERC20, Ownable {
+contract SwapPair is ERC20, Ownable, ISwapPair {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using SafeDecimalMath for uint256;
@@ -21,8 +22,8 @@ contract SwapPair is ERC20, Ownable {
 
     uint256 public constant MINIMUM_LIQUIDITY = 10**3;
 
-    address public token0; // origin erc20 token
-    address public token1; // bor-erc20 token
+    address public override token0; // origin erc20 token
+    address public override token1; // bor-erc20 token
 
     uint256 private reserve0;
     uint256 private reserve1;
@@ -53,17 +54,21 @@ contract SwapPair is ERC20, Ownable {
         twoWay = _twoWay;
     }
 
-    function getReserves() public view returns (uint256, uint256) {
+    function getReserves() public override view returns (uint256, uint256) {
         return (reserve0, reserve1);
     }
 
-    function mint(address to) external onlyTwoWay returns (uint256 lpAmount) {
-        (uint256 _reserve0, ) = getReserves();
+    function mint(address to) external override onlyTwoWay returns (uint256 lpAmount) {
+        (uint256 _reserve0, uint256 _reserve1) = getReserves();
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
-        uint256 balance1 = IERC20(token1).balanceOf(address(this));
+        // uint256 balance1 = IERC20(token1).balanceOf(address(this));
         uint256 amount0 = balance0.sub(_reserve0);
-
-        lpAmount = amount0 * totalSupply() / (balance0+balance1);
+        uint256 total = totalSupply();
+        if (total == 0 ) {
+            lpAmount = amount0;
+        } else {
+            lpAmount = amount0 * totalSupply() / (_reserve0+_reserve1);
+        }
 
         require(lpAmount> 0, "SwapPair: insufficient liquidity minted");
 
@@ -75,23 +80,8 @@ contract SwapPair is ERC20, Ownable {
         emit Mint(msg.sender, lpAmount);
     }
 
-    function burn(address from, address to, uint lpAmount, address feeTo, uint feeAmount) external onlyTwoWay returns (uint256 amount0, uint256 amount1) {
-        (uint256 _reserve0, uint256 _reserve1) = getReserves();
-
-        uint256 _totalSupply = totalSupply();
-        uint256 value = lpAmount * (_reserve0+_reserve1) / _totalSupply;
-
-
-        // 75%
-        if (_reserve1.mul(bRatio) < _reserve0) {
-            amount0 = value;
-            amount1 = 0;
-        } else {
-            amount0 = value.mul(_reserve0).div(_totalSupply);
-            amount1 = value.mul(_reserve1).div(_totalSupply);
-        }
-
-
+    function burn(address from, address to, uint lpAmount, address feeTo, uint feeAmount) external override onlyTwoWay returns (uint256 amount0, uint256 amount1) {
+		(amount0, amount1) = calculateBurn(lpAmount);
         IERC20(token0).transfer(to, amount0-feeAmount);
         if (feeAmount > 0) {
             IERC20(token0).transfer(feeTo, feeAmount);
@@ -113,7 +103,37 @@ contract SwapPair is ERC20, Ownable {
         emit Burn(msg.sender, amount0, amount1, to);
     }
 
-    function swapOut(address to, uint amount0) internal onlyTwoWay {
+	function calculateBurn(uint lpAmount) public view returns (uint256 amount0, uint256 amount1) {
+		(uint256 _reserve0, uint256 _reserve1) = getReserves();
+
+        uint256 _totalSupply = totalSupply();
+        uint256 value = lpAmount * (_reserve0+_reserve1) / _totalSupply;
+
+
+        // 75%
+        if (_reserve1.mul(bRatio) < _reserve0) {
+			if (value > reserve0) {
+				amount0 = reserve0;
+				amount1 = value - reserve0;
+			} else {
+            	amount0 = value;
+            	amount1 = 0;
+			}
+        } else {
+            amount0 = lpAmount.mul(_reserve0).div(_totalSupply);
+            amount1 = lpAmount.mul(_reserve1).div(_totalSupply);
+        }
+	}
+
+	function update() external override onlyTwoWay {
+        uint256 balance0 = IERC20(token0).balanceOf(address(this));
+        uint256 balance1 = IERC20(token1).balanceOf(address(this));
+
+        reserve0 = balance0;
+        reserve1 = balance1;
+	}
+
+    function swapOut(address to, uint amount0) external override onlyTwoWay {
         (, uint256 _reserve1) = getReserves();
 
         require(_reserve1 >= amount0, "SwapPair: insuffient liquidity");
@@ -136,14 +156,16 @@ contract SwapPair is ERC20, Ownable {
         uint256 feeAmountFix, 
         uint256 remainAmount, 
         address feeToDev
-    ) external onlyTwoWay{
+    ) external override onlyTwoWay{
         (uint256 _reserve0, ) = getReserves();
 
         require(_reserve0 >= amount1, "Insuffient liquidity");
         require(amount1 > 0, "Swap amount should be greater than 0");
 
         IERC20(token0).safeTransfer(to, remainAmount);
-        IERC20(token0).safeTransfer(feeToDev, feeAmountFix);
+		if (feeAmountFix > 0) {
+        	IERC20(token0).safeTransfer(feeToDev, feeAmountFix);
+		}
         IBoringToken(token1).mint(address(this), amount1);
 
         // current balance

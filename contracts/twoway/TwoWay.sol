@@ -10,7 +10,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../interface/ISwapPair.sol";
 import "../interface/IBoringToken.sol";
-import "../interface/ITwoWayFeePool.sol";
 import "../ProposalVote.sol";
 import "./TwoWayToll.sol";
 
@@ -27,9 +26,9 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
     mapping(string => bool) public txUnlocked;
     mapping(string => bool) public txRollbacked;
 
-    ITwoWayFeePool public twoWayFeePool;
-
     mapping(address => mapping(uint256 => address)) public pairs;
+    // unlock fee actived default
+    mapping(address => mapping(uint256 => bool)) public unlockFeeOn;
 
     //================= Event ==================//
     event CrossBurn(address token0, address token1, uint256 chainID0, uint256 chainID1, address from, address to, uint256 amount);
@@ -42,8 +41,9 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function setTwoWayFeePool(address _feePool) external onlyAdmin {
-        twoWayFeePool = ITwoWayFeePool(_feePool);
+    function setUnlockFeeOn(address token0, uint256 chainId, bool _inactived) external onlyAdmin onlySupportToken(token0, chainId){
+        require(unlockFeeOn[token0][chainId] != _inactived, "dont need change");
+        unlockFeeOn[token0][chainId] = _inactived;
     }
 
     function addPair(address token, address pair, uint256 chainID) public onlyAdmin {
@@ -73,6 +73,7 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         uint256 lpAmount,
         address to
     ) public onlySupportToken(token0, chainID) returns (uint256 amount0, uint256 amount1) {
+        require(lpAmount > 0, "zero lp");
         address pair = pairs[token0][chainID];
         uint userLiquiBal = IERC20(pair).balanceOf(msg.sender);
         require(userLiquiBal >= lpAmount, "Not enough lp");
@@ -107,15 +108,16 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         require(to != address(0), "TwoWay: to is empty");
         address pair = pairs[token0][chainID];
 
-        IERC20(token0).safeTransferFrom(msg.sender, pair, amount);
 
         uint256 out = getMaxToken1AmountOut(token0, chainID);
         uint256 burnAmount = amount.min(out);
         if (burnAmount > 0) {
+            IERC20(token0).safeTransferFrom(msg.sender, pair, burnAmount);
             ISwapPair(pair).swapOut(to, burnAmount);
-            emit CrossBurn(token0, pair, block.chainid, chainID, msg.sender, to, burnAmount);
+            emit CrossBurn(token0, supportToken[token0][chainID], block.chainid, chainID, msg.sender, to, burnAmount);
         }
         if (amount > out) {
+            IERC20(token0).safeTransferFrom(msg.sender, address(this), amount-burnAmount);
             emit Lock(token0, supportToken[token0][chainID], block.chainid, chainID, msg.sender, to, amount-burnAmount);
         }
     }
@@ -169,7 +171,17 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         bool result = _vote(token0, from, to, amount, txid);
         if (result) {
             txUnlocked[txid] = true;
-            IERC20(token0).safeTransfer(to, amount);
+            if (unlockFeeOn[token0][chainID]) {
+                (uint256 feeAmountFix, uint256 feeAmountRatio, uint256 remainAmount) = calculateFee(token0, chainID, amount);
+                IERC20(token0).safeTransfer(to, remainAmount);
+                IERC20(token0).safeTransfer(pairs[token0][chainID], feeAmountRatio);
+                ISwapPair(pairs[token0][chainID]).update();
+                if(feeAmountFix > 0) {
+                    IERC20(token0).safeTransfer(feeToDev, feeAmountFix);
+                }
+            } else {
+                IERC20(token0).safeTransfer(to, amount);
+            }
             emit Unlock(token0, supportToken[token0][chainID], block.chainid, chainID, from, to, amount, txid);
         }
     }
@@ -182,6 +194,7 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
     function addSupportToken(address token0, address token1, uint256 chainID) public onlyAdmin {
         require(supportToken[token0][chainID] == address(0), "TwoWay: Toke already Supported");
         supportToken[token0][chainID] = token1;
+        unlockFeeOn[token0][chainID] = true;
     }
 
     function removeSupportToken(address token0, uint256 chainID) public onlyAdmin {

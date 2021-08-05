@@ -11,7 +11,6 @@ contract TwoWayToll {
     mapping(address => mapping(uint256 => uint256)) public feeAmountM;
     mapping(address => mapping(uint256 => uint256)) public feeRatioM;
     mapping(address => mapping(uint256 => uint256)) public removeFeeAmount;
-    // mapping(address => mapping(uint256 => EnumerableSet.AddressSet)) internal feeToSet;
     mapping(address => mapping(uint256 => address)) public feeTo;
     address public feeToDev;
 
@@ -62,6 +61,9 @@ contract TwoWayToll {
         feeAmountFix = feeAmountM[token][chainID];
         uint256 _feeRatio = feeRatioM[token][chainID];
         feeAmountRatio = amount.multiplyDecimal(_feeRatio);
+        if (amount < feeAmountFix+feeAmountRatio) {
+            feeAmountFix = 0;
+        }
         remainAmount = amount - feeAmountFix - feeAmountRatio;
     }
 

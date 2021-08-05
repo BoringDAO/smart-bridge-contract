@@ -88,6 +88,14 @@ const config: HardhatUserConfig = {
       chainId: 1666600000,
       accounts: [privateKeyAVAX]
     },
+    t1: {
+      url: "http://127.0.0.1:8545",
+      chainId: 31337
+    },
+    t2: {
+      url: "http://127.0.0.1:8546",
+      // chainId: 31338
+    }
   },
   namedAccounts: {
     deployer: {

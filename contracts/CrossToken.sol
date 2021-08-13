@@ -12,21 +12,8 @@ contract CrossToken is ERC20, AccessControl {
     mapping(string => bool) public txMinted;
 
     // xToken yToken eg. ethToken bscToken
-    event CrossBurn(
-        address xToken,
-        address yToken,
-        address from,
-        address to,
-        uint256 amount
-    );
-    event CrossMint(
-        address xToken,
-        address yToken,
-        address from,
-        address to,
-        uint256 amount,
-        string txid
-    );
+    event CrossBurn(address xToken, address yToken, address from, address to, uint256 amount);
+    event CrossMint(address xToken, address yToken, address from, address to, uint256 amount, string txid);
 
     constructor(
         string memory _name,
@@ -55,11 +42,8 @@ contract CrossToken is ERC20, AccessControl {
         emit CrossBurn(xToken, address(this), msg.sender, recipient, amount);
     }
 
-    modifier onlyCrosser {
-        require(
-            hasRole(CROSSER_ROLE, msg.sender),
-            "CrossToken::caller is not crosser"
-        );
+    modifier onlyCrosser() {
+        require(hasRole(CROSSER_ROLE, msg.sender), "CrossToken::caller is not crosser");
         _;
     }
 

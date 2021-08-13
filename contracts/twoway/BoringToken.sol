@@ -11,7 +11,11 @@ contract BoringToken is ERC20, AccessControl {
 
     uint8 private _decimals;
 
-    constructor(string memory _name, string memory _symbol, uint8 decimals_) ERC20(_name, _symbol) {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        uint8 decimals_
+    ) ERC20(_name, _symbol) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _decimals = decimals_;
     }
@@ -28,12 +32,12 @@ contract BoringToken is ERC20, AccessControl {
         return _decimals;
     }
 
-    modifier onlyMinter {
+    modifier onlyMinter() {
         require(hasRole(MINTER_ROLE, msg.sender), "BoringToken: msg.sender is not minter");
         _;
     }
 
-    modifier onlyBurner {
+    modifier onlyBurner() {
         require(hasRole(BURNER_ROLE, msg.sender), "BoringToken: msg.sender is not burner");
         _;
     }

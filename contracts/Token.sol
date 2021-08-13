@@ -41,12 +41,12 @@ contract Token is ERC20, IToken, AccessControl {
         super._beforeTokenTransfer(from, to, amount);
     }
 
-    modifier onlyMinter {
+    modifier onlyMinter() {
         require(hasRole(MINTER_ROLE, msg.sender), "Token::caller is not minter");
         _;
     }
 
-    modifier onlyBurner {
+    modifier onlyBurner() {
         require(hasRole(BURNER_ROLE, msg.sender), "Token::caller is not burner");
         _;
     }

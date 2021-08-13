@@ -16,6 +16,7 @@ let feeToDev: string;
 let crosser = "0xF15F3CE67D07ab9983Fa29142855c51608252A84"
 let BSC_CHAINID: number;
 let OKEX_CHAINID: number;
+let MATIC_CHAINID: number;
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const { deployments, getNamedAccounts } = hre;
@@ -24,18 +25,18 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const { deployer } = await getNamedAccounts();
 	feeToDev = deployer
 
-	// let decimals = 18
-	// const result = await deploy('TestERC20USDT', {
-	// 	from: deployer,
-	// 	contract: 'TestERC20',
-	// 	args: ['TestERC20', 'USDT', 18],
-	// 	log: true
-	// })
-	// let usdtAddr = result.address
+	let decimals = 6
+	const result = await deploy('TestERC20USDT', {
+		from: deployer,
+		contract: 'TestERC20',
+		args: ['TestERC20', 'USDT', decimals],
+		log: true
+	})
+	let usdtAddr = result.address
 	// process.exit(0)
 
-	let usdtAddr;
-	let decimals;
+	// let usdtAddr;
+	// let decimals;
 	let usdtBSCMain = '0x55d398326f99059ff775485246999027b3197955'
 	let usdtOkexMain = '0x382bB369d343125BfB2117af9c149795C6C65C50'
 	if (network.name === "bsc_test") {
@@ -65,12 +66,20 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	} else if (network.name === 'hardhat') {
 		usdtAddr = "0xB36c3713A6D46C67f55F6F49Ae0c47a61901F015"
 		decimals = 18
-	}else {
+
+	} else if (network.name === 'matic'){
+
+	} else if (network.name === 'matic_test') {
+		usdtAddr = ''
+		decimals = 18
+		BSC_CHAINID = 97
+		MATIC_CHAINID = 80001
+	} else {
 		console.error("not known network")
 		process.exit(1)
 	}
 
-	const boringUSDTResult = await deploy('BoringToken', {
+	const boringUSDTResult = await deploy('BoringToken-bsc-', {
 		from: deployer,
 		args: ['boirngUSDT', 'boringUSDT', decimals],
 		log: true

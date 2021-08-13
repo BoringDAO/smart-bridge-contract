@@ -17,7 +17,11 @@ contract WrapToken is IMB, AccessControl, IERC20, IERC20Metadata {
     IERC20 public underToken;
     address public dispatcher;
 
-    constructor(address admin, address _dispatcher, IERC20 _underToken) {
+    constructor(
+        address admin,
+        address _dispatcher,
+        IERC20 _underToken
+    ) {
         _setupRole(DEFAULT_ADMIN_ROLE, admin);
         dispatcher = _dispatcher;
         underToken = _underToken;
@@ -59,7 +63,11 @@ contract WrapToken is IMB, AccessControl, IERC20, IERC20Metadata {
         return underToken.approve(spender, amount);
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) public virtual override returns (bool) {
         return underToken.transferFrom(sender, recipient, amount);
     }
 
@@ -73,17 +81,17 @@ contract WrapToken is IMB, AccessControl, IERC20, IERC20Metadata {
         return true;
     }
 
-    modifier onlyAdmin {
+    modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "WrapToken::onlyAdmin only admin can call");
         _;
     }
 
-    modifier onlyMinter {
+    modifier onlyMinter() {
         require(hasRole(MINTER_ROLE, msg.sender), "Token::caller is not minter");
         _;
     }
 
-    modifier onlyBurner {
+    modifier onlyBurner() {
         require(hasRole(BURNER_ROLE, msg.sender), "Token::caller is not burner");
         _;
     }

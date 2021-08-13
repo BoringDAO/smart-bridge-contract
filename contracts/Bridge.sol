@@ -10,7 +10,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract Bridge is Initializable, UUPSUpgradeable, ProposalVote, Toll, AccessControlUpgradeable {
-
     uint256 public chainID;
     // eg.ethToken => other
     mapping(address => IToken) public supportToken;
@@ -18,16 +17,23 @@ contract Bridge is Initializable, UUPSUpgradeable, ProposalVote, Toll, AccessCon
     mapping(address => uint256) public minBurn;
 
     event CrossBurn(address token0, address token1, uint256 chainID, address from, address to, uint256 amount);
-    event CrossMint(address token0, address token1, uint256 chainID, address from, address to, uint256 amount, string txid);
+    event CrossMint(
+        address token0,
+        address token1,
+        uint256 chainID,
+        address from,
+        address to,
+        uint256 amount,
+        string txid
+    );
     event MinBurnChanged(address token1, uint256 preMin, uint256 nowMin);
 
-    function initialize(uint256 _chainID) initializer public {
+    function initialize(uint256 _chainID) public initializer {
         chainID = _chainID;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function _authorizeUpgrade(address) internal override onlyAdmin {}
-
 
     function getRoleKey(address token0, address token1) public view returns (bytes32) {
         bytes32 key = keccak256(abi.encodePacked(token0, token1, chainID));
@@ -139,7 +145,7 @@ contract Bridge is Initializable, UUPSUpgradeable, ProposalVote, Toll, AccessCon
         _;
     }
 
-    modifier onlyAdmin {
+    modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Bridge::only admin can call");
         _;
     }

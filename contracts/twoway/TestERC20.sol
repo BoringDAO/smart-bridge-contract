@@ -11,7 +11,11 @@ contract TestERC20 is ERC20 {
         return _decimals;
     }
 
-    constructor(string memory _name, string memory _symbol, uint8 decimals_) ERC20(_name, _symbol) {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        uint8 decimals_
+    ) ERC20(_name, _symbol) {
         _mint(msg.sender, 100000000 * 10**decimals_);
         _decimals = decimals_;
     }

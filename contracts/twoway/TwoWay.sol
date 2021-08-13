@@ -31,22 +31,64 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
     mapping(address => mapping(uint256 => bool)) public unlockFeeOn;
 
     //================= Event ==================//
-    event CrossBurn(address token0, address token1, uint256 chainID0, uint256 chainID1, address from, address to, uint256 amount);
-    event Lock(address token0, address token1, uint256 chainID0, uint256 chainID1, address from, address to, uint256 amount);
-    event Unlock(address token0, address token1, uint256 chianID0, uint256 chainID1, address from, address to, uint256 amount, string txid);
-    event Rollback(address token0, address token1, uint256 chainID0, uint256 chainID1, address from, address to, uint256 amount, string txid);
+    event CrossBurn(
+        address token0,
+        address token1,
+        uint256 chainID0,
+        uint256 chainID1,
+        address from,
+        address to,
+        uint256 amount
+    );
+    event Lock(
+        address token0,
+        address token1,
+        uint256 chainID0,
+        uint256 chainID1,
+        address from,
+        address to,
+        uint256 amount
+    );
+    event Unlock(
+        address token0,
+        address token1,
+        uint256 chianID0,
+        uint256 chainID1,
+        address from,
+        address to,
+        uint256 amount,
+        string txid
+    );
+    event Rollback(
+        address token0,
+        address token1,
+        uint256 chainID0,
+        uint256 chainID1,
+        address from,
+        address to,
+        uint256 amount,
+        string txid
+    );
     event Rollbacked(address token0, address from, uint256 amount, string txid);
 
     constructor(address _feeToDev) TwoWayToll(_feeToDev) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function setUnlockFeeOn(address token0, uint256 chainId, bool _inactived) external onlyAdmin onlySupportToken(token0, chainId){
+    function setUnlockFeeOn(
+        address token0,
+        uint256 chainId,
+        bool _inactived
+    ) external onlyAdmin onlySupportToken(token0, chainId) {
         require(unlockFeeOn[token0][chainId] != _inactived, "dont need change");
         unlockFeeOn[token0][chainId] = _inactived;
     }
 
-    function addPair(address token, address pair, uint256 chainID) public onlyAdmin {
+    function addPair(
+        address token,
+        address pair,
+        uint256 chainID
+    ) public onlyAdmin {
         require(pairs[token][chainID] == address(0), "token already supported");
         pairs[token][chainID] = pair;
     }
@@ -75,12 +117,12 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
     ) public onlySupportToken(token0, chainID) returns (uint256 amount0, uint256 amount1) {
         require(lpAmount > 0, "zero lp");
         address pair = pairs[token0][chainID];
-        uint userLiquiBal = IERC20(pair).balanceOf(msg.sender);
+        uint256 userLiquiBal = IERC20(pair).balanceOf(msg.sender);
         require(userLiquiBal >= lpAmount, "Not enough lp");
-        uint removeFee = removeFeeAmount[token0][chainID];
+        uint256 removeFee = removeFeeAmount[token0][chainID];
         (amount0, amount1) = ISwapPair(pair).burn(msg.sender, to, lpAmount, feeToDev, removeFee);
         if (amount1 > 0) {
-            emit CrossBurn(token0, supportToken[token0][chainID], block.chainid, chainID,  msg.sender, to, amount1);
+            emit CrossBurn(token0, supportToken[token0][chainID], block.chainid, chainID, msg.sender, to, amount1);
         }
     }
 
@@ -106,19 +148,34 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
     ) public onlySupportToken(token0, chainID) {
         require(amount > 0, "TwoWay: amount must be greater than 0");
         require(to != address(0), "TwoWay: to is empty");
-        address pair = pairs[token0][chainID];
+        ISwapPair pair = ISwapPair(pairs[token0][chainID]);
 
-
-        uint256 out = getMaxToken1AmountOut(token0, chainID);
+        uint256 out = getMaxToken1AmountOut(token0, chainID) / pair.diff0();
         uint256 burnAmount = amount.min(out);
         if (burnAmount > 0) {
-            IERC20(token0).safeTransferFrom(msg.sender, pair, burnAmount);
-            ISwapPair(pair).swapOut(to, burnAmount);
-            emit CrossBurn(token0, supportToken[token0][chainID], block.chainid, chainID, msg.sender, to, burnAmount);
+            IERC20(token0).safeTransferFrom(msg.sender, address(pair), burnAmount);
+            pair.swapOut(to, burnAmount);
+            emit CrossBurn(
+                token0,
+                supportToken[token0][chainID],
+                block.chainid,
+                chainID,
+                msg.sender,
+                to,
+                burnAmount * pair.diff0()
+            );
         }
         if (amount > out) {
-            IERC20(token0).safeTransferFrom(msg.sender, address(this), amount-burnAmount);
-            emit Lock(token0, supportToken[token0][chainID], block.chainid, chainID, msg.sender, to, amount-burnAmount);
+            IERC20(token0).safeTransferFrom(msg.sender, address(this), amount - burnAmount);
+            emit Lock(
+                token0,
+                supportToken[token0][chainID],
+                block.chainid,
+                chainID,
+                msg.sender,
+                to,
+                (amount - burnAmount) * pair.diff0()
+            );
         }
     }
 
@@ -135,12 +192,13 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
             // mint token
             txMinted[txid] = true;
             address pair = pairs[token0][chainID];
-            (uint feeAmountFix, , uint remainAmount) = calculateFee(token0, chainID, amount);
-            uint token0Amount = getMaxToken0AmountOut(token0, chainID);
-            if (amount > token0Amount) {
+            uint256 amountDiffHandle = amount / ISwapPair(pairs[token0][chainID]).diff0();
+            uint256 token0Amount = getMaxToken0AmountOut(token0, chainID);
+            if (amountDiffHandle > token0Amount) {
                 emit Rollback(token0, supportToken[token0][chainID], block.chainid, chainID, from, to, amount, txid);
             } else {
-                ISwapPair(pair).swapIn(to, amount, feeAmountFix, remainAmount, feeToDev);
+                (uint256 feeAmountFix, , uint256 remainAmount) = calculateFee(token0, chainID, amountDiffHandle);
+                ISwapPair(pair).swapIn(to, amountDiffHandle, feeAmountFix, remainAmount, feeToDev);
             }
         }
     }
@@ -155,8 +213,8 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         bool result = _vote(token0, from, from, amount, txid);
         if (result) {
             txRollbacked[txid] = true;
-            IERC20(token0).safeTransfer(from, amount);
-            emit Rollbacked(token0, from, amount, txid);
+            IERC20(token0).safeTransfer(from, amount / ISwapPair(pairs[token0][chainID]).diff0());
+            emit Rollbacked(token0, from, amount / ISwapPair(pairs[token0][chainID]).diff0(), txid);
         }
     }
 
@@ -169,20 +227,43 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         string memory txid
     ) public onlySupportToken(token0, chainID) onlyCrosser whenNotUnlocked(txid) {
         bool result = _vote(token0, from, to, amount, txid);
+        uint256 amountDiffHandle = amount / ISwapPair(pairs[token0][chainID]).diff0();
         if (result) {
             txUnlocked[txid] = true;
             if (unlockFeeOn[token0][chainID]) {
-                (uint256 feeAmountFix, uint256 feeAmountRatio, uint256 remainAmount) = calculateFee(token0, chainID, amount);
-                IERC20(token0).safeTransfer(to, remainAmount);
-                IERC20(token0).safeTransfer(pairs[token0][chainID], feeAmountRatio);
+                _handleFee(token0, chainID, amountDiffHandle, to);
                 ISwapPair(pairs[token0][chainID]).update();
-                if(feeAmountFix > 0) {
-                    IERC20(token0).safeTransfer(feeToDev, feeAmountFix);
-                }
             } else {
-                IERC20(token0).safeTransfer(to, amount);
+                IERC20(token0).safeTransfer(to, amountDiffHandle);
             }
-            emit Unlock(token0, supportToken[token0][chainID], block.chainid, chainID, from, to, amount, txid);
+            emit Unlock(
+                token0,
+                supportToken[token0][chainID],
+                block.chainid,
+                chainID,
+                from,
+                to,
+                amountDiffHandle,
+                txid
+            );
+        }
+    }
+
+    function _handleFee(
+        address token0,
+        uint256 chainID,
+        uint256 amountDiffHandle,
+        address to
+    ) internal {
+        (uint256 feeAmountFix, uint256 feeAmountRatio, uint256 remainAmount) = calculateFee(
+            token0,
+            chainID,
+            amountDiffHandle
+        );
+        IERC20(token0).safeTransfer(to, remainAmount);
+        IERC20(token0).safeTransfer(pairs[token0][chainID], feeAmountRatio);
+        if (feeAmountFix > 0) {
+            IERC20(token0).safeTransfer(feeToDev, feeAmountFix);
         }
     }
 
@@ -191,7 +272,11 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         _setThreshold(token, _threshold);
     }
 
-    function addSupportToken(address token0, address token1, uint256 chainID) public onlyAdmin {
+    function addSupportToken(
+        address token0,
+        address token1,
+        uint256 chainID
+    ) public onlyAdmin {
         require(supportToken[token0][chainID] == address(0), "TwoWay: Toke already Supported");
         supportToken[token0][chainID] = token1;
         unlockFeeOn[token0][chainID] = true;
@@ -202,10 +287,14 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         delete supportToken[token0][chainID];
     }
 
-    function addSupportTokens(address[] memory token0s, address[] memory token1s, uint256[] memory chainIDs) public {
+    function addSupportTokens(
+        address[] memory token0s,
+        address[] memory token1s,
+        uint256[] memory chainIDs
+    ) public {
         require(token0s.length == token1s.length, "TwoWay: token length not match");
         require(token0s.length == chainIDs.length, "TwoWay: chainIDs length not match");
-        for (uint256 i; i <token0s.length; i++) {
+        for (uint256 i; i < token0s.length; i++) {
             addSupportToken(token0s[i], token1s[i], chainIDs[i]);
         }
     }
@@ -219,15 +308,24 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
 
     //================ Toll =====================//
 
-    function setFee(address token0, uint256 chainID, uint256 feeAmount, uint256 feeRatio) external onlyAdmin {
+    function setFee(
+        address token0,
+        uint256 chainID,
+        uint256 feeAmount,
+        uint256 feeRatio
+    ) external onlyAdmin {
         _setFee(token0, chainID, feeAmount, feeRatio);
     }
 
-    function setFeeToDev(address account) external {
+    function setFeeToDev(address account) external onlyAdmin {
         _setFeeToDev(account);
     }
 
-    function setRemoveFee(address token0, uint256 chainID, uint256 _feeAmount) external onlyAdmin {
+    function setRemoveFee(
+        address token0,
+        uint256 chainID,
+        uint256 _feeAmount
+    ) external onlyAdmin {
         _setRemoveFee(token0, chainID, _feeAmount);
     }
 
@@ -237,12 +335,12 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         _;
     }
 
-    modifier onlyAdmin {
+    modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "TwoWay: caller is not admin");
         _;
     }
 
-    modifier onlyCrosser {
+    modifier onlyCrosser() {
         require(hasRole(CROSSER_ROLE, msg.sender), "TwoWay: caller is not crosser");
         _;
     }

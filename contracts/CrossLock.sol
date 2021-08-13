@@ -19,14 +19,21 @@ contract CrossLock is Initializable, UUPSUpgradeable, ProposalVote, AccessContro
     mapping(string => bool) public txUnlocked;
 
     event Lock(address token0, address token1, uint256 chainID, address locker, address to, uint256 amount);
-    event Unlock(address token0, address token1, uint256 chainID, address from, address to, uint256 amount, string txid);
+    event Unlock(
+        address token0,
+        address token1,
+        uint256 chainID,
+        address from,
+        address to,
+        uint256 amount,
+        string txid
+    );
 
-    function initialize() initializer public {
+    function initialize() public initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function _authorizeUpgrade(address) internal override onlyAdmin {}
-
 
     function getRoleKey(
         address token0,
@@ -105,7 +112,7 @@ contract CrossLock is Initializable, UUPSUpgradeable, ProposalVote, AccessContro
         _;
     }
 
-    modifier onlyAdmin {
+    modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "caller is not admin");
         _;
     }

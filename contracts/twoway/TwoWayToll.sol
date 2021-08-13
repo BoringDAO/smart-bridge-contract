@@ -57,19 +57,32 @@ contract TwoWayToll {
         address token,
         uint256 chainID,
         uint256 amount
-    ) public view virtual returns (uint256 feeAmountFix, uint256 feeAmountRatio, uint256 remainAmount) {
+    )
+        public
+        view
+        virtual
+        returns (
+            uint256 feeAmountFix,
+            uint256 feeAmountRatio,
+            uint256 remainAmount
+        )
+    {
         feeAmountFix = feeAmountM[token][chainID];
         uint256 _feeRatio = feeRatioM[token][chainID];
         feeAmountRatio = amount.multiplyDecimal(_feeRatio);
-        if (amount < feeAmountFix+feeAmountRatio) {
+        if (amount < feeAmountFix + feeAmountRatio) {
             feeAmountFix = 0;
         }
         remainAmount = amount - feeAmountFix - feeAmountRatio;
     }
 
-    function calculateRemoveFee(address token, uint256 chainID, uint256 amount) public view virtual returns (uint256 feeAmount, uint256 remainAmount) {
+    function calculateRemoveFee(
+        address token,
+        uint256 chainID,
+        uint256 amount
+    ) public view virtual returns (uint256 feeAmount, uint256 remainAmount) {
         require(amount > removeFeeAmount[token][chainID], "not enough token");
         feeAmount = removeFeeAmount[token][chainID];
         remainAmount = amount - feeAmount;
-    } 
+    }
 }

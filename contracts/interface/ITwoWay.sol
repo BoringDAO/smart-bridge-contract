@@ -20,6 +20,14 @@ interface ITwoWay {
     function getPair(address token, uint256 chainID) external view returns (address);
 
     function getMaxToken1AmountOut(address token0, uint256 chainID) external view returns (uint256);
+
     function getMaxToken0AmountOut(address token0, uint256 chainID) external view returns (uint256);
-    function burnBoringToken(address sender, address token0, uint256 chainID, address to, uint256 amount) external;
+
+    function burnBoringToken(
+        address sender,
+        address token0,
+        uint256 chainID,
+        address to,
+        uint256 amount
+    ) external;
 }

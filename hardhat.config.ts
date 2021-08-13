@@ -15,7 +15,7 @@ const { mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privat
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.4",
+    version: "0.8.6",
     settings: {
       optimizer: {
         enabled: true,
@@ -46,7 +46,7 @@ const config: HardhatUserConfig = {
       },
     },
     bsc_test: {
-      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+      url: "https://data-seed-prebsc-2-s1.binance.org:8545",
       chainId: 97,
       accounts: {
         mnemonic: mnemonic
@@ -87,6 +87,21 @@ const config: HardhatUserConfig = {
       url: "https://api.harmony.one",
       chainId: 1666600000,
       accounts: [privateKeyAVAX]
+    },
+    matic_test: {
+      url: "https://rpc-mumbai.maticvigil.com",
+      chainId: 80001,
+      accounts: {
+        mnemonic: mnemonic
+      }
+    },
+    matic: {
+      url: "https://rpc-mainnet.maticvigil.com",
+      chainId: 137,
+      // accounts: [privateKey]
+      accounts: {
+        mnemonic: mnemonic
+      }
     },
     t1: {
       url: "http://127.0.0.1:8545",

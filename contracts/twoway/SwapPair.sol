@@ -24,7 +24,7 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
 
     address public override token0; // origin erc20 token
 
-    uint256 private reserve0;
+    uint256 public reserve0;
 
     EnumerableSet.UintSet private supportChainids;
     mapping(uint256 => uint256) public reserve1s;
@@ -70,17 +70,10 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
     }
 
     function mint(address to) external override onlyTwoWay returns (uint256 lpAmount) {
-        uint256 _reserve0 = reserve0;
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
-        uint256 amount0 = balance0.sub(_reserve0);
-        uint256 amount0Adjust = amount0 * diff0;
-        _reserve0 *= diff0;
-        uint256 total = totalSupply();
-        if (total == 0) {
-            lpAmount = amount0Adjust;
-        } else {
-            lpAmount = (amount0Adjust * totalSupply()) / (totalReserve1s + _reserve0);
-        }
+        uint256 amount0 = balance0.sub(reserve0);
+
+        lpAmount = getLPAmount(amount0);
 
         require(lpAmount > 0, "SwapPair: insufficient liquidity minted");
 
@@ -90,6 +83,17 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
         reserve0 = balance0;
 
         emit Mint(msg.sender, lpAmount);
+    }
+
+    function getLPAmount(uint256 amount) public view returns (uint256 lpAmount) {
+        uint256 amountAdjust = amount * diff0;
+        uint256 _reserve0 = reserve0 * diff0;
+        uint256 total = totalSupply();
+        if (total == 0) {
+            lpAmount = amountAdjust;
+        } else {
+            lpAmount = (amountAdjust * totalSupply()) / (totalReserve1s + _reserve0);
+        }
     }
 
     function burn(
@@ -170,7 +174,7 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
                         break;
                     } else {
                         chainids[i] = chainid;
-                        amounts[i] = amount;
+                        amounts[i] = reserve1s[chainid];
                         amount = amount - reserve1s[chainid];
                     }
                 }
@@ -217,7 +221,7 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
         address to,
         uint256 amount0,
         uint256 chainID
-    ) external override onlyTwoWay onlySupportChainID(chainID){
+    ) external override onlyTwoWay onlySupportChainID(chainID) {
         (, uint256 _reserve1) = getReserves(chainID);
 
         require(_reserve1 >= amount0 * diff0, "SwapPair: insuffient liquidity");
@@ -259,7 +263,7 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
         _;
     }
 
-    modifier onlySupportChainID(uint chainID) { 
+    modifier onlySupportChainID(uint256 chainID) {
         require(supportChainids.contains(chainID), "not support chainID");
         _;
     }

@@ -7,8 +7,8 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./interface/IToken.sol";
 
 contract Token is ERC20, IToken, AccessControl {
-    bytes32 public MINTER_ROLE = "MINTER_ROLE";
-    bytes32 public BURNER_ROLE = "BURNER_ROLE";
+    bytes32 public constant MINTER_ROLE = "MINTER_ROLE";
+    bytes32 public constant BURNER_ROLE = "BURNER_ROLE";
 
     constructor(
         string memory _name,

@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import "../twoway/struct.sol";
+
 interface ISwapPair {
     function mint(address to) external returns (uint256 liquidity);
 
@@ -11,25 +13,41 @@ interface ISwapPair {
         uint256 amount,
         address feeTo,
         uint256 feeAmount
-    ) external returns (uint256 amount0, uint256 amount1);
+    )
+        external
+        returns (
+            uint256,
+            uint256[] memory,
+            uint256[] memory
+        );
 
     function token0() external returns (address);
 
-    function token1() external returns (address);
-
-    function swapOut(address to, uint256 amount) external; // direction: token0 -> token1 or token1 -> token0
-
-    function swapIn(
+    function swapOut(
         address to,
         uint256 amount,
-        uint256 feeAmountFix,
-        uint256 remainAmount,
-        address feeToDev
+        uint256 chainid
+    ) external; // direction: token0 -> token1 or token1 -> token0
+
+    // function swapIn(
+    //     address to,
+    //     uint256 amount,
+    //     uint256 feeAmountFix,
+    //     uint256 remainAmount,
+    //     address feeToDev,
+    //     uint256 chainid
+    // ) external;
+
+
+    function swapIn(
+        SwapInParams memory params
     ) external;
 
-    function getReserves() external view returns (uint256, uint256);
+    function getReserves(uint256 chainid) external view returns (uint256, uint256);
 
     function update() external;
 
     function diff0() external returns (uint256);
+
+    function addChainIDs(uint256[] memory chainids) external;
 }

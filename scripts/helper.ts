@@ -21,28 +21,33 @@ export async function attach(name: string, addr: string) {
 }
 
 export async function setTwoWay(usdt: ERC20,
-	boringUSDT: BoringToken,
 	tw: TwoWay,
-	swapPair: SwapPair, 
-	chainID: number, 
-	token0: string, 
-	token1: string, 
+	swapPair: SwapPair,
+	chainIDs: number[],
+	token0: string,
+	token1s: string[],
 	crosser: string,
 	fixFee: string,
 	ratioFee: string,
 	removeFee: string
-	) {
+) {
+	
+	const tx8 = await swapPair.setTwoWay(tw.address)
+	console.log(`tx setTwoWay ${tx8.hash}`)
+	await tx8.wait()
 	// TwoWay
-	const tx = await tw.addPair(usdt.address, swapPair.address, chainID)
+	const tx = await tw.addPair(usdt.address, swapPair.address, chainIDs)
 	console.log(`tx addPair ${tx.hash}`)
 	await tx.wait()
 
 	let token0Decimals = await usdt.decimals()
-	const tx2 = await tw.setFee(usdt.address, chainID, ethers.utils.parseUnits(fixFee, token0Decimals), ethers.utils.parseEther(ratioFee))
-	console.log(`tx setFee ${tx2.hash}`)
-	await tx2.wait()
+	for (let i = 0; i < chainIDs.length; i++) {
+		const tx2 = await tw.setFee(usdt.address, chainIDs[i], ethers.utils.parseUnits(fixFee, token0Decimals), ethers.utils.parseEther(ratioFee))
+		console.log(`tx setFee ${tx2.hash}`)
+		await tx2.wait()
+	}
 
-	const tx3 = await tw.setRemoveFee(usdt.address, chainID, ethers.utils.parseUnits(removeFee, token0Decimals))
+	const tx3 = await tw.setRemoveFee(usdt.address, ethers.utils.parseUnits(removeFee, token0Decimals))
 	console.log(`tx setRemoveFee ${tx3.hash}`)
 	await tx3.wait()
 
@@ -54,20 +59,11 @@ export async function setTwoWay(usdt: ERC20,
 	console.log(`tx grantRole ${tx5.hash}`)
 	await tx5.wait()
 
-	const tx6 = await boringUSDT.grantRole(ethers.utils.formatBytes32String("MINTER_ROLE"), swapPair.address)
-	console.log(`tx grantRole ${tx6.hash}`)
-	await tx6.wait()
 
-	const tx7 = await boringUSDT.grantRole(ethers.utils.formatBytes32String("BURNER_ROLE"), swapPair.address)
-	console.log(`tx grantRole ${tx7.hash}`)
-	await tx7.wait()
-
-	const tx8 = await swapPair.setTwoWay(tw.address)
-	console.log(`tx setTwoWay ${tx8.hash}`)
-	await tx8.wait()
-
-	const tx9 = await tw.addSupportToken(token0, token1, chainID)
-	console.log(`tx addSupportToken ${tx9.hash}`)
-	await tx9.wait()
+	for (let i = 0; i < token1s.length; i++) {
+		const tx9 = await tw.addSupportToken(token0, token1s[i], chainIDs[i])
+		console.log(`tx addSupportToken ${tx9.hash}`)
+		await tx9.wait()
+	}
 
 }

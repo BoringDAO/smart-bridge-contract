@@ -10,7 +10,8 @@ contract TwoWayToll {
 
     mapping(address => mapping(uint256 => uint256)) public feeAmountM;
     mapping(address => mapping(uint256 => uint256)) public feeRatioM;
-    mapping(address => mapping(uint256 => uint256)) public removeFeeAmount;
+    // mapping(address => mapping(uint256 => uint256)) public removeFeeAmount;
+    mapping(address => uint256) public removeFeeAmount;
     mapping(address => mapping(uint256 => address)) public feeTo;
     address public feeToDev;
 
@@ -41,10 +42,9 @@ contract TwoWayToll {
 
     function _setRemoveFee(
         address token,
-        uint256 chainID,
         uint256 _feeAmount
     ) internal virtual {
-        removeFeeAmount[token][chainID] = _feeAmount;
+        removeFeeAmount[token] = _feeAmount;
     }
 
     // function _setFeeTo(address token, uint256 chainID, address account) internal virtual {
@@ -78,11 +78,10 @@ contract TwoWayToll {
 
     function calculateRemoveFee(
         address token,
-        uint256 chainID,
         uint256 amount
     ) public view virtual returns (uint256 feeAmount, uint256 remainAmount) {
-        require(amount > removeFeeAmount[token][chainID], "not enough token");
-        feeAmount = removeFeeAmount[token][chainID];
+        require(amount > removeFeeAmount[token], "not enough token");
+        feeAmount = removeFeeAmount[token];
         remainAmount = amount - feeAmount;
     }
 }

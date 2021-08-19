@@ -11,7 +11,7 @@ import "hardhat-abi-exporter"
 
 import { ethers } from "hardhat";
 
-const { mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX } = require("./.secret.json");
+const { mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX, privateKeyMatic} = require("./.secret.json");
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -98,10 +98,7 @@ const config: HardhatUserConfig = {
     matic: {
       url: "https://rpc-mainnet.maticvigil.com",
       chainId: 137,
-      // accounts: [privateKey]
-      accounts: {
-        mnemonic: mnemonic
-      }
+      accounts: [privateKeyMatic]
     },
     t1: {
       url: "http://127.0.0.1:8545",

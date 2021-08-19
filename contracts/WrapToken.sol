@@ -11,8 +11,8 @@ import "./interface/IMB.sol";
 contract WrapToken is IMB, AccessControl, IERC20, IERC20Metadata {
     using SafeERC20 for IERC20;
 
-    bytes32 public MINTER_ROLE = "MINTER_ROLE";
-    bytes32 public BURNER_ROLE = "BURNER_ROLE";
+    bytes32 public constant MINTER_ROLE = "MINTER_ROLE";
+    bytes32 public constant BURNER_ROLE = "BURNER_ROLE";
 
     IERC20 public underToken;
     address public dispatcher;

@@ -13,6 +13,8 @@ import "../interface/IBoringToken.sol";
 import "../ProposalVote.sol";
 import "./TwoWayToll.sol";
 
+import "./struct.sol";
+
 contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
@@ -26,7 +28,7 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
     mapping(string => bool) public txUnlocked;
     mapping(string => bool) public txRollbacked;
 
-    mapping(address => mapping(uint256 => address)) public pairs;
+    mapping(address => address) public pairs;
     // unlock fee actived default
     mapping(address => mapping(uint256 => bool)) public unlockFeeOn;
 
@@ -87,55 +89,84 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
     function addPair(
         address token,
         address pair,
-        uint256 chainID
+        uint[] memory chainIDs
     ) public onlyAdmin {
-        require(pairs[token][chainID] == address(0), "token already supported");
-        pairs[token][chainID] = pair;
+        require(pairs[token] == address(0), "token already supported");
+        pairs[token] = pair;
+        ISwapPair(pair).addChainIDs(chainIDs);
     }
 
-    function removePair(address token, uint256 chainID) public onlyAdmin {
-        require(pairs[token][chainID] != address(0), "token not supported");
-        delete pairs[token][chainID];
+    function addChainIDs(address token, uint[] memory chainIDs) public onlyAdmin {
+        address pair = pairs[token];
+        require(pair != address(0), "not support token");
+        ISwapPair(pair).addChainIDs(chainIDs);
+    }
+
+    function removePair(address token) public onlyAdmin {
+        require(pairs[token] != address(0), "token not supported");
+        delete pairs[token];
     }
 
     function addLiquidity(
         address token0,
-        uint256 chainID,
         uint256 amount,
         address to
-    ) public onlySupportToken(token0, chainID) returns (uint256 liquidity) {
-        address pair = pairs[token0][chainID];
+    ) public returns (uint256 liquidity) {
+        address pair = pairs[token0];
+        require(pair != address(0), "not soupport pair");
         IERC20(token0).safeTransferFrom(msg.sender, pair, amount);
         liquidity = ISwapPair(pair).mint(to);
     }
 
     function removeLiquidity(
         address token0,
-        uint256 chainID,
         uint256 lpAmount,
         address to
-    ) public onlySupportToken(token0, chainID) returns (uint256 amount0, uint256 amount1) {
+    )
+        public
+        returns (
+            uint256 amount0,
+            uint256[] memory chainids,
+            uint256[] memory amount1s
+        )
+    {
         require(lpAmount > 0, "zero lp");
-        address pair = pairs[token0][chainID];
+        address pair = pairs[token0];
+        require(pair != address(0), "not soupport pair");
         uint256 userLiquiBal = IERC20(pair).balanceOf(msg.sender);
         require(userLiquiBal >= lpAmount, "Not enough lp");
-        uint256 removeFee = removeFeeAmount[token0][chainID];
-        (amount0, amount1) = ISwapPair(pair).burn(msg.sender, to, lpAmount, feeToDev, removeFee);
-        if (amount1 > 0) {
-            emit CrossBurn(token0, supportToken[token0][chainID], block.chainid, chainID, msg.sender, to, amount1);
+        uint256 removeFee = removeFeeAmount[token0];
+        (amount0, chainids, amount1s) = ISwapPair(pair).burn(msg.sender, to, lpAmount, feeToDev, removeFee);
+        _emitEvent(token0, to, chainids, amount1s);
+    }
+
+    function _emitEvent(address token0, address to, uint[] memory chainids, uint[] memory amount1s) internal {
+        for (uint256 i; i < chainids.length; i++) {
+            if (amount1s[i] > 0) {
+                emit CrossBurn(
+                    token0,
+                    supportToken[token0][chainids[i]],
+                    block.chainid,
+                    chainids[i],
+                    msg.sender,
+                    to,
+                    amount1s[i]
+                );
+            }
         }
+
     }
 
     function getMaxToken1AmountOut(address token0, uint256 chainID) public view returns (uint256) {
-        address pair = pairs[token0][chainID];
-        (, uint256 _reserve1) = ISwapPair(pair).getReserves();
+        address pair = pairs[token0];
+        (, uint256 _reserve1) = ISwapPair(pair).getReserves(chainID);
 
         return _reserve1;
     }
 
     function getMaxToken0AmountOut(address token0, uint256 chainID) public view returns (uint256) {
-        address pair = pairs[token0][chainID];
-        (uint256 _reserve0, ) = ISwapPair(pair).getReserves();
+        address pair = pairs[token0];
+        (uint256 _reserve0, ) = ISwapPair(pair).getReserves(chainID);
 
         return _reserve0;
     }
@@ -148,13 +179,13 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
     ) public onlySupportToken(token0, chainID) {
         require(amount > 0, "TwoWay: amount must be greater than 0");
         require(to != address(0), "TwoWay: to is empty");
-        ISwapPair pair = ISwapPair(pairs[token0][chainID]);
+        ISwapPair pair = ISwapPair(pairs[token0]);
 
         uint256 out = getMaxToken1AmountOut(token0, chainID) / pair.diff0();
         uint256 burnAmount = amount.min(out);
         if (burnAmount > 0) {
             IERC20(token0).safeTransferFrom(msg.sender, address(pair), burnAmount);
-            pair.swapOut(to, burnAmount);
+            pair.swapOut(to, burnAmount, chainID);
             emit CrossBurn(
                 token0,
                 supportToken[token0][chainID],
@@ -191,14 +222,17 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         if (result) {
             // mint token
             txMinted[txid] = true;
-            address pair = pairs[token0][chainID];
-            uint256 amountDiffHandle = amount / ISwapPair(pairs[token0][chainID]).diff0();
+            address pair = pairs[token0];
+            uint256 amountDiffHandle = amount / ISwapPair(pairs[token0]).diff0();
             uint256 token0Amount = getMaxToken0AmountOut(token0, chainID);
             if (amountDiffHandle > token0Amount) {
                 emit Rollback(token0, supportToken[token0][chainID], block.chainid, chainID, from, to, amount, txid);
             } else {
                 (uint256 feeAmountFix, , uint256 remainAmount) = calculateFee(token0, chainID, amountDiffHandle);
-                ISwapPair(pair).swapIn(to, amountDiffHandle, feeAmountFix, remainAmount, feeToDev);
+                SwapInParams memory params = SwapInParams(to, amountDiffHandle, feeAmountFix, remainAmount, feeToDev, chainID);
+                // ISwapPair(pair).swapIn(to, amountDiffHandle, feeAmountFix, remainAmount, feeToDev, chainID);
+                ISwapPair(pair).swapIn(params);
+
             }
         }
     }
@@ -213,8 +247,8 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         bool result = _vote(token0, from, from, amount, txid);
         if (result) {
             txRollbacked[txid] = true;
-            IERC20(token0).safeTransfer(from, amount / ISwapPair(pairs[token0][chainID]).diff0());
-            emit Rollbacked(token0, from, amount / ISwapPair(pairs[token0][chainID]).diff0(), txid);
+            IERC20(token0).safeTransfer(from, amount / ISwapPair(pairs[token0]).diff0());
+            emit Rollbacked(token0, from, amount / ISwapPair(pairs[token0]).diff0(), txid);
         }
     }
 
@@ -227,12 +261,12 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         string memory txid
     ) public onlySupportToken(token0, chainID) onlyCrosser whenNotUnlocked(txid) {
         bool result = _vote(token0, from, to, amount, txid);
-        uint256 amountDiffHandle = amount / ISwapPair(pairs[token0][chainID]).diff0();
+        uint256 amountDiffHandle = amount / ISwapPair(pairs[token0]).diff0();
         if (result) {
             txUnlocked[txid] = true;
             if (unlockFeeOn[token0][chainID]) {
                 _handleFee(token0, chainID, amountDiffHandle, to);
-                ISwapPair(pairs[token0][chainID]).update();
+                ISwapPair(pairs[token0]).update();
             } else {
                 IERC20(token0).safeTransfer(to, amountDiffHandle);
             }
@@ -261,7 +295,7 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
             amountDiffHandle
         );
         IERC20(token0).safeTransfer(to, remainAmount);
-        IERC20(token0).safeTransfer(pairs[token0][chainID], feeAmountRatio);
+        IERC20(token0).safeTransfer(pairs[token0], feeAmountRatio);
         if (feeAmountFix > 0) {
             IERC20(token0).safeTransfer(feeToDev, feeAmountFix);
         }
@@ -323,10 +357,9 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
 
     function setRemoveFee(
         address token0,
-        uint256 chainID,
         uint256 _feeAmount
     ) external onlyAdmin {
-        _setRemoveFee(token0, chainID, _feeAmount);
+        _setRemoveFee(token0, _feeAmount);
     }
 
     //================ Modifier =================//

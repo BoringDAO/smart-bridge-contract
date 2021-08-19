@@ -131,11 +131,11 @@ function getUsdt(chainName: string): string {
 function getTwoWayAddr(chainName: string): string {
     switch (chainName) {
         case 'bsc_test':
-            return '0x98F41cCCAf27C63D93e802FE567BFA0c0c4DbCeb';
+            return '';
         case 'okex_test':
-            return '0x5D413eaE42D0D05cF05eC570a0c02932842a52f7';
+            return '';
         case 'matic_test':
-            return '0x48a8b90287d95469E0294938B6Af5DEF65230925';
+            return '';
         case 'bsc':
             return '0xcA8Eaee513fF3980B886505EbcfFeCD74CECe88F';
         case 'matic':

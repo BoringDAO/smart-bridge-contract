@@ -10,4 +10,3 @@ abi.json
 contracts.json
 src/
 data/
-*.sol

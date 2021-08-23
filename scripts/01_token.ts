@@ -10,9 +10,15 @@ async function main() {
 	let usdtToken: TestERC20
 	switch (network.name) {
 		case 'okex_test':
-			usdtToken = await deploy("TestERC20", "USDT", "USDT", 6) as TestERC20
+			usdtToken = await deploy("TestERC20", "USDT", "USDT", 18) as TestERC20
 			break
 		case 'bsc_test':
+			usdtToken = await deploy("TestERC20", "USDT", "USDT", 18) as TestERC20
+			break
+		case 'kovan':
+			usdtToken = await deploy("TestERC20", "USDT", "USDT", 6) as TestERC20
+			break
+		case 'avax_test':
 			usdtToken = await deploy("TestERC20", "USDT", "USDT", 6) as TestERC20
 			break
 		case 'okex':

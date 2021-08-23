@@ -32,13 +32,13 @@ export async function setTwoWay(usdt: ERC20,
 	removeFee: string
 ) {
 	
-	const tx8 = await swapPair.setTwoWay(tw.address)
-	console.log(`tx setTwoWay ${tx8.hash}`)
-	await tx8.wait()
-	// TwoWay
-	const tx = await tw.addPair(usdt.address, swapPair.address, chainIDs)
-	console.log(`tx addPair ${tx.hash}`)
-	await tx.wait()
+	// const tx8 = await swapPair.setTwoWay(tw.address)
+	// console.log(`tx setTwoWay ${tx8.hash}`)
+	// await tx8.wait()
+	// // TwoWay
+	// const tx = await tw.addPair(usdt.address, swapPair.address, chainIDs)
+	// console.log(`tx addPair ${tx.hash}`)
+	// await tx.wait()
 
 	let token0Decimals = await usdt.decimals()
 	for (let i = 0; i < chainIDs.length; i++) {

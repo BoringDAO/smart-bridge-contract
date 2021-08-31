@@ -11,7 +11,7 @@ import "hardhat-abi-exporter"
 
 import { ethers } from "hardhat";
 
-const { mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX, privateKeyMatic} = require("./.secret.json");
+const { polygonTestUrl, mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX, privateKeyMatic } = require("./.secret.json");
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -88,8 +88,18 @@ const config: HardhatUserConfig = {
       chainId: 1666600000,
       accounts: [privateKeyAVAX]
     },
+    harmony_test: {
+      url: "https://api.s0.pops.one",
+      chainId: 1666700000,
+      accounts: {
+        mnemonic: mnemonic
+      }
+    },
     matic_test: {
-      url: "https://rpc-mumbai.maticvigil.com",
+      // url: "https://rpc-mumbai.maticvigil.com",
+      // url: `https://polygon-mumbai.infura.io/v3/${projectId}`,
+      // url: "https://matic-mumbai.chainstacklabs.com",
+      url: polygonTestUrl,
       chainId: 80001,
       accounts: {
         mnemonic: mnemonic
@@ -100,6 +110,53 @@ const config: HardhatUserConfig = {
       chainId: 137,
       accounts: [privateKeyMatic]
     },
+    heco_test: {
+      url: "https://http-testnet.hecochain.com",
+      chainId: 256,
+      accounts: {
+        mnemonic: mnemonic
+      }
+    },
+    heco: {
+      url: "https://http-mainnet-node.huobichain.com",
+      chainId: 128,
+      accounts: {
+        mnemonic: privateKeyAVAX
+      }
+    },
+    fantom: {
+      url: "https://rpcapi.fantom.network",
+      chainId: 250,
+      accounts: {
+        mnemonic: privateKeyAVAX
+      }
+    },
+    fantom_test: {
+      url: "https://rpc.testnet.fantom.network",
+      chainId: 4002,
+      accounts: {
+        mnemonic: mnemonic
+      }
+    },
+    xdai_test: {
+      url: "https://sokol.poa.network",
+      chainId: 77,
+      accounts: {
+        mnemonic: mnemonic
+      }
+    },
+    moonriver_test: {
+      url: "https://rpc.testnet.moonbeam.network",
+      chainId: 1287,
+      accounts: {
+        mnemonic: mnemonic
+      }
+    },
+    moonriver: {
+      url: "https://rpc.moonriver.moonbeam.network",
+      chainId: 1285
+    },
+
     t1: {
       url: "http://127.0.0.1:8545",
       chainId: 31337

@@ -40,18 +40,9 @@ contract TwoWayToll {
         emit FeeChange(token, chainID, _feeAmount, _feeRatio);
     }
 
-    function _setRemoveFee(
-        address token,
-        uint256 _feeAmount
-    ) internal virtual {
+    function _setRemoveFee(address token, uint256 _feeAmount) internal virtual {
         removeFeeAmount[token] = _feeAmount;
     }
-
-    // function _setFeeTo(address token, uint256 chainID, address account) internal virtual {
-    //     require(feeTo[token][chainID] != account, "Toll::account was feeTo already");
-    //     feeTo[token][chainID] = account;
-    //     emit FeeToChanged(token, chainID, account);
-    // }
 
     function calculateFee(
         address token,
@@ -76,10 +67,12 @@ contract TwoWayToll {
         remainAmount = amount - feeAmountFix - feeAmountRatio;
     }
 
-    function calculateRemoveFee(
-        address token,
-        uint256 amount
-    ) public view virtual returns (uint256 feeAmount, uint256 remainAmount) {
+    function calculateRemoveFee(address token, uint256 amount)
+        public
+        view
+        virtual
+        returns (uint256 feeAmount, uint256 remainAmount)
+    {
         require(amount > removeFeeAmount[token], "not enough token");
         feeAmount = removeFeeAmount[token];
         remainAmount = amount - feeAmount;

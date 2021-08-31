@@ -31,39 +31,48 @@ export async function setTwoWay(usdt: ERC20,
 	ratioFee: string,
 	removeFee: string
 ) {
-	
-	// const tx8 = await swapPair.setTwoWay(tw.address)
-	// console.log(`tx setTwoWay ${tx8.hash}`)
-	// await tx8.wait()
-	// // TwoWay
-	// const tx = await tw.addPair(usdt.address, swapPair.address, chainIDs)
-	// console.log(`tx addPair ${tx.hash}`)
-	// await tx.wait()
+	if (chainIDs.length != token1s.length) {
+		console.error("chainIDs and token1s length not match")
+		process.exit(1)
+	}
+	let token0s: string[] = [];
+	for (let i = 0; i < token1s.length; i++) {
+		token0s.push(token0)
+	}
+
+	const tx1 = await swapPair.setTwoWay(tw.address)
+	console.log(`tx setTwoWay ${tx1.hash}`)
+	await tx1.wait()
+	// TwoWay
+	const tx2 = await tw.addPair(usdt.address, swapPair.address, chainIDs)
+	console.log(`tx addPair ${tx2.hash}`)
+	await tx2.wait()
 
 	let token0Decimals = await usdt.decimals()
+	let fixFees: BigNumberish[] = []
+	let ratioFees: BigNumberish[] = []
 	for (let i = 0; i < chainIDs.length; i++) {
-		const tx2 = await tw.setFee(usdt.address, chainIDs[i], ethers.utils.parseUnits(fixFee, token0Decimals), ethers.utils.parseEther(ratioFee))
-		console.log(`tx setFee ${tx2.hash}`)
-		await tx2.wait()
+		fixFees.push(ethers.utils.parseUnits(fixFee, token0Decimals))
+		ratioFees.push(ethers.utils.parseEther(ratioFee))
 	}
-
-	const tx3 = await tw.setRemoveFee(usdt.address, ethers.utils.parseUnits(removeFee, token0Decimals))
-	console.log(`tx setRemoveFee ${tx3.hash}`)
+	const tx3 = await tw.setFees(token0s, chainIDs, fixFees, ratioFees)
+	console.log(`tx setFees ${tx3.hash}`)
 	await tx3.wait()
 
-	const tx4 = await tw.setThreshold(usdt.address, 1)
-	console.log(`tx setThreshold ${tx4.hash}`)
+	const tx4 = await tw.setRemoveFee(usdt.address, ethers.utils.parseUnits(removeFee, token0Decimals))
+	console.log(`tx setRemoveFee ${tx4.hash}`)
 	await tx4.wait()
 
-	const tx5 = await tw.grantRole(ethers.utils.formatBytes32String("CROSSER_ROLE"), crosser)
-	console.log(`tx grantRole ${tx5.hash}`)
+	const tx5 = await tw.setThreshold(usdt.address, 1)
+	console.log(`tx setThreshold ${tx5.hash}`)
 	await tx5.wait()
 
+	const tx6 = await tw.grantRole(ethers.utils.formatBytes32String("CROSSER_ROLE"), crosser)
+	console.log(`tx grantRole ${tx6.hash}`)
+	await tx6.wait()
 
-	for (let i = 0; i < token1s.length; i++) {
-		const tx9 = await tw.addSupportToken(token0, token1s[i], chainIDs[i])
-		console.log(`tx addSupportToken ${tx9.hash}`)
-		await tx9.wait()
-	}
+	const tx7 = await tw.addSupportTokens(token0s, token1s, chainIDs)
+	console.log(`tx addSupportToken ${tx7.hash}`)
+	tx7.wait()
 
 }

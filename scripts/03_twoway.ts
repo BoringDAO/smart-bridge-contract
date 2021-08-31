@@ -26,23 +26,39 @@ async function main() {
     console.log(network.name, 'target chain', targetChains);
     switch (network.name) {
         case 'okex_test':
-            targetChains = ['matic_test', 'bsc_test', 'kovan', 'avax_test']
+            targetChains = ['matic_test', 'bsc_test', 'kovan', 'avax_test', 'fantom_test', 'xdai_test', 'heco_test', 'harmony_test']
             await addPair(network.name, targetChains, deployer, crosser)
             break;
         case 'bsc_test':
-            targetChains = ['matic_test', 'okex_test', 'kovan', 'avax_test']
+            targetChains = ['matic_test', 'okex_test', 'kovan', 'avax_test', 'fantom_test', 'xdai_test', 'heco_test', 'harmony_test']
             await addPair(network.name, targetChains, deployer, crosser)
             break;
         case 'matic_test':
-            targetChains = ['bsc_test', 'okex_test', 'kovan', 'avax_test']
+            targetChains = ['bsc_test', 'okex_test', 'kovan', 'avax_test', 'fantom_test', 'xdai_test', 'heco_test', 'harmony_test']
             await addPair(network.name, targetChains, deployer, crosser)
             break;
         case 'kovan':
-            targetChains = ['bsc_test', 'okex_test', 'matic_test', 'avax_test']
+            targetChains = ['bsc_test', 'okex_test', 'matic_test', 'avax_test', 'fantom_test', 'xdai_test', 'heco_test', 'harmony_test']
             await addPair(network.name, targetChains, deployer, crosser)
             break
         case 'avax_test':
-            targetChains = ['bsc_test', 'okex_test', 'matic_test', 'kovan']
+            targetChains = ['bsc_test', 'okex_test', 'matic_test', 'kovan', 'fantom_test', 'xdai_test', 'heco_test', 'harmony_test']
+            await addPair(network.name, targetChains, deployer, crosser)
+            break
+        case 'fantom_test':
+            targetChains = ['bsc_test', 'okex_test', 'matic_test', 'kovan', 'avax_test', 'xdai_test', 'heco_test', 'harmony_test']
+            await addPair(network.name, targetChains, deployer, crosser)
+            break
+        case 'xdai_test':
+            targetChains = ['bsc_test', 'okex_test', 'matic_test', 'kovan', 'avax_test', 'fantom_test', 'heco_test', 'harmony_test']
+            await addPair(network.name, targetChains, deployer, crosser)
+            break
+        case 'heco_test':
+            targetChains = ['bsc_test', 'okex_test', 'matic_test', 'kovan', 'avax_test', 'fantom_test', 'xdai_test', 'harmony_test']
+            await addPair(network.name, targetChains, deployer, crosser)
+            break
+        case 'harmony_test':
+            targetChains = ['bsc_test', 'okex_test', 'matic_test', 'kovan', 'avax_test', 'fantom_test', 'xdai_test', 'heco_test']
             await addPair(network.name, targetChains, deployer, crosser)
             break
         case 'okex':
@@ -72,7 +88,8 @@ async function main() {
 }
 
 async function addPair(sourceChain: string, targetChains: string[], feeToDev: string, crosser: string) {
-    console.log(`source chain ${sourceChain}, target chain ${targetChains}`)
+    let sourceChainID = getChainId(sourceChain)
+    console.log(`source chain ${sourceChain} chainid is ${sourceChainID}, target chain ${targetChains}`)
     let targetChainIDs: number[] = []
     let targetUSDTAddrs: string[] = []
     for (let chainName of targetChains ) {
@@ -86,14 +103,14 @@ async function addPair(sourceChain: string, targetChains: string[], feeToDev: st
     let twoWay: TwoWay
     let twoWayAddr = getTwoWayAddr(sourceChain)
     if (twoWayAddr === '') {
-        twoWay = (await deploy('TwoWay', feeToDev)) as TwoWay;
+        twoWay = (await deploy('TwoWay', feeToDev, sourceChainID)) as TwoWay;
     } else {
         twoWay = (await ethers.getContractAt('TwoWay', twoWayAddr)) as TwoWay
     }
     let usdt = (await ethers.getContractAt('TestERC20', sourceUSDTAddr)) as ERC20;
-    // let swapPair = (await deploy('SwapPair', 'TwoWay LP', 'TLP', usdt.address)) as SwapPair;
+    let swapPair = (await deploy('SwapPair', 'TwoWay LP', 'TLP', usdt.address)) as SwapPair;
     // let boringUSDT = (await ethers.getContractAt('BoringToken', '0xcf83FE4d666Adc4605c381A02D54f7990F9adBee')) as BoringToken
-    let swapPair = (await ethers.getContractAt('SwapPair', '0x5B62442638e6595e45Ce7CBdEAc84E23f398E012')) as SwapPair
+    // let swapPair = (await ethers.getContractAt('SwapPair', '0x5B62442638e6595e45Ce7CBdEAc84E23f398E012')) as SwapPair
     await setTwoWay(usdt, twoWay, swapPair, targetChainIDs, usdt.address, targetUSDTAddrs, crosser, '0.5', '0', '0');
 }
 
@@ -109,6 +126,14 @@ function getChainId(chainName: string): number {
             return 42
         case 'avax_test':
             return 43113
+        case 'fantom_test':
+            return 4002
+        case 'xdai_test':
+            return 77
+        case 'heco_test':
+            return 256
+        case 'harmony_test':
+            return 1666700000
         case 'bsc':
             return 56
         case 'okex':
@@ -133,6 +158,14 @@ function getUsdt(chainName: string): string {
             return '0x1D83BcDA708047898F20Cebb4AABF08008783f41';
         case 'avax_test':
             return '0xb608b55b0F777e70F8e37a18F8Da6EC8AE667B33';
+        case 'fantom_test':
+            return '0xbf49c0ffDEEC5bF1731674841B60E4B0855FE6ED'
+        case 'xdai_test':
+            return '0xbf49c0ffDEEC5bF1731674841B60E4B0855FE6ED'
+        case 'heco_test':
+            return '0xAe8234563e2B07E5cB89c6B0d81Fe54CF7667769'
+        case 'harmony_test':
+            return '0xbf49c0ffDEEC5bF1731674841B60E4B0855FE6ED'
         case 'bsc':
             return '0x55d398326f99059ff775485246999027b3197955'
         case 'okex':
@@ -158,9 +191,17 @@ function getTwoWayAddr(chainName: string): string {
         case 'matic_test':
             return '';
         case 'kovan':
-            return '0x6fE083cFeDD7C0052bf514194Db673975f1d0a0B';
+            return '';
         case 'avax_test':
             return '';
+        case 'fantom_test':
+            return ''
+        case 'xdai_test':
+            return ''
+        case 'heco_test':
+            return ''
+        case 'harmony_test':
+            return ''
         case 'bsc':
             return '0xcA8Eaee513fF3980B886505EbcfFeCD74CECe88F';
         case 'matic':

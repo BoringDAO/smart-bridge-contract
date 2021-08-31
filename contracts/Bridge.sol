@@ -31,6 +31,7 @@ contract Bridge is Initializable, UUPSUpgradeable, ProposalVote, Toll, AccessCon
     function initialize(uint256 _chainID) public initializer {
         chainID = _chainID;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        __UUPSUpgradeable_init();
     }
 
     function _authorizeUpgrade(address) internal override onlyAdmin {}
@@ -42,6 +43,7 @@ contract Bridge is Initializable, UUPSUpgradeable, ProposalVote, Toll, AccessCon
 
     function addSupportToken(address token0, address token1) public onlyAdmin {
         require(address(supportToken[token0]) == address(0), "Toke already Supported");
+        require(address(0) != token1, "zero address");
         supportToken[token0] = IToken(token1);
     }
 
@@ -117,6 +119,7 @@ contract Bridge is Initializable, UUPSUpgradeable, ProposalVote, Toll, AccessCon
     }
 
     function addFeeTo(address token0, address account) external onlyAdmin {
+        require(address(0) != account, "zero address");
         _addFeeTo(token0, account);
     }
 

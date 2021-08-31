@@ -21,6 +21,18 @@ async function main() {
 		case 'avax_test':
 			usdtToken = await deploy("TestERC20", "USDT", "USDT", 6) as TestERC20
 			break
+		case 'fantom_test':
+			usdtToken = await deploy("TestERC20", "USDT", "USDT", 6) as TestERC20
+			break
+		case 'xdai_test':
+			usdtToken = await deploy("TestERC20", "USDT", "USDT", 6) as TestERC20
+			break
+		case 'heco_test':
+			usdtToken = await deploy("TestERC20", "USDT", "USDT", 18) as TestERC20
+			break
+		case 'harmony_test':
+			usdtToken = await deploy("TestERC20", "USDT", "USDT", 6) as TestERC20
+			break
 		case 'okex':
 			break
 		case 'bsc':

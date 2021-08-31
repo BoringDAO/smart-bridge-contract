@@ -50,4 +50,6 @@ interface ISwapPair {
     function diff0() external returns (uint256);
 
     function addChainIDs(uint256[] memory chainids) external;
+
+    function removeChainIDs(uint256[] memory chainids) external;
 }

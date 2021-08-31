@@ -20,8 +20,6 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
     using SafeDecimalMath for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
 
-    uint256 public constant MINIMUM_LIQUIDITY = 10**3;
-
     address public override token0; // origin erc20 token
 
     uint256 public reserve0;
@@ -31,8 +29,6 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
     uint256 public totalReserve1s;
 
     address public twoWay;
-
-    uint256 public bRatio = 3;
 
     uint256 public override diff0;
 
@@ -51,21 +47,32 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
         diff0 = 10**(18 - token0Decimals);
     }
 
-    function setBRatio(uint256 _ratio) external onlyOwner {
-        bRatio = _ratio;
+    // ======view=====
+    function getReserves(uint256 chainId) public view override returns (uint256, uint256) {
+        return (reserve0, reserve1s[chainId]);
+    }
+
+    function getSupportChainIDs() external view returns(uint256[] memory) {
+        uint[] memory chainids = new uint256[](supportChainids.length());
+        for (uint i; i < supportChainids.length(); i++) {
+            chainids[i] = supportChainids.at(i);
+        }
+        return chainids;
     }
 
     function setTwoWay(address _twoWay) external onlyOwner {
         twoWay = _twoWay;
     }
 
-    function getReserves(uint256 chainId) public view override returns (uint256, uint256) {
-        return (reserve0, reserve1s[chainId]);
-    }
-
     function addChainIDs(uint256[] memory chainids) external override onlyTwoWay {
         for (uint256 i; i < chainids.length; i++) {
             supportChainids.add(chainids[i]);
+        }
+    }
+
+    function removeChainIDs(uint256[] memory chainids) external override onlyTwoWay {
+        for (uint256 i; i < chainids.length; i++) {
+            supportChainids.remove(chainids[i]);
         }
     }
 
@@ -92,7 +99,7 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
         if (total == 0) {
             lpAmount = amountAdjust;
         } else {
-            lpAmount = (amountAdjust * totalSupply()) / (totalReserve1s + _reserve0);
+            lpAmount = (amountAdjust * total) / (totalReserve1s + _reserve0);
         }
     }
 
@@ -137,9 +144,6 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
         return (amount0, chainids, amount1s);
     }
 
-    /**
-    amount0's decimal is different when token0's decimal is not 18
-     */
     function calculateBurn(uint256 lpAmount)
         public
         view
@@ -149,67 +153,34 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
             uint256[] memory
         )
     {
-        // (uint256 _reserve0, uint256 _reserve1) = getReserves();
-        uint256 _reserve0 = reserve0;
-
-        _reserve0 *= diff0;
-
+        uint256 _reserve0 = reserve0 * diff0;
         uint256 _totalSupply = totalSupply();
         uint256 value = (lpAmount * (_reserve0 + totalReserve1s)) / _totalSupply;
 
-        // 75%
-        if (totalReserve1s.mul(bRatio) < _reserve0) {
-            if (value > _reserve0) {
-                uint256 amount0 = reserve0;
-                // todo
-                uint256 amount = value - _reserve0;
-                uint256 chainidLength = supportChainids.length();
-                uint256[] memory chainids = new uint256[](chainidLength);
-                uint256[] memory amounts = new uint256[](chainidLength);
-                for (uint256 i; i < chainidLength; i++) {
-                    uint256 chainid = supportChainids.at(i);
-                    if (reserve1s[chainid] >= amount) {
-                        chainids[i] = chainid;
-                        amounts[i] = amount;
-                        break;
-                    } else {
-                        chainids[i] = chainid;
-                        amounts[i] = reserve1s[chainid];
-                        amount = amount - reserve1s[chainid];
-                    }
-                }
-                return (amount0, chainids, amounts);
-            } else {
-                uint256 amount0 = value / diff0;
-                uint256[] memory chainids = new uint256[](0);
-                uint256[] memory amounts = new uint256[](0);
-                return (amount0, chainids, amounts);
-            }
+        if (value <= _reserve0) {
+            uint256 amount0 = value / diff0;
+            uint256[] memory chainids = new uint256[](0);
+            uint256[] memory amounts = new uint256[](0);
+            return (amount0, chainids, amounts);
         } else {
-            return _handleRatioBurn(lpAmount, _totalSupply);
+            uint256 amount = value - _reserve0;
+            uint256 chainidLength = supportChainids.length();
+            uint256[] memory chainids = new uint256[](chainidLength);
+            uint256[] memory amounts = new uint256[](chainidLength);
+            for (uint256 i; i < chainidLength; i++) {
+                uint256 chainid = supportChainids.at(i);
+                if (reserve1s[chainid] >= amount) {
+                    chainids[i] = chainid;
+                    amounts[i] = amount;
+                    break;
+                } else {
+                    chainids[i] = chainid;
+                    amounts[i] = reserve1s[chainid];
+                    amount = amount - reserve1s[chainid];
+                }
+            }
+            return (reserve0, chainids, amounts);
         }
-    }
-
-    function _handleRatioBurn(uint256 lpAmount, uint256 _totalSupply)
-        internal
-        view
-        returns (
-            uint256,
-            uint256[] memory,
-            uint256[] memory
-        )
-    {
-        uint256 amount0 = lpAmount.mul(reserve0).div(_totalSupply);
-        uint256 chainidLength = supportChainids.length();
-        uint256[] memory chainids = new uint256[](chainidLength);
-        uint256[] memory amounts = new uint256[](chainidLength);
-        for (uint256 i; i < chainidLength; i++) {
-            uint256 chainid = supportChainids.at(i);
-            uint256 amount = lpAmount.mul(reserve1s[chainid]).div(_totalSupply);
-            chainids[i] = chainid;
-            amounts[i] = amount;
-        }
-        return (amount0, chainids, amounts);
     }
 
     function update() external override onlyTwoWay {
@@ -228,6 +199,7 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
 
         // IBoringToken(token1).burn(address(this), amount0 * diff0);
         reserve1s[chainID] -= amount0 * diff0;
+        totalReserve1s -= amount0 * diff0;
 
         // current balance
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
@@ -249,6 +221,7 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
         }
         // IBoringToken(token1).mint(address(this), amount1 * diff0);
         reserve1s[params.chainID] += params.amount1 * diff0;
+        totalReserve1s += params.amount1 * diff0;
 
         // current balance
         uint256 balance0 = IERC20(token0).balanceOf(address(this));

@@ -127,7 +127,7 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
         uint256 totalRemove;
         for (uint256 i; i < chainids.length; i++) {
             if (amount1s[i] > 0) {
-                reserve1s[i] -= amount1s[i];
+                reserve1s[chainids[i]] -= amount1s[i];
                 totalRemove += amount1s[i];
             }
         }

@@ -11,7 +11,7 @@ import "hardhat-abi-exporter"
 
 import { ethers } from "hardhat";
 
-const { polygonTestUrl, mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX, privateKeyMatic } = require("./.secret.json");
+const { polygonTestUrl, polygonURL, mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX, privateKeyMatic } = require("./.secret.json");
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -30,7 +30,7 @@ const config: HardhatUserConfig = {
     hardhat: {},
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,
-      gasPrice: 25 * 10 ** 9,
+      gasPrice: 70 * 10 ** 9,
       accounts: [privateKeyETH],
     },
     ropsten: {
@@ -83,7 +83,7 @@ const config: HardhatUserConfig = {
       chainId: 66,
       accounts: [privateKeyOkex]
     },
-    harmony0: {
+    harmony: {
       url: "https://api.harmony.one",
       chainId: 1666600000,
       accounts: [privateKeyAVAX]
@@ -106,7 +106,8 @@ const config: HardhatUserConfig = {
       }
     },
     matic: {
-      url: "https://rpc-mainnet.maticvigil.com",
+      // url: "https://rpc-mainnet.maticvigil.com",
+      url: polygonURL,
       chainId: 137,
       accounts: [privateKeyMatic]
     },
@@ -120,16 +121,12 @@ const config: HardhatUserConfig = {
     heco: {
       url: "https://http-mainnet-node.huobichain.com",
       chainId: 128,
-      accounts: {
-        mnemonic: privateKeyAVAX
-      }
+      accounts: [privateKeyAVAX]
     },
     fantom: {
       url: "https://rpcapi.fantom.network",
       chainId: 250,
-      accounts: {
-        mnemonic: privateKeyAVAX
-      }
+      accounts: [privateKeyAVAX]
     },
     fantom_test: {
       url: "https://rpc.testnet.fantom.network",
@@ -144,6 +141,11 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: mnemonic
       }
+    },
+    xdai: {
+      url: "https://rpc.xdaichain.com",
+      chainId: 100,
+      accounts: [privateKeyAVAX]
     },
     moonriver_test: {
       url: "https://rpc.testnet.moonbeam.network",

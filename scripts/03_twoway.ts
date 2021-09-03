@@ -20,8 +20,9 @@ async function main() {
     // process.exit(0)
 
     // let crosser = '0xc38068d89b16a1dae117974f30230f4afd654b3c';
-    let crosser = '0x2353178C6c05378812f024A783541857634A1e82';
-    let feeToDev
+    // let crosser = '0x2353178C6c05378812f024A783541857634A1e82';
+    let crosser = '0x9037772a588A2b6725fe2360c0356B7f0140b5d2'
+    let feeToDev = '0x09587012B3670D75a90930be9282d98063E402a2'
     let targetChains:string[] = [];
     console.log(network.name, 'target chain', targetChains);
     switch (network.name) {
@@ -62,24 +63,39 @@ async function main() {
             await addPair(network.name, targetChains, deployer, crosser)
             break
         case 'okex':
-            // targetChain = 'bsc'
-            targetChains = ['bsc', 'matic']
-            feeToDev = '0x09587012B3670D75a90930be9282d98063E402a2'
-            crosser = '0x9037772a588A2b6725fe2360c0356B7f0140b5d2'
+            targetChains = ['matic', 'bsc', 'mainnet', 'avax', 'fantom', 'xdai', 'heco', 'harmony']
             await addPair(network.name, targetChains, feeToDev, crosser)
             break;
         case 'bsc':
-            // targetChain = 'okex'
-            targetChains = ['matic', 'okex']
-            feeToDev = '0x09587012B3670D75a90930be9282d98063E402a2'
-            crosser = '0x9037772a588A2b6725fe2360c0356B7f0140b5d2'
+            targetChains = ['matic', 'okex', 'mainnet', 'avax', 'fantom', 'xdai', 'heco', 'harmony']
             await addPair(network.name, targetChains, feeToDev, crosser)
             break;
         case 'matic':
-            // targetChain = 'bsc'
-            targetChains = ['bsc', 'okex']
-            feeToDev = '0x09587012B3670D75a90930be9282d98063E402a2'
-            crosser = '0x9037772a588A2b6725fe2360c0356B7f0140b5d2'
+            targetChains = ['bsc', 'okex', 'mainnet', 'avax', 'fantom', 'xdai', 'heco', 'harmony']
+            await addPair(network.name, targetChains, feeToDev, crosser)
+            break;
+        case 'mainnet':
+            targetChains = ['bsc', 'okex', 'matic', 'avax', 'fantom', 'xdai', 'heco', 'harmony']
+            await addPair(network.name, targetChains, feeToDev, crosser)
+            break
+        case 'avax':
+            targetChains = ['bsc', 'okex', 'matic', 'mainnet', 'fantom', 'xdai', 'heco', 'harmony']
+            await addPair(network.name, targetChains, feeToDev, crosser)
+            break
+        case 'fantom':
+            targetChains = ['bsc', 'okex', 'matic', 'mainnet', 'avax', 'xdai', 'heco', 'harmony']
+            await addPair(network.name, targetChains, feeToDev, crosser)
+            break
+        case 'xdai':
+            targetChains = ['bsc', 'okex', 'matic', 'mainnet', 'avax', 'fantom', 'heco', 'harmony']
+            await addPair(network.name, targetChains, feeToDev, crosser)
+            break
+        case 'heco':
+            targetChains = ['bsc', 'okex', 'matic', 'mainnet', 'avax', 'fantom', 'xdai', 'harmony']
+            await addPair(network.name, targetChains, feeToDev, crosser)
+            break
+        case 'harmony':
+            targetChains = ['bsc', 'okex', 'matic', 'mainnet', 'avax', 'fantom', 'xdai', 'heco']
             await addPair(network.name, targetChains, feeToDev, crosser)
             break
         default:
@@ -110,7 +126,7 @@ async function addPair(sourceChain: string, targetChains: string[], feeToDev: st
     let usdt = (await ethers.getContractAt('TestERC20', sourceUSDTAddr)) as ERC20;
     let swapPair = (await deploy('SwapPair', 'TwoWay LP', 'TLP', usdt.address)) as SwapPair;
     // let boringUSDT = (await ethers.getContractAt('BoringToken', '0xcf83FE4d666Adc4605c381A02D54f7990F9adBee')) as BoringToken
-    // let swapPair = (await ethers.getContractAt('SwapPair', '0x5B62442638e6595e45Ce7CBdEAc84E23f398E012')) as SwapPair
+    // let swapPair = (await ethers.getContractAt('SwapPair', '0x216f332D17145871D1d5ff5fEB4b08513Ef7Cc21')) as SwapPair
     await setTwoWay(usdt, twoWay, swapPair, targetChainIDs, usdt.address, targetUSDTAddrs, crosser, '0.5', '0', '0');
 }
 
@@ -134,12 +150,24 @@ function getChainId(chainName: string): number {
             return 256
         case 'harmony_test':
             return 1666700000
+        case 'mainnet':
+            return 1
         case 'bsc':
             return 56
         case 'okex':
             return 66
+        case 'heco':
+            return 128
         case 'matic':
             return 137
+        case 'fantom':
+            return 250
+        case 'xdai':
+            return 100
+        case 'harmony':
+            return 1666600000
+        case 'avax':
+            return 43114
         default:
             console.error('not known network');
             process.exit(-1);
@@ -166,16 +194,25 @@ function getUsdt(chainName: string): string {
             return '0xAe8234563e2B07E5cB89c6B0d81Fe54CF7667769'
         case 'harmony_test':
             return '0xbf49c0ffDEEC5bF1731674841B60E4B0855FE6ED'
+        case 'mainnet':
+            return '0xdac17f958d2ee523a2206206994597c13d831ec7'
         case 'bsc':
             return '0x55d398326f99059ff775485246999027b3197955'
         case 'okex':
             return '0x382bB369d343125BfB2117af9c149795C6C65C50'
+        case 'heco':
+            return '0xa71edc38d189767582c38a3145b5873052c3e47a'
         case 'matic':
             return '0xc2132d05d31c914a87c6611c10748aeb04b58e8f'
+        case 'fantom':
+            return '0x049d68029688eabf473097a2fc38ef61633a3c7a'
+        case 'harmony':
+            return '0x3c2b8be99c50593081eaa2a724f0b8285f5aba8f'
         case 'avax':
+            // 0xde3A24028580884448a5397872046a019649b084
             return '0xc7198437980c041c805A1EDcbA50c1Ce5db95118'
-        case 'mainnet':
-            return '0xdac17f958d2ee523a2206206994597c13d831ec7'
+        case 'xdai':
+            return '0x4ECaBa5870353805a9F068101A40E0f32ed605C6'
         default:
             console.error('not known network');
             process.exit(-1);
@@ -202,16 +239,24 @@ function getTwoWayAddr(chainName: string): string {
             return ''
         case 'harmony_test':
             return ''
-        case 'bsc':
-            return '0xcA8Eaee513fF3980B886505EbcfFeCD74CECe88F';
-        case 'matic':
-            return '0x45c0ABE077bB35AE1868DF42A7175a989Cccb0E3';
-        case 'okex':
-            return '0x8b5de97Ba8F7b10bb415E7f58dd6D6477874E9D7'
         case 'mainnet':
             return '';
-        case 'avax':
+        case 'bsc':
             return '';
+        case 'okex':
+            return ''
+        case 'heco':
+            return ''
+        case 'matic':
+            return '';
+        case 'xdai':
+            return ''
+        case 'fantom':
+            return ''
+        case 'avax':
+            return '0x0F4C9320B9DE4fa426d3E27D85C3452F52314C57';
+        case 'harmony':
+            return ''
         default:
             console.error('not known network for twoway Addr');
             return ''

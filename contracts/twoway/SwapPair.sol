@@ -20,7 +20,7 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
     using SafeDecimalMath for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
 
-    address public override token0; // origin erc20 token
+    address public immutable override token0; // origin erc20 token
 
     uint256 public reserve0;
 
@@ -30,11 +30,14 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
 
     address public twoWay;
 
-    uint256 public override diff0;
+    uint256 public immutable override diff0;
 
     event Mint(address indexed sender, uint256 amount);
     event Burn(address indexed sender, uint256 amount0, uint256 amount1, address indexed to);
     event Swap(address indexed sender, uint256 amountIn, uint256 amountOut, address indexed to);
+    event TWoWayChanged(address indexed from, address indexed to);
+    event SupportChaninidsAdded(uint256[] newChainids);
+    event SupportChaninidsRemoved(uint256[] oldChainids);
 
     constructor(
         string memory _name,
@@ -61,6 +64,7 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
     }
 
     function setTwoWay(address _twoWay) external onlyOwner {
+        emit TWoWayChanged(twoWay, _twoWay);
         twoWay = _twoWay;
     }
 
@@ -68,12 +72,14 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
         for (uint256 i; i < chainids.length; i++) {
             supportChainids.add(chainids[i]);
         }
+        emit SupportChaninidsAdded(chainids);
     }
 
     function removeChainIDs(uint256[] memory chainids) external override onlyTwoWay {
         for (uint256 i; i < chainids.length; i++) {
             supportChainids.remove(chainids[i]);
         }
+        emit SupportChaninidsRemoved(chainids);
     }
 
     function mint(address to) external override onlyTwoWay returns (uint256 lpAmount) {

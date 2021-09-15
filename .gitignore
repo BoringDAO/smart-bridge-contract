@@ -10,3 +10,5 @@ abi.json
 contracts.json
 src/
 data/
+contracts/nft/
+tw.sol

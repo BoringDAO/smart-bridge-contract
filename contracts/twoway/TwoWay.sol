@@ -77,6 +77,16 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         string txid
     );
     event Rollbacked(address token0, address from, uint256 amount, string txid);
+    event CrossIn(
+        address token0,
+        address token1,
+        uint256 chianID0,
+        uint256 chainID1,
+        address from,
+        address to,
+        uint256 amount,
+        string txid
+    );
 
     constructor(address _feeToDev, uint256 _chainid) TwoWayToll(_feeToDev) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -262,6 +272,7 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
                 );
                 // ISwapPair(pair).swapIn(to, amountDiffHandle, feeAmountFix, remainAmount, feeToDev, chainID);
                 ISwapPair(pair).swapIn(params);
+                emit CrossIn(token0, supportToken[token0][chainID], chainid, chainID, from, to, amountDiffHandle, txid);
             }
         }
     }

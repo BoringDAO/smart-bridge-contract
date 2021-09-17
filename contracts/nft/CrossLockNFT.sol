@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721MetadataUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "./lib/SafeDecimalMath.sol";
-import "./ProposalVote.sol";
+import "../lib/SafeDecimalMath.sol";
+import "../ProposalVote.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
@@ -16,7 +16,6 @@ contract CrossLockNFT is Initializable, UUPSUpgradeable, ProposalVote, AccessCon
     mapping(string => bool) public txUnlocked;
 
     uint256 private _lockId = 0;
-    mapping(uint256 => address) public lockOwner;
 
     event Lock(
         address token0, 
@@ -91,7 +90,6 @@ contract CrossLockNFT is Initializable, UUPSUpgradeable, ProposalVote, AccessCon
         address to,
         uint256 tokenId
     ) public onlySupportToken(token0, chainID) {
-        lockOwner[_lockId] = msg.sender;
         string memory tokenUri = IERC721MetadataUpgradeable(token0).tokenURI(tokenId);
         IERC721MetadataUpgradeable(token0).transferFrom(msg.sender, address(this), tokenId);
         emit Lock(token0, supportToken[token0][chainID], chainID, msg.sender, to, tokenId, _lockId, tokenUri);

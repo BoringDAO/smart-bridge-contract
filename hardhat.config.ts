@@ -11,7 +11,11 @@ import "hardhat-abi-exporter"
 
 import { ethers } from "hardhat";
 
-const { polygonTestUrl, polygonURL, mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX, privateKeyMatic } = require("./.secret.json");
+const { polygonTestUrl, polygonURL, mnemonic, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX, privateKeyMatic } = require("./.secret.json");
+
+
+const projectId = process.env.INFURA_KEY
+const privateKey = process.env.Private_Key
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -35,9 +39,9 @@ const config: HardhatUserConfig = {
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${projectId}`,
-      accounts: {
-        mnemonic: mnemonic,
-      },
+      accounts: [`0x${privateKey}`],
+      gasPrice: 70 * 10 ** 9,
+      gas: 21000
     },
     kovan: {
       url: `https://kovan.infura.io/v3/${projectId}`,

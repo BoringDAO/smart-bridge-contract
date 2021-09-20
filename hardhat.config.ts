@@ -40,7 +40,7 @@ const config: HardhatUserConfig = {
     ropsten: {
       url: `https://ropsten.infura.io/v3/${projectId}`,
       accounts: [`0x${privateKey}`],
-      gasPrice: 70 * 10 ** 9,
+      gasPrice: 7 * 10 ** 9,
       gas: 21000
     },
     kovan: {
@@ -52,9 +52,7 @@ const config: HardhatUserConfig = {
     bsc_test: {
       url: "https://data-seed-prebsc-2-s1.binance.org:8545",
       chainId: 97,
-      accounts: {
-        mnemonic: mnemonic
-      },
+      accounts: [`0x${privateKey}`],
       gas: 10000000
     },
     bsc: {
@@ -65,9 +63,7 @@ const config: HardhatUserConfig = {
     okex_test: {
       url: "https://exchaintestrpc.okex.org",
       chainId: 65,
-      accounts: {
-        mnemonic: mnemonic
-      },
+      accounts: [`0x${privateKey}`],
       gas: 10000000
     },
     avax: {

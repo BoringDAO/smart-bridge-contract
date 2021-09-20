@@ -10,10 +10,10 @@ describe("BoringBridgeNFT Contract",function() {
         // 0. deploy a NFT TOKEN
         console.log("----------Deploy NFT Token And Mint a NFT To Owner--------")
         const NFTToken = await ethers.getContractFactory("BridgeNFT")
-        const NFT = await NFTToken.deploy()
-        console.log("BridgeNFT Token Address:" + NFT.address)
-        const token0 = NFT.address
-        const token0Id = 999
+        const nft = await NFTToken.deploy()
+        console.log("BridgeNFT Token Address:" + nft.address)
+        const nftId = 999
+        const nftChainId = 0
 
         // 1 set NFT base uri 
         // const baseUri = "base"
@@ -26,12 +26,113 @@ describe("BoringBridgeNFT Contract",function() {
         const BoringBridge = await BridgeToken.deploy()
         console.log(`BoringBridgeNFT Contract Address: ${BoringBridge.address}\n`)
 
+        //3. NFT Mint
+        console.log("---------------NFT mint to owner")
+        const nftUri = "http://first-nft-token.com"
+        await nft.safeMint(owner.address, nftId, nftUri)
+        let ownerNFTBalance  = await nft.balanceOf(owner.address)
+        console.log(`owner nft balance: ${ownerNFTBalance}\n`)
 
-        await NFT.safeMint(BoringBridge.address, token0Id, "first token")
-        let BoringBridgeNFTBalance  = await NFT.balanceOf(BoringBridge.address)
-        console.log(`BoringBridge nft balance: ${BoringBridgeNFTBalance}\n`)
 
-        // 3.Mint
+        //4. CrossOut Transfer
+        console.log("--------Add Support Token-----")
+        const targetChainId = 97
+        await BoringBridge.addSupportToken(nft.address, targetChainId)
+        console.log(`add token ${nft.address} and chainID ${targetChainId}\n`)
+
+        console.log("-----------approve-----------------------")
+        await nft.approve(BoringBridge.address, nftId)
+
+        console.log("--------set token Threshold-----\n")
+        await BoringBridge.setThreshold(nft.address, 1)
+        
+        console.log("-----------Set is Current Chain-----------\n")
+        await BoringBridge.setIsCurrentChain(nft.address)
+
+        console.log("--------Cross Out: transfer-----")
+
+        console.log("--------Cross Out: before-----")
+        ownerNFTBalance  = await nft.balanceOf(owner.address)
+        console.log(`owner nft balance: ${ownerNFTBalance}\n`)
+        BoringBridgeBalance  = await nft.balanceOf(BoringBridge.address)
+        console.log("BoringBridge nft balance:" + BoringBridgeBalance)
+
+        await BoringBridge.crossOut(nft.address, targetChainId, owner.address, nftId)
+
+        console.log("--------Cross Out: after-----")
+        ownerNFTBalance  = await nft.balanceOf(owner.address)
+        console.log(`owner nft balance: ${ownerNFTBalance}`)
+        BoringBridgeBalance  = await nft.balanceOf(BoringBridge.address)
+        console.log(`BoringBridge nft balance:${BoringBridgeBalance}\n`)
+
+
+
+        //5. Cross In Transfer
+        console.log("--------Cross In: before-----")
+        ownerNFTBalance  = await nft.balanceOf(owner.address)
+        console.log(`owner nft balance: ${ownerNFTBalance}\n`)
+        BoringBridgeBalance  = await nft.balanceOf(BoringBridge.address)
+        console.log("BoringBridge balance is:" + BoringBridgeBalance)
+
+        const nftCrossInHash = "0x202109191606"
+        await BoringBridge.crossIn({token:nft.address,chainId:nftChainId, tokenId:nftId}, nftUri, owner.address, owner.address, nftCrossInHash)
+
+        console.log("--------Cross In: after-----")
+        ownerNFTBalance  = await nft.balanceOf(owner.address)
+        console.log(`owner nft balance: ${ownerNFTBalance}`)
+        BoringBridgeBalance  = await nft.balanceOf(BoringBridge.address)
+        console.log(`BoringBridge nft balance is:${BoringBridgeBalance}\n`)
+
+
+
+
+
+        // 6. Cross In:Mint
+        console.log("----------Cross In : Mint--------")
+        console.log("-----------remove is Current Chain(Simulation)-----------\n")
+        await BoringBridge.removeIsCurrentChain(nft.address)
+
+        console.log("--------Cross In: before-----")
+        let ownerBridgeBalance  = await BoringBridge.balanceOf(owner.address)
+        console.log(`owner bridge balance: ${ownerBridgeBalance}`)
+        let contractBridgeBalance  = await BoringBridge.balanceOf(BoringBridge.address)
+        console.log(`contractBridgeBalance bridge balance is:${contractBridgeBalance}`)
+
+        const bridgeCrossInHash = "0x202109191641"
+        await BoringBridge.crossIn({token:nft.address,chainId:nftChainId, tokenId:nftId}, nftUri, owner.address, owner.address, bridgeCrossInHash)
+
+        console.log("--------Cross In: after-----")
+        ownerBridgeBalance  = await BoringBridge.balanceOf(owner.address)
+        console.log(`owner bridge balance: ${ownerBridgeBalance}`)
+        contractBridgeBalance  = await BoringBridge.balanceOf(BoringBridge.address)
+        console.log(`contractBridgeBalance bridge balance is:${contractBridgeBalance}\n`)
+
+        //7. Cross Out: Burn
+        console.log("--------Cross Out: before-----")
+        ownerBridgeBalance  = await BoringBridge.balanceOf(owner.address)
+        console.log(`owner bridge balance: ${ownerNFTBalance}`)
+        contractBridgeBalance  = await BoringBridge.balanceOf(BoringBridge.address)
+        console.log(`contractBridgeBalance bridge balance is:${contractBridgeBalance}\n`)
+
+        const BridgeNftId = 0
+        console.log("--------Add Support Token-----")
+        await BoringBridge.addSupportToken(BoringBridge.address, targetChainId)
+        console.log(`add token ${BoringBridge.address} and chainID ${targetChainId}\n`)
+
+        console.log("-----------approve-----------------------")
+        await BoringBridge.approve(BoringBridge.address, BridgeNftId)
+
+        await BoringBridge.crossOut(BoringBridge.address, targetChainId, owner.address, BridgeNftId)
+
+        console.log("--------Cross Out: after-----")
+        ownerBridgeBalance  = await BoringBridge.balanceOf(owner.address)
+        console.log(`owner Bridge balance: ${ownerBridgeBalance}`)
+        contractBridgeBalance  = await BoringBridge.balanceOf(BoringBridge.address)
+        console.log(`BoringBridge Bridge balance:${contractBridgeBalance}\n`)
+
+
+
+        //3.Mint
         // console.log("-----------Mint----------")
         // const tokenId = 1
         // const tokenURI_ = "http://1.BoringBridgeNFT.com"
@@ -42,7 +143,7 @@ describe("BoringBridgeNFT Contract",function() {
         // const tokenID_uri = await BoringBridge.tokenURI(tokenId)
         // console.log(`tokenId:${tokenId} tokenURI:${tokenID_uri}\n`)
 
-        // 4.Tranfer
+        //4.Tranfer
         // console.log("-----------Transfer------------")
         // console.log("--before transfer--")
         // let user1Balance  = await BoringBridge.balanceOf(user1.address)
@@ -58,12 +159,12 @@ describe("BoringBridgeNFT Contract",function() {
 
         
         // 5. add Support Token
-        const chainID = 97
-        console.log("--------Add Support Token-----")
+        // const chainID = 97
+        // console.log("--------Add Support Token-----")
         
-        console.log(`add token ${BoringBridge.address} and chainID ${chainID}`)
-        await BoringBridge.addSupportToken(BoringBridge.address, 97)
-        console.log('\n')
+        // console.log(`add token ${BoringBridge.address} and chainID ${chainID}`)
+        // await BoringBridge.addSupportToken(BoringBridge.address, chainID)
+        // console.log('\n')
 
         // 6. CrossOut
         // console.log("--------Cross Out-----")
@@ -74,48 +175,85 @@ describe("BoringBridgeNFT Contract",function() {
         // console.log('\n')
 
         // 7. set token Threshold
-        console.log("--------set token Threshold-----\n")
-        await BoringBridge.setThreshold(token0, 1)
+        // console.log("--------set token Threshold-----\n")
+        // await BoringBridge.setThreshold(token0, 1)
 
         // 8. CrossIn
         // console.log("--------Cross In-----")
         // console.log("-----------Cross In:Mint-------")
-        // await BoringBridge.CrossIn(BoringBridge.address, owner.address, user1.address, tokenId, tokenID_uri,'0x01')
+        // await BoringBridge.CrossIn(BoringBridge.address, owner.address, user1.address, token0Id, tokenID_uri,'0x01')
         // user1Balance  = await BoringBridge.balanceOf(user1.address)
         // console.log(`user1's balance is:${user1Balance}\n`)
 
         // 8.2 Cross In:transfer
-        console.log("-----------Cross In:transfer-----------")
+        // console.log("-----------Cross In:transfer-----------")
 
-        // 8.2.1 
-        console.log("-----------Set is Current Chain-----------")
-        BoringBridge.setIsCurrentChain(token0)
+        // // 8.2.1 
+        // console.log("-----------Set is Current Chain-----------")
+        // await BoringBridge.setIsCurrentChain(token0)
         
-        // 8.2.2
-        console.log("-----------approve-----------------------")
+        // // 8.2.2
+        // console.log("-----------approve-----------------------")
+        // await NFT.approve(BoringBridge.address, token0Id)
+
+        // // 8.2.2 
+        // console.log("-----------cross in before-----------")
+        // let user1NFTBalance  = await NFT.balanceOf(user1.address)
+        // BoringBridgeNFTBalance  = await NFT.balanceOf(BoringBridge.address)
+        // console.log(`user1 nft balance: ${user1NFTBalance}`)
+        // console.log(`BoringBridge nft balance: ${BoringBridgeNFTBalance}\n`)
+
+        // let chainId0 = 0
+        // await BoringBridge.crossIn({token:token0,chainId:chainId0,tokenId:token0Id}, token0Uri,owner.address, user1.address, '0x01')
+        
+        // console.log("-----------cross in after-----------")
+        // user1NFTBalance  = await NFT.balanceOf(user1.address)
+        // BoringBridgeNFTBalance  = await NFT.balanceOf(BoringBridge.address)
+        // console.log(`user1 nft balance: ${user1NFTBalance}`)
+        // console.log(`BoringBridge nft balance: ${BoringBridgeNFTBalance}\n`)
+
+
+        // 9 cross out
+        // 9.1 cross transfer
+        // console.log("---------------cross out: transfer------------")
+        // console.log("-----------cross out before-----------")
+        // console.log(`user1 nft balance: ${user1NFTBalance}`)
+        // console.log(`BoringBridge nft balance: ${BoringBridgeNFTBalance}\n`)
+
+
+        // await BoringBridge.crossOut(token0, chainId0, user1.address, token0Id)
+        // console.log("-----------cross out after-----------")
+        // user1NFTBalance  = await NFT.balanceOf(user1.address)
+        // BoringBridgeNFTBalance  = await NFT.balanceOf(BoringBridge.address)
+        // console.log(`user1 nft balance: ${user1NFTBalance}`)
+        // console.log(`BoringBridge nft balance: ${BoringBridgeNFTBalance}\n`)
+        
+
+        // console.log("-----------Cross In:Mint-----------")
+
+        // console.log("-----------remove token0 Current Chain-----------")
+        // await BoringBridge.removeIsCurrentChain(token0)
+        
+        // // 8.2.2
+        // console.log("-----------approve-----------------------")
         // await NFT.approve(BoringBridge.address, token0Id)
 
         // 8.2.2 
-        console.log("-----------cross in before-----------")
-        let user1NFTBalance  = await NFT.balanceOf(user1.address)
-        BoringBridgeNFTBalance  = await NFT.balanceOf(BoringBridge.address)
-        console.log(`user1 nft balance: ${user1NFTBalance}`)
-        console.log(`BoringBridge nft balance: ${BoringBridgeNFTBalance}\n`)
-        await BoringBridge.crossIn(token0, owner.address, user1.address, token0Id, '0x01')
-        console.log("-----------cross in after-----------")
-        user1NFTBalance  = await NFT.balanceOf(user1.address)
-        BoringBridgeNFTBalance  = await NFT.balanceOf(BoringBridge.address)
-        console.log(`user1 nft balance: ${user1NFTBalance}`)
-        console.log(`BoringBridge nft balance: ${BoringBridgeNFTBalance}\n`)
+        // console.log("-----------cross in before-----------")
+        // let user1NFTBalance  = await NFT.balanceOf(user1.address)
+        // BoringBridgeNFTBalance  = await NFT.balanceOf(BoringBridge.address)
+        // console.log(`user1 nft balance: ${user1NFTBalance}`)
+        // console.log(`BoringBridge nft balance: ${BoringBridgeNFTBalance}\n`)
 
+        // let chainId0 = 0
+        // await BoringBridge.crossIn({token:token0,chainId:chainId0,tokenId:token0Id}, token0Uri,owner.address, user1.address, '0x01')
+        
+        // console.log("-----------cross in after-----------")
+        // user1NFTBalance  = await NFT.balanceOf(user1.address)
+        // BoringBridgeNFTBalance  = await NFT.balanceOf(BoringBridge.address)
+        // console.log(`user1 nft balance: ${user1NFTBalance}`)
+        // console.log(`BoringBridge nft balance: ${BoringBridgeNFTBalance}\n`)
 
-        // function CrossOut(
-        //     address token0, 
-        //     uint256 chainID, 
-        //     address to, 
-        //     uint256 tokenId)
-
-        // 7.add IsCurrent
         
 
         // 1.set base uri

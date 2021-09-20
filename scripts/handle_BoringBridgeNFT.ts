@@ -13,21 +13,24 @@ const chainId = 97
 
 async function init() {
     token = await ethers.getContractAt("BridgeNFT", nftAddr)
-    
+    let bridgeTokenBalance = await token.ownerOf(1)
+    console.log("owern:" + bridgeTokenBalance)
+
+
     bridge = await ethers.getContractAt("BoringBridgeNFT", BridgeAddr)
 
-    console.log(`---------settings-------------`)
-    console.log("------approve-------")
-    console.log(BridgeAddr)
-    console.log(tokenId)
-    await token.approve(BridgeAddr, tokenId)
-    console.log("------current chain-------\n")
-    await bridge.setIsCurrentChain(nftAddr)
-    console.log("-------set supporttoken------\n")
-    await bridge.addSupportToken(BridgeAddr, chainId)
-    console.log("--------set token Threshold-----\n")
-    await bridge.setThreshold(nftAddr, 1)
-    console.log(`---------settings-------------`)
+    // console.log(`---------settings-------------`)
+    // console.log("------approve-------")
+    // console.log(BridgeAddr)
+    // console.log(tokenId)
+    // await token.approve(BridgeAddr, tokenId)
+    // console.log("------current chain-------\n")
+    // await bridge.setIsCurrentChain(nftAddr)
+    // console.log("-------set supporttoken------\n")
+    // await bridge.addSupportToken(BridgeAddr, chainId)
+    // console.log("--------set token Threshold-----\n")
+    // await bridge.setThreshold(nftAddr, 1)
+    // console.log(`---------settings-------------`)
 
 
     // let userTokenBalance = await token.balanceOf(user)

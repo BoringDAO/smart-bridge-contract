@@ -18,20 +18,26 @@ import "../ProposalVote.sol";
 contract BoringBridgeNFT is ProposalVote, IERC721Receiver, ERC721, Pausable, AccessControl, 
 ERC721Burnable, ERC721URIStorage {
     using Counters for Counters.Counter;
+    Counters.Counter private _tokenIds;
 
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
     bytes32 public constant CROSSER_ROLE = keccak256("CROSSER_ROLE");
     
-
+    
     string private _baseUri;
     
+    struct tokenInfo{
+        address token;
+        uint256 chainId;
+        uint256 tokenId;
+    }
     
+    mapping(uint256 => tokenInfo) public tokenIdInfo;
     mapping(address => uint256 ) public supportToken;
     mapping(address => bool) public isCurrentChain;
     mapping(string => bool) public txMinted;
-
     
     constructor() ERC721("Boring Bridge NFT", "BBNFT") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -48,17 +54,18 @@ ERC721Burnable, ERC721URIStorage {
     
 
     event CrossOut(
-        address token0, 
-        uint256 chainID, 
-        address to, 
-        uint256 tokenId);
+        address originToken0,
+        uint256 originChainId,
+        uint256 originTokenId,
+        string originTokenUri,
+        uint256 targetChainID, 
+        address from,
+        address to);
 
     event CrossIn(
-        address token0,
-        uint256 chainID,
+        uint256 targetTokenId,
         address from,
-        address to,
-        uint256 amount,
+        address to, 
         string txid
     );
 
@@ -67,38 +74,49 @@ ERC721Burnable, ERC721URIStorage {
         uint256 chainID, 
         address to, 
         uint256 tokenId) onlySupportToken(token0, chainID) public {
-        require(tokenId >= 0, "BridgeNFT: tokenId must ge 0");
         require(to != address(0), "NFT to is empty");
         
         if (isCurrentChain[token0]) {
+            string memory tokenUri = IERC721Metadata(token0).tokenURI(tokenId);
             IERC721(token0).safeTransferFrom(msg.sender, address(this), tokenId);
-        }else{
-            burn(tokenId);
-        }
 
-        emit CrossOut(token0, chainID, to, tokenId);
+            emit CrossOut(token0, chainID, tokenId, tokenUri, chainID, msg.sender, to);
+        }else{
+            string memory tokenUri = tokenURI(tokenId);
+            burn(tokenId);
+
+            emit CrossOut(
+                tokenIdInfo[tokenId].token,
+                tokenIdInfo[tokenId].chainId,
+                tokenIdInfo[tokenId].tokenId,
+                tokenUri,
+                chainID,
+                msg.sender,
+                to
+                );
+        }
 
     }
     
     function crossIn(
-        address token0,
+        tokenInfo memory origin,
+        string memory originTokenUri,
         address from,
         address to,
-        uint256 tokenId,
         string memory txid
-    ) public {
-        bool result = _vote(token0, from, to, tokenId, txid);
+    ) public whenNotMinted(txid) {
+        bool result = _vote(origin.token, from, to, origin.tokenId, txid);
         if(result){
-            if(isCurrentChain[token0]){
-                // unlock
-                IERC721(token0).safeTransferFrom(address(this), to, tokenId);
+            txMinted[txid] = true;
+            if(isCurrentChain[origin.token]){
+                IERC721(origin.token).safeTransferFrom(address(this), to, origin.tokenId);
+                emit CrossIn(origin.tokenId, from, to, txid);
             }else{
-                // mint()
-                string memory tokenUri = IERC721Metadata(token0).tokenURI(tokenId);
-                safeMint(to, tokenId, tokenUri);
+                uint256 tokenId = safeMint(to, originTokenUri);
+                tokenInfo memory tokenInfo_ = tokenInfo(address(this), block.chainid, tokenId);
+                tokenIdInfo[tokenId] = tokenInfo_;
+                emit CrossIn(tokenId, from, to, txid);
             }
-
-            emit CrossIn(token0, supportToken[token0], from, to, tokenId, txid);
         } 
     }
     
@@ -106,14 +124,17 @@ ERC721Burnable, ERC721URIStorage {
         address token0,
         uint256 chainID
     ) public onlyAdmin {
-        require(supportToken[token0] == 0, "TwoWay: Toke already Supported");
+        require(supportToken[token0] == 0, "NFT Bridge: Token already Supported");
         supportToken[token0] = chainID;
     }
 
-    function safeMint(address to, uint256 tokenId, string memory tokenURI_) public {
+    function safeMint(address to, string memory tokenURI_) public returns (uint256) {
         require(hasRole(MINTER_ROLE, _msgSender()));
+        uint256 tokenId = _tokenIds.current();
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, tokenURI_);
+        _tokenIds.increment();
+        return tokenId;
     }
 
     function pause() public {
@@ -147,11 +168,16 @@ ERC721Burnable, ERC721URIStorage {
 
     function burn(uint256 tokenId) public override onlyBurner() {
         _burn(tokenId);
+        delete tokenIdInfo[tokenId];
     }
 
     function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) 
             returns (string memory){
         return super.tokenURI(tokenId);
+    }
+
+    function tokenINFO(uint256 tokenId) public view returns(tokenInfo memory){
+        return tokenIdInfo[tokenId];
     }
 
     function supportsInterface(bytes4 interfaceId) public view override(ERC721, AccessControl) 
@@ -185,9 +211,6 @@ ERC721Burnable, ERC721URIStorage {
         _;
     }
 
-    
-    
-    // setter 
     function setIsCurrentChain(address token) onlyAdmin public {
         isCurrentChain[token] = true;
     }

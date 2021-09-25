@@ -80,11 +80,9 @@ ERC721Burnable, ERC721URIStorage {
             string memory tokenUri = IERC721Metadata(token0).tokenURI(tokenId);
             IERC721(token0).safeTransferFrom(msg.sender, address(this), tokenId);
 
-            emit CrossOut(token0, chainID, tokenId, tokenUri, chainID, msg.sender, to);
+            emit CrossOut(token0, block.chainid, tokenId, tokenUri, chainID, msg.sender, to);
         }else{
             string memory tokenUri = tokenURI(tokenId);
-            burn(tokenId);
-
             emit CrossOut(
                 tokenIdInfo[tokenId].token,
                 tokenIdInfo[tokenId].chainId,
@@ -94,6 +92,8 @@ ERC721Burnable, ERC721URIStorage {
                 msg.sender,
                 to
                 );
+            
+            burn(tokenId);
         }
 
     }
@@ -104,7 +104,7 @@ ERC721Burnable, ERC721URIStorage {
         address from,
         address to,
         string memory txid
-    ) public whenNotMinted(txid) {
+    ) public onlyCrosser() whenNotMinted(txid) {
         bool result = _vote(origin.token, from, to, origin.tokenId, txid);
         if(result){
             txMinted[txid] = true;
@@ -113,8 +113,7 @@ ERC721Burnable, ERC721URIStorage {
                 emit CrossIn(origin.tokenId, from, to, txid);
             }else{
                 uint256 tokenId = safeMint(to, originTokenUri);
-                tokenInfo memory tokenInfo_ = tokenInfo(address(this), block.chainid, tokenId);
-                tokenIdInfo[tokenId] = tokenInfo_;
+                tokenIdInfo[tokenId] = origin;
                 emit CrossIn(tokenId, from, to, txid);
             }
         } 

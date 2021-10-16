@@ -27,10 +27,18 @@ const config: HardhatUserConfig = {
     apiKey: etherscanKey
   },
   networks: {
-    hardhat: {},
+    hardhat: {
+      forking: {
+        url: `https://mainnet.infura.io/v3/${projectId}`,
+      },
+      accounts: {
+        mnemonic: mnemonic
+      }
+
+    },
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,
-      gasPrice: 70 * 10 ** 9,
+      // gasPrice: 70 * 10 ** 9,
       accounts: [privateKeyETH],
     },
     ropsten: {
@@ -158,7 +166,16 @@ const config: HardhatUserConfig = {
       url: "https://rpc.moonriver.moonbeam.network",
       chainId: 1285
     },
-
+    arbitrum: {
+      url: "https://arb1.arbitrum.io/rpc",
+      chainId: 42161,
+      accounts: [privateKeyAVAX]
+    },
+    op: {
+      url: "https://mainnet.optimism.io",
+      chainId: 10,
+      accounts: [privateKeyAVAX],
+    },
     t1: {
       url: "http://127.0.0.1:8545",
       chainId: 31337

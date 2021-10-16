@@ -67,8 +67,9 @@ async function main() {
             await addPair(network.name, targetChains, feeToDev, crosser)
             break;
         case 'bsc':
-            targetChains = ['matic', 'okex', 'mainnet', 'avax', 'fantom', 'xdai', 'heco', 'harmony']
-            await addPair(network.name, targetChains, feeToDev, crosser)
+            // targetChains = ['matic', 'okex', 'mainnet', 'avax', 'fantom', 'xdai', 'heco', 'harmony']
+            // await addPair(network.name, targetChains, feeToDev, crosser)
+            await addChainIDs('bsc', ['arbitrum'])
             break;
         case 'matic':
             targetChains = ['bsc', 'okex', 'mainnet', 'avax', 'fantom', 'xdai', 'heco', 'harmony']
@@ -96,6 +97,14 @@ async function main() {
             break
         case 'harmony':
             targetChains = ['bsc', 'okex', 'matic', 'mainnet', 'avax', 'fantom', 'xdai', 'heco']
+            await addPair(network.name, targetChains, feeToDev, crosser)
+            break
+        case 'arbitrum':
+            targetChains = ['mainnet', 'bsc', 'matic', 'op']
+            await addPair(network.name, targetChains, feeToDev, crosser)
+            break
+        case 'op':
+            targetChains = ['mainnet', 'bsc', 'matic', 'arbitrum']
             await addPair(network.name, targetChains, feeToDev, crosser)
             break
         default:
@@ -168,6 +177,10 @@ function getChainId(chainName: string): number {
             return 1666600000
         case 'avax':
             return 43114
+        case 'arbitrum':
+            return 42161
+        case 'op':
+            return 10
         default:
             console.error('not known network');
             process.exit(-1);
@@ -213,6 +226,10 @@ function getUsdt(chainName: string): string {
             return '0xc7198437980c041c805A1EDcbA50c1Ce5db95118'
         case 'xdai':
             return '0x4ECaBa5870353805a9F068101A40E0f32ed605C6'
+        case 'arbitrum':
+            return '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9'
+        case 'op':
+            return '0x94b008aa00579c1307b0ef2c499ad98a8ce58e58'
         default:
             console.error('not known network');
             process.exit(-1);
@@ -242,7 +259,7 @@ function getTwoWayAddr(chainName: string): string {
         case 'mainnet':
             return '';
         case 'bsc':
-            return '';
+            return '0xf52D6823D9e2aff7548D9Fe82eeadCA6b1ED3062';
         case 'okex':
             return ''
         case 'heco':
@@ -256,6 +273,10 @@ function getTwoWayAddr(chainName: string): string {
         case 'avax':
             return '0x0F4C9320B9DE4fa426d3E27D85C3452F52314C57';
         case 'harmony':
+            return ''
+        case 'arbitrum':
+            return '0x017Ff87AB312301aDE54f7cf9Cc5AEA28C9De024'
+        case 'op':
             return ''
         default:
             console.error('not known network for twoway Addr');
@@ -271,6 +292,28 @@ async function crossOut(chainName: string, amount: string, targetChain: string, 
     let tx = await tw.crossOut(usdtAddr, targetChainId, to, parseEther(amount))
     console.log(`crossOut tx hash ${tx.hash}`)
     await tx.wait()
+}
+
+async function addChainIDs(chainName: string, targetChain: string[]) {
+    let twoWayAddr = getTwoWayAddr(chainName)
+    let usdtAddr = getUsdt(chainName)
+    let targetChainIds: number[] = []
+    let targetUsdtAddrs: string[] = []
+    for (const name of targetChain) {
+        targetChainIds.push(getChainId(name))
+        targetUsdtAddrs.push(getUsdt(name))
+    }
+    console.log(` usdt ${usdtAddr}, targetChainIds ${targetChainIds} targetUsdtAddrs ${targetUsdtAddrs}`)
+    // process.exit(1)
+    let tw = await ethers.getContractAt('TwoWay', twoWayAddr) as TwoWay
+
+    // let tx = await tw.addChainIDs(usdtAddr, targetChainIds)
+    // console.log(`add chainIDs tx hash ${tx.hash}`)
+    // await tx.wait()
+
+    let tx1 = await tw.addSupportTokens([usdtAddr], targetUsdtAddrs, targetChainIds)
+    console.log(`addSupportTokens ${tx1.hash}`)
+    await tx1.wait()
 }
 
 main()

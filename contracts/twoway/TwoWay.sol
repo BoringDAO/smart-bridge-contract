@@ -272,7 +272,7 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
                 );
                 // ISwapPair(pair).swapIn(to, amountDiffHandle, feeAmountFix, remainAmount, feeToDev, chainID);
                 ISwapPair(pair).swapIn(params);
-                emit CrossIn(token0, supportToken[token0][chainID], chainid, chainID, from, to, amountDiffHandle, txid);
+                // emit CrossIn(token0, supportToken[token0][chainID], chainid, chainID, from, to, amountDiffHandle, txid);
             }
         }
     }

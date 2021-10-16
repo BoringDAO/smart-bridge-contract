@@ -12,3 +12,4 @@ src/
 data/
 contracts/nft/
 tw.sol
+*.sol

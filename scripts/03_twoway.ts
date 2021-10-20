@@ -1,5 +1,5 @@
 import { run, ethers, network } from 'hardhat';
-import { attach, deploy, setTwoWay } from './helper';
+import { attach, deploy, setFees, setTwoWay } from './helper';
 import { TestERC20 } from '../src/types/TestERC20';
 import { TwoWay } from '../src/types/TwoWay';
 import { SwapPair } from '../src/types/SwapPair';
@@ -64,40 +64,49 @@ async function main() {
             break
         case 'okex':
             targetChains = ['matic', 'bsc', 'mainnet', 'avax', 'fantom', 'xdai', 'heco', 'harmony']
-            await addPair(network.name, targetChains, feeToDev, crosser)
+            // await addPair(network.name, targetChains, feeToDev, crosser)
+            await setCrossFees(network.name, targetChains, "1", "0.005")
             break;
         case 'bsc':
-            // targetChains = ['matic', 'okex', 'mainnet', 'avax', 'fantom', 'xdai', 'heco', 'harmony']
+            targetChains = ['matic', 'okex', 'mainnet', 'avax', 'fantom', 'xdai', 'heco', 'harmony']
             // await addPair(network.name, targetChains, feeToDev, crosser)
-            await addChainIDs('bsc', ['arbitrum'])
+            // await addChainIDs('bsc', ['arbitrum'])
+            await setCrossFees(network.name, targetChains, "1", "0.005")
             break;
         case 'matic':
             targetChains = ['bsc', 'okex', 'mainnet', 'avax', 'fantom', 'xdai', 'heco', 'harmony']
-            await addPair(network.name, targetChains, feeToDev, crosser)
+            // await addPair(network.name, targetChains, feeToDev, crosser)
+            await setCrossFees(network.name, targetChains, "1", "0.005")
             break;
         case 'mainnet':
             targetChains = ['bsc', 'okex', 'matic', 'avax', 'fantom', 'xdai', 'heco', 'harmony']
-            await addPair(network.name, targetChains, feeToDev, crosser)
+            // await addPair(network.name, targetChains, feeToDev, crosser)
+            await setCrossFees(network.name, targetChains, "100", "0.005")
             break
         case 'avax':
             targetChains = ['bsc', 'okex', 'matic', 'mainnet', 'fantom', 'xdai', 'heco', 'harmony']
-            await addPair(network.name, targetChains, feeToDev, crosser)
+            // await addPair(network.name, targetChains, feeToDev, crosser)
+            await setCrossFees(network.name, targetChains, "1", "0.005")
             break
         case 'fantom':
             targetChains = ['bsc', 'okex', 'matic', 'mainnet', 'avax', 'xdai', 'heco', 'harmony']
-            await addPair(network.name, targetChains, feeToDev, crosser)
+            // await addPair(network.name, targetChains, feeToDev, crosser)
+            await setCrossFees(network.name, targetChains, "1", "0.005")
             break
         case 'xdai':
             targetChains = ['bsc', 'okex', 'matic', 'mainnet', 'avax', 'fantom', 'heco', 'harmony']
-            await addPair(network.name, targetChains, feeToDev, crosser)
+            // await addPair(network.name, targetChains, feeToDev, crosser)
+            await setCrossFees(network.name, targetChains, "1", "0.005")
             break
         case 'heco':
             targetChains = ['bsc', 'okex', 'matic', 'mainnet', 'avax', 'fantom', 'xdai', 'harmony']
-            await addPair(network.name, targetChains, feeToDev, crosser)
+            // await addPair(network.name, targetChains, feeToDev, crosser)
+            await setCrossFees(network.name, targetChains, "1", "0.005")
             break
         case 'harmony':
             targetChains = ['bsc', 'okex', 'matic', 'mainnet', 'avax', 'fantom', 'xdai', 'heco']
-            await addPair(network.name, targetChains, feeToDev, crosser)
+            // await addPair(network.name, targetChains, feeToDev, crosser)
+            await setCrossFees(network.name, targetChains, "1", "0.005")
             break
         case 'arbitrum':
             targetChains = ['mainnet', 'bsc', 'matic', 'op']
@@ -137,6 +146,29 @@ async function addPair(sourceChain: string, targetChains: string[], feeToDev: st
     // let boringUSDT = (await ethers.getContractAt('BoringToken', '0xcf83FE4d666Adc4605c381A02D54f7990F9adBee')) as BoringToken
     // let swapPair = (await ethers.getContractAt('SwapPair', '0x216f332D17145871D1d5ff5fEB4b08513Ef7Cc21')) as SwapPair
     await setTwoWay(usdt, twoWay, swapPair, targetChainIDs, usdt.address, targetUSDTAddrs, crosser, '0.5', '0', '0');
+}
+
+async function setCrossFees(sourceChain: string, targetChains: string[], fixFee: string, ratioFee: string) {
+    let targetChainIDs: number[] = []
+    let targetUSDTAddrs: string[] = []
+    for (let chainName of targetChains ) {
+        let chainID = getChainId(chainName);
+        targetChainIDs.push(chainID) 
+
+        let targetUSDTAddr = getUsdt(chainName);
+        targetUSDTAddrs.push(targetUSDTAddr)
+    }
+    let sourceUSDTAddr = getUsdt(sourceChain)
+    let usdt = (await ethers.getContractAt('TestERC20', sourceUSDTAddr)) as ERC20;
+    let twoWay: TwoWay
+    let twoWayAddr = getTwoWayAddr(sourceChain)
+    if (twoWayAddr === '') {
+        console.error("twoway not exist")
+        process.exit(-1)
+    } else {
+        twoWay = (await ethers.getContractAt('TwoWay', twoWayAddr)) as TwoWay
+    }
+    await setFees(usdt, twoWay, targetChainIDs, usdt.address, targetUSDTAddrs, fixFee, ratioFee)
 }
 
 function getChainId(chainName: string): number {
@@ -222,7 +254,6 @@ function getUsdt(chainName: string): string {
         case 'harmony':
             return '0x3c2b8be99c50593081eaa2a724f0b8285f5aba8f'
         case 'avax':
-            // 0xde3A24028580884448a5397872046a019649b084
             return '0xc7198437980c041c805A1EDcbA50c1Ce5db95118'
         case 'xdai':
             return '0x4ECaBa5870353805a9F068101A40E0f32ed605C6'
@@ -257,23 +288,23 @@ function getTwoWayAddr(chainName: string): string {
         case 'harmony_test':
             return ''
         case 'mainnet':
-            return '';
+            return '0xF8393Bc60CF8CfcD442BcD742a4Aa847f4B6B4ac';
         case 'bsc':
             return '0xf52D6823D9e2aff7548D9Fe82eeadCA6b1ED3062';
         case 'okex':
-            return ''
+            return '0x39b107D2d810954507e7Cd70403fDa4Ae12a192e'
         case 'heco':
-            return ''
+            return '0x8b645375a7a3BCeaa01A6eCFd6e58D90b125b454'
         case 'matic':
-            return '';
+            return '0x54e2657015a9b5cC65dde59E515c71171312D319';
         case 'xdai':
-            return ''
+            return '0x8b645375a7a3BCeaa01A6eCFd6e58D90b125b454'
         case 'fantom':
-            return ''
+            return '0xbE4A5438ad89311d8c67882175D0fFcC65Dc9C03'
         case 'avax':
             return '0x0F4C9320B9DE4fa426d3E27D85C3452F52314C57';
         case 'harmony':
-            return ''
+            return '0xE3B59FD01c0155A98146a6E0Beb8376B751363fc'
         case 'arbitrum':
             return '0x017Ff87AB312301aDE54f7cf9Cc5AEA28C9De024'
         case 'op':

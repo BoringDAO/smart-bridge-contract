@@ -38,7 +38,7 @@ const config: HardhatUserConfig = {
     },
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,
-      // gasPrice: 70 * 10 ** 9,
+      gasPrice: 95 * 10 ** 9,
       accounts: [privateKeyETH],
     },
     ropsten: {
@@ -132,7 +132,8 @@ const config: HardhatUserConfig = {
       accounts: [privateKeyAVAX]
     },
     fantom: {
-      url: "https://rpcapi.fantom.network",
+      // url: "https://rpcapi.fantom.network",
+      url: "https://rpc.ftm.tools",
       chainId: 250,
       accounts: [privateKeyAVAX]
     },

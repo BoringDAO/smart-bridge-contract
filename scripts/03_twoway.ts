@@ -347,6 +347,9 @@ async function addChainIDs(chainName: string, targetChain: string[]) {
     await tx1.wait()
 }
 
+async function crossUSDT() {
+}
+
 main()
     .then(() => process.exit(0))
     .catch((error) => {

@@ -31,6 +31,11 @@ const config: HardhatUserConfig = {
     apiKey: etherscanKey
   },
   networks: {
+    op_kovan:{
+      url:`https://kovan.optimism.io`,
+      accounts:[`${privateKey}`],
+      gasPrice:10000,
+    },
     hardhat: {},
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,

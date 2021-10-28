@@ -4,7 +4,7 @@ import { BigNumber as RawBigNumber } from "bignumber.js"
 
 import { ethers } from "hardhat";
 import { ERC20 } from "../src/types/ERC20";
-import { BoringToken } from "../src/types/BoringToken";
+// import { BoringToken } from "../src/types/BoringToken";
 import { TwoWay } from "../src/types/TwoWay";
 import { SwapPair } from "../src/types/SwapPair";
 

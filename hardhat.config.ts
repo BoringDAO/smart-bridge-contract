@@ -31,11 +31,11 @@ const config: HardhatUserConfig = {
     apiKey: etherscanKey
   },
   networks: {
-    op_kovan:{
-      url:`https://kovan.optimism.io`,
-      accounts:[`${privateKey}`],
-      gasPrice:10000,
-    },
+    // op_kovan:{
+    //   url:`https://kovan.optimism.io`,
+    //   accounts:[`${privateKey}`],
+    //   gasPrice:10000,
+    // },
     hardhat: {},
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,
@@ -50,27 +50,27 @@ const config: HardhatUserConfig = {
     },
     kovan: {
       url: `https://kovan.infura.io/v3/${projectId}`,
-      accounts: {
-        mnemonic: mnemonic,
-      },
-    },
-    bsc_test: {
-      url: "https://data-seed-prebsc-2-s1.binance.org:8545",
-      chainId: 97,
       accounts: [`0x${privateKey}`],
-      gas: 10000000
+      gasPrice:7 * 10 ** 9,
+      gas: 21000
     },
+    // bsc_test: {
+    //   url: "https://data-seed-prebsc-2-s1.binance.org:8545",
+    //   chainId: 97,
+    //   accounts: [`0x${privateKey}`],
+    //   gas: 10000000
+    // },
     bsc: {
       url: "https://bsc-dataseed.binance.org",
       chainId: 56,
       accounts: [privateKeyBSC]
     },
-    okex_test: {
-      url: "https://exchaintestrpc.okex.org",
-      chainId: 65,
-      accounts: [`0x${privateKey}`],
-      gas: 10000000
-    },
+    // okex_test: {
+    //   url: "https://exchaintestrpc.okex.org",
+    //   chainId: 65,
+    //   accounts: [`0x${privateKey}`],
+    //   gas: 10000000
+    // },
     avax: {
       url: "https://api.avax.network/ext/bc/C/rpc",
       chainId: 43114,

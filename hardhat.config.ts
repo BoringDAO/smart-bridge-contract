@@ -15,7 +15,7 @@ const { polygonTestUrl, polygonURL, mnemonic, privateKeyETH, privateKeyOkex, eth
 
 
 const projectId = process.env.INFURA_KEY
-const privateKey = process.env.Private_Key
+const privateKey = process.env.PRIVATE_KEY
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -54,23 +54,23 @@ const config: HardhatUserConfig = {
       gasPrice:7 * 10 ** 9,
       gas: 21000
     },
-    // bsc_test: {
-    //   url: "https://data-seed-prebsc-2-s1.binance.org:8545",
-    //   chainId: 97,
-    //   accounts: [`0x${privateKey}`],
-    //   gas: 10000000
-    // },
+    bsc_test: {
+      url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
+      chainId: 97,
+      accounts: [`0x${privateKey}`],
+      gas: 10000000
+    },
     bsc: {
       url: "https://bsc-dataseed.binance.org",
       chainId: 56,
       accounts: [privateKeyBSC]
     },
-    // okex_test: {
-    //   url: "https://exchaintestrpc.okex.org",
-    //   chainId: 65,
-    //   accounts: [`0x${privateKey}`],
-    //   gas: 10000000
-    // },
+    okex_test: {
+      url: "https://exchaintestrpc.okex.org",
+      chainId: 65,
+      accounts: [`0x${privateKey}`],
+      gas: 10000000
+    },
     avax: {
       url: "https://api.avax.network/ext/bc/C/rpc",
       chainId: 43114,

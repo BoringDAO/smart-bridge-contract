@@ -7,7 +7,8 @@ import "hardhat-deploy";
 import "hardhat-deploy-ethers";
 import "@nomiclabs/hardhat-etherscan";
 import "@openzeppelin/hardhat-upgrades";
-import "hardhat-abi-exporter"
+import "hardhat-abi-exporter";
+import "hardhat-change-network";
 
 import { ethers } from "hardhat";
 
@@ -38,8 +39,8 @@ const config: HardhatUserConfig = {
     },
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,
-      gasPrice: 95 * 10 ** 9,
       accounts: [privateKeyETH],
+      chainId: 1
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${projectId}`,
@@ -52,9 +53,10 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: mnemonic,
       },
+      chainId: 42
     },
     bsc_test: {
-      url: "https://data-seed-prebsc-2-s1.binance.org:8545",
+      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
       chainId: 97,
       accounts: {
         mnemonic: mnemonic
@@ -77,7 +79,8 @@ const config: HardhatUserConfig = {
     avax: {
       url: "https://api.avax.network/ext/bc/C/rpc",
       chainId: 43114,
-      accounts: [privateKeyAVAX]
+      accounts: [privateKeyAVAX],
+      gas: 8000000
     },
     avax_test: {
       url: "https://api.avax-test.network/ext/bc/C/rpc",
@@ -97,7 +100,8 @@ const config: HardhatUserConfig = {
       accounts: [privateKeyAVAX]
     },
     harmony_test: {
-      url: "https://api.s0.pops.one",
+      // url: "https://api.s0.pops.one",
+      url: "https://api.s0.b.hmny.io",
       chainId: 1666700000,
       accounts: {
         mnemonic: mnemonic
@@ -117,7 +121,8 @@ const config: HardhatUserConfig = {
       // url: "https://rpc-mainnet.maticvigil.com",
       url: polygonURL,
       chainId: 137,
-      accounts: [privateKeyMatic]
+      accounts: [privateKeyMatic],
+      timeout: 600000
     },
     heco_test: {
       url: "https://http-testnet.hecochain.com",
@@ -154,7 +159,8 @@ const config: HardhatUserConfig = {
     xdai: {
       url: "https://rpc.xdaichain.com",
       chainId: 100,
-      accounts: [privateKeyAVAX]
+      accounts: [privateKeyAVAX],
+      timeout: 600000
     },
     moonriver_test: {
       url: "https://rpc.testnet.moonbeam.network",

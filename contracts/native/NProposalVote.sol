@@ -3,15 +3,16 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "../struct/NCrossInParams.sol";
 
 contract NProposalVote {
     using SafeMath for uint256;
 
     mapping(address => uint256) public threshold;
 
-    mapping(string => bool) isFinished;
-    mapping(string => mapping(address => bool)) isVoted;
-    mapping(string => uint256) counter;
+    mapping(bytes32 => bool) isFinished;
+    mapping(bytes32 => mapping(address => bool)) isVoted;
+    mapping(bytes32 => uint256) counter;
 
     event ProposalVoted(address token, address proposer, uint256 count, uint256 threshold);
 
@@ -24,20 +25,20 @@ contract NProposalVote {
     }
 
     function _vote(
-        address token,
-        string memory txid
+        NCrossInParams memory p
     ) internal virtual returns (bool result) {
-        require(threshold[token] > 0, "ProposalVote: threshold should be greater than 0");
-        uint256 count = threshold[token];
-        require(isFinished[txid] == false, "_vote::proposal finished");
-        require(isVoted[txid][msg.sender] == false, "_vote::msg.sender voted");
-        counter[txid] = counter[txid].add(1);
-        isVoted[txid][msg.sender] = true;
+        require(threshold[p._originToken] > 0, "ProposalVote: threshold should be greater than 0");
+        uint256 count = threshold[p._originToken];
+        bytes32 mid = keccak256(abi.encode(p));
+        require(isFinished[mid] == false, "_vote::proposal finished");
+        require(isVoted[mid][msg.sender] == false, "_vote::msg.sender voted");
+        counter[mid] = counter[mid].add(1);
+        isVoted[mid][msg.sender] = true;
 
-        if (counter[txid] >= count) {
-            isFinished[txid] = true;
+        if (counter[mid] >= count) {
+            isFinished[mid] = true;
             result = true;
         }
-        emit ProposalVoted(token, msg.sender, counter[txid], count);
+        emit ProposalVoted(p._originToken, msg.sender, counter[mid], count);
     }
 }

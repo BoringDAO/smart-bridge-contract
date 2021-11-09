@@ -12,10 +12,9 @@ contract Token is ERC20, IToken, AccessControl {
 
     constructor(
         string memory _name,
-        string memory _symbol,
-        address admin
+        string memory _symbol
     ) ERC20(_name, _symbol) {
-        _setupRole(DEFAULT_ADMIN_ROLE, admin);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function decimals() public view virtual override returns (uint8) {

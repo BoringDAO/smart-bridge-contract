@@ -2,11 +2,12 @@ import { BigNumber, BigNumberish, Contract } from "ethers";
 import { formatEther, parseEther } from "ethers/lib/utils";
 import { BigNumber as RawBigNumber } from "bignumber.js"
 
-import { ethers, network } from "hardhat";
+import { ethers, network, upgrades } from "hardhat";
 import { ERC20 } from "../src/types/ERC20";
 import { BoringToken } from "../src/types/BoringToken";
 import { TwoWay } from "../src/types/TwoWay";
 import { SwapPair } from "../src/types/SwapPair";
+import { readFile, readFileSync, writeFileSync } from "fs";
 
 export async function deploy(name: string, ...params: any[]) {
 	const contractFactory = await ethers.getContractFactory(name);
@@ -153,4 +154,32 @@ export function getChainIdByName(chainName: string): number {
             console.error('not known network');
             process.exit(-1);
     }
+}
+
+export function getContractsAddress(): string {
+	let data: string = ""
+	// readFileSync('../contracts.json', 'utf-8', (err, data) => {
+	// 	if (err) {
+	// 		throw err;
+	// 	}
+	// 	// let contracts = JSON.parse(data.toString())
+	// 	data =  data.toString()
+	// 	console.log("data", data)
+	// })
+	let file = readFileSync('contracts.json', 'utf-8')
+	data = file.toString()
+	return data
+}
+
+export function writeContractAddress(data: string) {
+	writeFileSync('./contracts.json', data)
+}
+
+export async function deployProxy<T>(name: string, ...params: any[]) {
+	const contractFactory = await ethers.getContractFactory(name);
+
+	const proxy = await upgrades.deployProxy(contractFactory, [...params], { kind: 'uups' })
+	await proxy.deployed()
+	console.log(`deploy ${name} proxy at ${proxy.address}`)
+	return proxy as unknown as T
 }

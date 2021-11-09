@@ -1,13 +1,120 @@
 {
-    "avax_oltc": "0xD01a5051253007ae0b7123b50410E3B5A3f6cF95",
-    "bsc_bridge": "0x45745F2Ec18D8C1424486E2B06975973C2db87D7",
-    "crossLockAddr": "0x687d761089193dD5bb1C33a04cFeB6F18e6b9B3d",
-    "eth_boring": "0xBC19712FEB3a26080eBf6f2F7849b417FdD792CA",
-    "bsc_boring": "0xffEecbf8D7267757c2dc3d13D730E97E15BfdF7F",
-    "avax_bridge": "0x020bC28dF8904Bba7f432519D5fc86D494e708dD",
-    "avax_boring": "0x11E4BED429b239a1A0C594ADEB71b99e8Fa1011A",
-    "okex_boring": "0x5cE01aa1528A6A0C8EDEcC4cEe909F0a24CF54de",
-    "okex_bridge": "0xD644BBa8B4d8b8188BEa2325D12F187ca7511dC1",
-    "harmony_boring": "0x017Ff87AB312301aDE54f7cf9Cc5AEA28C9De024",
-    "harmony_bridge": "0x87DD4a7Ad23B95cD9fF9C26B5cF325905CaF8663",
+  "1": {
+    "network_name": "mainnet",
+    "boring": "0xBC19712FEB3a26080eBf6f2F7849b417FdD792CA",
+    "nbridge": "0xdBe43C732080271Fd7588aa5fe71bd07456D9173",
+    "BoringChef": "0x637ca32056146Ef2bFE72312EcBB97A890C0B02F",
+    "SwapPair": "0x9312142EfbA17Ce795F95E17076B0800D14a3b19",
+    "oBTC": "0x8064d9Ae6cDf087b1bcd5BDf3531bD5d8C537a68",
+    "VEMP": "0xcFEB09C3c5F0f78aD72166D55f9e6E9A60e96eEC",
+    "xVEMP": "0x4a4e2d4859af854d2a3fc6df295843d21e70cc78"
+  },
+  "42": {
+    "network_name": "kovan",
+    "boring": "0x55FB3193F6e42D6753691c8aA38800B2753FB7d0",
+    "nbridge": "0x14dcF56cbf4C437449FE3811228D2E853B23E55f",
+    "xVEMP": "0x2cEa1A4cc4aEBd76e448Bb894345D294c53853f2",
+    "VEMP": "0xe179a674CF3785be513E1620aEBB944e68147D3F"
+  },
+  "56": {
+    "network_name": "bsc",
+    "boring": "0xffEecbf8D7267757c2dc3d13D730E97E15BfdF7F",
+    "nbridge": "0xe7b388d44fA9069385E174efe6f10616B149Fe86",
+    "BoringChef": "0xAC0Bfb2fF13cC99810a8fcF5F61b0268f7c55737",
+    "SwapPair": "0x37e6812C17252534B8b30c8b05Fb677C4a94C397",
+    "oBTC": "0xd595a0632B7dC0d92f3a80147C63F2f3498F8eE4"
+  },
+  "65": {
+    "network_name": "okex_test",
+    "boring": "0x6D9A04F0fc111F00F0954B660C83f83B94A3D919",
+    "nbridge": "0x5DC6250d88Ca6C20c87ef074Ae7850053f92B180"
+  },
+  "66": {
+    "network_name": "okex",
+    "boring": "0x5ce01aa1528a6a0c8edecc4cee909f0a24cf54de",
+    "nbridge": "0xb9A9587eee2Da928f72A5846440E81C7426d595f",
+    "BoringChef": "0xef002868F3Ee02a20ac6d7fd8381A83a8C127005",
+    "SwapPair": "0x232c6B4e2e0833b1E6E07c9a37898203E7DD7b24",
+    "oBTC": "0x6ef2968f539E9cBe5043F62dAdE97EAfd92EC53d"
+  },
+  "77": {
+    "network_name": "xdai_test",
+    "boring": "0x3a5D17855932ec7c28F741F873c4c86a27D323C1",
+    "nbridge": "0x7fbdB4E3657AA7877887BB445dcB57e58c674871"
+  },
+  "97": {
+    "network_name": "bsc_test",
+    "boring": "0xC2769060Ea91EC67bca1e6Bedb02e3017a7C0d32",
+    "nbridge": "0x7B8C0668F4B5f3d8D4695864041F1f0C31e2F86C",
+    "VEMP": "0x337c6fC30eEACe049017fc180D259e95eAe1c960",
+    "xVEMP": "0x4852931e56B6bBf1f5a26eF62d85B0C56595DCE5"
+  },
+  "100": {
+    "network_name": "xdai",
+    "boring": "0xfC7b937D53fbcFE0881c3a3D99c9736d5887A006",
+    "nbridge": "0xE3B59FD01c0155A98146a6E0Beb8376B751363fc",
+    "BoringChef": "0x560EB8c4B113ce38da680DafA3388Ffbeb61B14D",
+    "SwapPair": "0xE9fE1cEFeD8492ccE0A72bC01C46002791644784",
+    "oBTC": "0x29414EC76d79Ff238E5E773322799d1c7Ca2443F"
+  },
+  "128": {
+    "network_name": "heco",
+    "boring": "0xfC7b937D53fbcFE0881c3a3D99c9736d5887A006",
+    "nbridge": "0xE3B59FD01c0155A98146a6E0Beb8376B751363fc",
+    "BoringChef": "0x560EB8c4B113ce38da680DafA3388Ffbeb61B14D",
+    "SwapPair": "0xE9fE1cEFeD8492ccE0A72bC01C46002791644784",
+    "oBTC": "0x29414EC76d79Ff238E5E773322799d1c7Ca2443F"
+  },
+  "137": {
+    "network_name": "matic",
+    "boring": "0x50D0799ba241E10A6E9bAcE2936129f117Cb32af",
+    "nbridge": "0x64E4E7840bC20959c8BA984Db82fA0132D9b04dD",
+    "BoringChef": "0x5304990549f9f6e24C8d726a153c62dbD7F3333a",
+    "SwapPair": "0xeD6701d701841401b446F23757CaA422D81691B0",
+    "oBTC": "0xd39A60AF2ae61D0D92A06d04F97c505b9a54EDAA"
+  },
+  "250": {
+    "network_name": "fantom",
+    "boring": "0xB238a595e9797E009eFD5f938C9918181662066C",
+    "nbridge": "0x77B3aa18D89ea24e4AF7BB9BC221D49FD5534c19",
+    "BoringChef": "0x1f5330323b12c62eB1258FA227D88C8E63fDb855",
+    "SwapPair": "0xe4aF65953eeB4b868B7b7ff33808E22069B09916",
+    "oBTC": "0xbc0090f48FDb8725C24B4327c69B99cDd39c2749"
+  },
+  "256": {
+    "network_name": "heco_test",
+    "boring": "0xd79643bD00C6f5cEF20DE6e86ea029fbCFe9BaB3",
+    "nbridge": "0xd2f98bE5a4C9ea4B44624266b357283eBBa00dFA"
+  },
+  "4002": {
+    "network_name": "fantom_test",
+    "boring": "0xE2D268AD9c53d8ad0A0791C9a9C12Fb183856b46",
+    "nbridge": "0xE804626120222Ff41a1dC5945822B50cAB400637"
+  },
+  "43113": {
+    "network_name": "avax_test",
+    "boring": "0x4a9063776C9999f7080D032bD22A12F5a171AD99",
+    "nbridge": "0xC454Cf249C8065Ec282A1B50AB7e2e61cb2351a9"
+  },
+  "43114": {
+    "network_name": "avax",
+    "boring": "0x603f0d26DA2c245D892300A4c3c86b5AD95C96be",
+    "nbridge": "0x2e220E3ab85fC4A46F770A34eF2CdDc8074E4689",
+    "BoringChef": "0x61CF453D7930ECf145f3Dd29fCE4d9c15F9405c3",
+    "SwapPair": "0x216f332D17145871D1d5ff5fEB4b08513Ef7Cc21",
+    "oBTC": "0x57c37416c853C2703bbbF7eABB382A9CeDB523d8"
+  },
+  "80001": {
+    "network_name": "matic_test",
+    "boring": "0x6F4E99b40FdF51bADc6C31361e17D5E1Bb33A13e",
+    "nbridge": "0x944d7466B3c246BBeFAB03a51FBfF6Ac6355570E"
+  },
+  "1666600000": {
+    "network_name": "harmony",
+    "boring": "0x017ff87ab312301ade54f7cf9cc5aea28c9de024",
+    "nbridge": "0x216f332D17145871D1d5ff5fEB4b08513Ef7Cc21",
+    "BoringChef": "0xB98863f0a0cFE367496bFa393dA4D408Bee0A5Bf",
+    "SwapPair": "0xB238a595e9797E009eFD5f938C9918181662066C",
+    "oBTC": "0x18d7ddc3583C03d7912593A07f353f0279668964"
+  }
 }

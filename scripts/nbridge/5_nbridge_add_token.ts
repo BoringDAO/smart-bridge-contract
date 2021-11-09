@@ -1,35 +1,29 @@
-import { ethers, network, getChainId } from "hardhat";
-import { attach, deploy, deployProxy, getChainIdByName, getContractsAddress, writeContractAddress } from "../helper";
-import { NBridge } from "../../src/types/NBridge";
-import { parseEther } from "ethers/lib/utils";
-import { TestIToken } from "../../src/types/TestIToken";
-import { Token } from "../../src/types/Token";
-import { BigNumberish } from "ethers";
+import { parseEther } from "ethers/lib/utils"
+import { ethers, getChainId, network } from "hardhat"
+import { NBridge } from "../../src/types/NBridge"
+import { Token } from "../../src/types/Token"
+import { attach, getContractsAddress } from "../helper"
 const hre = require('hardhat')
+
+const MIN_CROSS_AMOUNT = "200"
+const FEE_RATIO = "0.005"
 
 async function main() {
 	console.log(`network ${network.name} ${Number(await getChainId())}`)
-	let accounts = await ethers.getSigners()
-	let ti;
-	let tokenChainId;
-	let crosser = "0xbC41ef18DfaE72b665694B034f608E6Dfe170149"
-	// let feeTo = await accounts[3].getAddress()
-	let feeTo = "0x09587012B3670D75a90930be9282d98063E402a2"
-	// let networkToChange = ['okex_test', 'avax_test', 'harmony_test', 'heco_test', 'fantom_test', 'xdai_test']
-	// let networkToChange = ['okex_test', 'avax_test', 'heco_test', 'fantom_test', 'xdai_test']
-	// let networkToChange = ["bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai"]
-	let networkToChange = [ "mainnet"]
-	// let networkToChange = ["avax", "matic", "heco", "fantom", "xdai"]
-	// let networkToChange = ["bsc"]
+	let crosser = "0xC63573cB77ec56e0A1cb40199bb85838D71e4dce"
+	let feeTo = "0xC63573cB77ec56e0A1cb40199bb85838D71e4dce"
+	let networkToChange = ["bsc_test"]	
 	let contracts = JSON.parse(getContractsAddress())
-	let originChainId = '1'
-	let tokenName = 'oBTC'
-	let originToken = contracts[originChainId][tokenName]
+	let originChainId = '42'
+	let tokenSymbol = 'xVEMP'
+	let originToken = contracts[originChainId][tokenSymbol]
+
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)
 		let number = await ethers.provider.getBlockNumber()
 		console.log(`check ${n} blockNumber is ${number}`)
-	}
+	}	
+
 	for (const n of networkToChange) {
 		hre.changeNetwork(n)
 		let chainid = network.config.chainId!
@@ -44,7 +38,8 @@ async function main() {
 			// continue
 			nb = await attach("NBridge", contracts[chainid.toString()]['nbridge']) as NBridge
 		} else {
-			nb = await getNBridge()
+			console.log("network error: nbridge not exist")
+			process.exit(-1)
 		}
 		let crosserKey = await nb.getRoleKey(originToken, Number(originChainId))
 		switch (network.config.chainId!) {
@@ -53,25 +48,14 @@ async function main() {
 				await addOriginSupportToken(nb, originToken, chainid)
 				break;
 			default:
-				let boringAddr = contracts[chainid.toString()][tokenName]
+				let tokenAddr = contracts[chainid.toString()][tokenSymbol]
 				await setupNBridge(nb, originToken, Number(originChainId), crosserKey, crosser, feeTo)
-				await grantMinterBurner(nb, boringAddr)
-				await addDeriveSupportToken(nb, originToken, Number(originChainId), boringAddr, chainid)
+				await grantMinterBurner(nb, tokenAddr)
+				await addDeriveSupportToken(nb, originToken, Number(originChainId), tokenAddr, chainid)
 		}
-		// contracts[chainid.toString()]['nbridge'] = nb.address
-		// writeContractAddress(JSON.stringify(contracts))
 	}
 }
 
-async function getNBridge(): Promise<NBridge> {
-	return await deployNBridge(network.config.chainId!)
-}
-
-async function deployNBridge(chainID: number): Promise<NBridge> {
-	console.log(`will deploy nbridge with chainid ${chainID}`)
-	let nb = await deployProxy<NBridge>("NBridge", chainID)
-	return nb;
-}
 
 async function grantMinterBurner(nb: NBridge, tokenAddr: string) {
 	console.log(`token ${tokenAddr} grant minter and burner`)
@@ -91,17 +75,17 @@ async function setupNBridge(nb: NBridge, originToken: string, originChainId: num
 	let tx2 = await nb.setThreshold(originToken, 1)
 	console.log(`setThreshold ${tx2.hash}`)
 	await tx2.wait()
-	let tx3 = await nb.setFee(originToken, parseEther("0.005"))
+	let tx3 = await nb.setFee(originToken, parseEther(FEE_RATIO))
 	console.log(`setFee ${tx3.hash}`)
 	await tx3.wait()
-	let tx4 = await nb.setFeeTo(feeTo)
-	console.log(`setFeeTo ${tx4.hash}`)
-	await tx4.wait(2)
+	// let tx4 = await nb.setFeeTo(feeTo)
+	// console.log(`setFeeTo ${tx4.hash}`)
+	// await tx4.wait(2)
 	let tx5 = await nb.grantRole(crosserKey, crosser)
 	console.log(`grantRole crosser ${tx5.hash}`)
 	await tx5.wait()
 	if (network.config.chainId! != originChainId) {
-		let txMinCross = await nb.setMinCrossAmount(originToken, originChainId, parseEther("10000"))
+		let txMinCross = await nb.setMinCrossAmount(originToken, originChainId, parseEther(MIN_CROSS_AMOUNT))
 		console.log(`tx minCrossAmount ${txMinCross.hash} ${network.config.chainId}`)
 	}
 }

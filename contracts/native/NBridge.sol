@@ -2,17 +2,20 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "../interface/IToken.sol";
 import "./NProposalVote.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./NToll.sol";
 import "../struct/NCrossInParams.sol";
 
-contract NBridge is NProposalVote, NToll, AccessControl {
-    using SafeERC20 for IToken;
+contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NProposalVote, NToll {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
+    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     uint256 public chainId;
 
     struct TokenInfo {
@@ -26,10 +29,19 @@ contract NBridge is NProposalVote, NToll, AccessControl {
     mapping(string => bool) public txHandled;
     mapping(address => mapping(uint256 => uint256)) public minCrossAmount;
 
-    constructor(uint256 _chainId) {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    function initialize(uint256 _chainId) public initializer {
         chainId = _chainId;
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
+
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(UPGRADER_ROLE, msg.sender);
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
 
     function setMinCrossAmount(
         address token,
@@ -43,7 +55,7 @@ contract NBridge is NProposalVote, NToll, AccessControl {
         uint256 _chainId,
         address _token,
         TokenInfo memory ti
-    ) public {
+    ) public onlyAdmin {
         require(_token != address(0), "error token address");
         // require(supportedTokens[_chainId][_token].isSupported = false, "Token already supported");
         require(ti.isSupported == true, "params error");
@@ -62,29 +74,10 @@ contract NBridge is NProposalVote, NToll, AccessControl {
         }
     }
 
-    function getRoleKey(address token, uint _chainId) public pure returns (bytes32) {
+    function getRoleKey(address token, uint256 _chainId) public pure returns (bytes32) {
         bytes32 key = keccak256(abi.encodePacked(token, _chainId));
         return key;
     }
-
-    event CrossOut(
-        address originToken,
-        uint256 originChainId,
-        uint256 fromChainId,
-        uint256 toChainId,
-        address from,
-        address to,
-        uint256 amount
-    );
-    event CrossIn(
-        address originToken,
-        uint256 originChainId,
-        uint256 fromChainId,
-        uint256 toChainId,
-        address from,
-        address to,
-        uint256 amount
-    );
 
     function crossOut(
         address _token,
@@ -101,7 +94,7 @@ contract NBridge is NProposalVote, NToll, AccessControl {
         }
         if (ti.tokenType == 1) {
             // lock
-            IToken(_token).safeTransferFrom(msg.sender, address(this), amount);
+            IERC20Upgradeable(_token).safeTransferFrom(msg.sender, address(this), amount);
             emit CrossOut(_token, chainId, chainId, toChainID, msg.sender, to, amount);
         } else if (ti.tokenType == 2) {
             // burn
@@ -110,22 +103,24 @@ contract NBridge is NProposalVote, NToll, AccessControl {
         }
     }
 
-    function crossIn(
-        NCrossInParams memory p
-    ) external onlyCrosser(p._originToken, p._originChainId) whenNotHandled(p.txid) {
+    function crossIn(NCrossInParams memory p)
+        external
+        onlyCrosser(p._originToken, p._originChainId)
+        whenNotHandled(p.txid)
+    {
         require(p.toChainId == chainId, "chainId error");
         TokenInfo memory ti = supportedTokens[p._originChainId][p._originToken];
         require(ti.isSupported, "not support token");
 
-        bool result = _vote(p._originToken, p.txid);
+        bool result = _vote(p);
         if (result) {
             txHandled[p.txid] = true;
             (uint256 feeAmount, uint256 remainAmount) = calculateFee(p._originToken, p.amount);
             if (ti.tokenType == 1) {
                 // unlock
-                IToken(ti.mirrorAddress).safeTransferFrom(address(this), p.to, remainAmount);
+                IERC20Upgradeable(ti.mirrorAddress).safeTransfer(p.to, remainAmount);
                 if (feeAmount > 0) {
-                    IToken(ti.mirrorAddress).safeTransferFrom(address(this), feeTo, feeAmount);
+                    IERC20Upgradeable(ti.mirrorAddress).safeTransfer(feeTo, feeAmount);
                 }
             } else if (ti.tokenType == 2) {
                 // mint
@@ -165,4 +160,23 @@ contract NBridge is NProposalVote, NToll, AccessControl {
         require(hasRole(key, msg.sender), "Bridge::caller is not crosser");
         _;
     }
+
+    event CrossOut(
+        address originToken,
+        uint256 originChainId,
+        uint256 fromChainId,
+        uint256 toChainId,
+        address from,
+        address to,
+        uint256 amount
+    );
+    event CrossIn(
+        address originToken,
+        uint256 originChainId,
+        uint256 fromChainId,
+        uint256 toChainId,
+        address from,
+        address to,
+        uint256 amount
+    );
 }

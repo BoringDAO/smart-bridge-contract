@@ -11,7 +11,11 @@ import "hardhat-abi-exporter"
 
 import { ethers } from "hardhat";
 
-const { polygonTestUrl, polygonURL, mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX, privateKeyMatic } = require("./.secret.json");
+const { polygonTestUrl, polygonURL, mnemonic, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX, privateKeyMatic } = require("./.secret.json");
+
+
+const projectId = process.env.INFURA_KEY
+const privateKey = process.env.PRIVATE_KEY
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -27,6 +31,11 @@ const config: HardhatUserConfig = {
     apiKey: etherscanKey
   },
   networks: {
+    // op_kovan:{
+    //   url:`https://kovan.optimism.io`,
+    //   accounts:[`${privateKey}`],
+    //   gasPrice:10000,
+    // },
     hardhat: {},
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,
@@ -35,22 +44,20 @@ const config: HardhatUserConfig = {
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${projectId}`,
-      accounts: {
-        mnemonic: mnemonic,
-      },
+      accounts: [`0x${privateKey}`],
+      gasPrice: 7 * 10 ** 9,
+      gas: 21000
     },
     kovan: {
       url: `https://kovan.infura.io/v3/${projectId}`,
-      accounts: {
-        mnemonic: mnemonic,
-      },
+      accounts: [`0x${privateKey}`],
+      gasPrice:7 * 10 ** 9,
+      gas: 21000
     },
     bsc_test: {
-      url: "https://data-seed-prebsc-2-s1.binance.org:8545",
+      url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
       chainId: 97,
-      accounts: {
-        mnemonic: mnemonic
-      },
+      accounts: [`0x${privateKey}`],
       gas: 10000000
     },
     bsc: {
@@ -61,9 +68,7 @@ const config: HardhatUserConfig = {
     okex_test: {
       url: "https://exchaintestrpc.okex.org",
       chainId: 65,
-      accounts: {
-        mnemonic: mnemonic
-      },
+      accounts: [`0x${privateKey}`],
       gas: 10000000
     },
     avax: {

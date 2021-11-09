@@ -8,6 +8,7 @@ artifacts
 secret.json
 abi.json
 contracts.json
+hardhat.config.ts
 src/
 data/
 contracts/nft/

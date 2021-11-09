@@ -6,16 +6,17 @@ import { attach, getContractsAddress } from "../helper"
 const hre = require('hardhat')
 
 const MIN_CROSS_AMOUNT = "200"
-const FEE_RATIO = "0.005"
+const FEE_RATIO = "0"
 
 async function main() {
 	console.log(`network ${network.name} ${Number(await getChainId())}`)
-	let crosser = "0xC63573cB77ec56e0A1cb40199bb85838D71e4dce"
-	let feeTo = "0xC63573cB77ec56e0A1cb40199bb85838D71e4dce"
-	let networkToChange = ["bsc_test"]	
+	// let crosser = "0xC63573cB77ec56e0A1cb40199bb85838D71e4dce" // test
+	let crosser = "0xbC41ef18DfaE72b665694B034f608E6Dfe170149"
+	let feeTo = "0x09587012B3670D75a90930be9282d98063E402a2"
+	let networkToChange = ["okex", "mainnet"]	
 	let contracts = JSON.parse(getContractsAddress())
-	let originChainId = '42'
-	let tokenSymbol = 'xVEMP'
+	let originChainId = '1'
+	let tokenSymbol = 'FIN'
 	let originToken = contracts[originChainId][tokenSymbol]
 
 	for (let n of networkToChange) {

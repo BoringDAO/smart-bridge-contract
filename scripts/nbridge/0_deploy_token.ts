@@ -17,12 +17,12 @@ async function main1() {
 	// let networkToChange = ['okex_test', 'avax_test',  'heco_test', 'fantom_test', 'xdai_test']
 	// let networkToChange = ["avax", "matic", "heco", "fantom", "xdai"]
 	// let networkToChange = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai"]
-	let networkToChange = ["kovan"]
+	let networkToChange = ["bsc"]
 	let accounts = await ethers.getSigners()
 	let deployer = await accounts[0].getAddress()
-	let originChain = "kovan"
-	let tokenName = "vEmpire Gamer Token"
-	let tokenSymbol = "VEMP"
+	let originChain = "mainnet"
+	let tokenName = "xVEMP"
+	let tokenSymbol = "xVEMP"
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)
 		let number = await ethers.provider.getBlockNumber()

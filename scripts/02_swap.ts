@@ -1,7 +1,7 @@
 import { run, ethers, network } from "hardhat";
 import { attach, deploy } from "./helper";
-import { TestERC20 } from '../typechain/TestERC20'
-import { TwoWay } from '../typechain/TwoWay'
+import { TestERC20 } from '../src/types/TestERC20'
+import { TwoWay } from '../src/types/TwoWay'
 import { PegSwapPair } from '../src/types/PegSwapPair'
 import { PegSwap } from '../src/types/PegSwap'
 

@@ -33,6 +33,12 @@ async function main() {
 		case 'harmony_test':
 			usdtToken = await deploy("TestERC20", "USDT", "USDT", 6) as TestERC20
 			break
+		case 'arbi_test':
+			usdtToken = await deploy("TestERC20", "USDT", "USDT", 6) as TestERC20
+			break
+		case 'op_test':
+			usdtToken = await deploy("TestERC20", "USDT", "USDT", 6) as TestERC20
+			break
 		case 'okex':
 			break
 		case 'bsc':

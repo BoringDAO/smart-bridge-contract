@@ -30,12 +30,14 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       forking: {
-        url: `https://mainnet.infura.io/v3/${projectId}`,
+        // url: `https://mainnet.infura.io/v3/${projectId}`,
+        url: "https://bsc-dataseed.binance.org",
       },
+      // accounts: [privateKeyBSC],
       accounts: {
         mnemonic: mnemonic
-      }
-
+      },
+      chainId: 56
     },
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,
@@ -66,7 +68,8 @@ const config: HardhatUserConfig = {
     bsc: {
       url: "https://bsc-dataseed.binance.org",
       chainId: 56,
-      accounts: [privateKeyBSC]
+      accounts: [privateKeyBSC],
+      gas: 10000000
     },
     okex_test: {
       url: "https://exchaintestrpc.okex.org",
@@ -157,7 +160,8 @@ const config: HardhatUserConfig = {
       }
     },
     xdai: {
-      url: "https://rpc.xdaichain.com",
+      // url: "https://rpc.xdaichain.com",
+      url: "https://apis.ankr.com/db0ac96bc02b4f2e9dbfcc5b5c36df0d/6bd74b1c858dfcb71bb064bfd2007766/xdai/fast/main",
       chainId: 100,
       accounts: [privateKeyAVAX],
       timeout: 600000
@@ -173,15 +177,31 @@ const config: HardhatUserConfig = {
       url: "https://rpc.moonriver.moonbeam.network",
       chainId: 1285
     },
-    arbitrum: {
-      url: "https://arb1.arbitrum.io/rpc",
+    arbi: {
+      // url: "https://arb1.arbitrum.io/rpc",
+      url: "https://arb-mainnet.g.alchemy.com/v2/X2f0Oz14kffPgL2sTddBDWoSdMoQLP9j",
       chainId: 42161,
-      accounts: [privateKeyAVAX]
+      accounts: [privateKeyAVAX],
+    },
+    arbi_test: {
+      url: "https://rinkeby.arbitrum.io/rpc",
+      chainId: 421611,
+      accounts: {
+        mnemonic: mnemonic
+      }
+
     },
     op: {
       url: "https://mainnet.optimism.io",
       chainId: 10,
       accounts: [privateKeyAVAX],
+    },
+    op_test: {
+      url: "https://kovan.optimism.io",
+      chainId: 69,
+      accounts: {
+        mnemonic: mnemonic
+      }
     },
     t1: {
       url: "http://127.0.0.1:8545",

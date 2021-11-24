@@ -2,35 +2,37 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "../interface/IBoringToken.sol";
 import "../interface/ISwapPair.sol";
 import "../lib/SafeDecimalMath.sol";
 import "./struct.sol";
 
-contract SwapPair is ERC20, Ownable, ISwapPair {
-    using SafeMath for uint256;
-    using SafeERC20 for IERC20;
+contract SwapPair is Initializable, ERC20Upgradeable, OwnableUpgradeable, UUPSUpgradeable, ISwapPair {
+    using SafeMathUpgradeable for uint256;
+    using SafeERC20Upgradeable for IERC20Upgradeable;
     using SafeDecimalMath for uint256;
-    using EnumerableSet for EnumerableSet.UintSet;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
 
-    address public immutable override token0; // origin erc20 token
+    address public override token0; // origin erc20 token
 
     uint256 public reserve0;
 
-    EnumerableSet.UintSet private supportChainids;
+    EnumerableSetUpgradeable.UintSet private supportChainids;
     mapping(uint256 => uint256) public reserve1s;
     uint256 public totalReserve1s;
 
     address public twoWay;
 
-    uint256 public immutable override diff0;
+    uint256 public override diff0;
 
     event Mint(address indexed sender, uint256 amount);
     event Burn(address indexed sender, uint256 amount0, uint256 amount1, address indexed to);
@@ -39,25 +41,33 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
     event SupportChaninidsAdded(uint256[] newChainids);
     event SupportChaninidsRemoved(uint256[] oldChainids);
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    function initialize(
         string memory _name,
         string memory _symbol,
         address _token0
-    ) ERC20(_name, _symbol) {
-        uint256 token0Decimals = IERC20Metadata(_token0).decimals();
+    ) public initializer {
+        __ERC20_init(_name, _symbol);
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+        uint256 token0Decimals = IERC20MetadataUpgradeable(_token0).decimals();
         require(token0Decimals < 19, "token0 decimals too big");
         token0 = _token0;
         diff0 = 10**(18 - token0Decimals);
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // ======view=====
     function getReserves(uint256 chainId) public view override returns (uint256, uint256) {
         return (reserve0, reserve1s[chainId]);
     }
 
-    function getSupportChainIDs() external view returns(uint256[] memory) {
-        uint[] memory chainids = new uint256[](supportChainids.length());
-        for (uint i; i < supportChainids.length(); i++) {
+    function getSupportChainIDs() external view returns (uint256[] memory) {
+        uint256[] memory chainids = new uint256[](supportChainids.length());
+        for (uint256 i; i < supportChainids.length(); i++) {
             chainids[i] = supportChainids.at(i);
         }
         return chainids;
@@ -83,7 +93,7 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
     }
 
     function mint(address to) external override onlyTwoWay returns (uint256 lpAmount) {
-        uint256 balance0 = IERC20(token0).balanceOf(address(this));
+        uint256 balance0 = IERC20Upgradeable(token0).balanceOf(address(this));
         uint256 amount0 = balance0.sub(reserve0);
 
         lpAmount = getLPAmount(amount0);
@@ -126,9 +136,9 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
         )
     {
         (uint256 amount0, uint256[] memory chainids, uint256[] memory amount1s) = calculateBurn(lpAmount);
-        IERC20(token0).transfer(from, amount0 - feeAmount);
+        IERC20Upgradeable(token0).safeTransfer(from, amount0 - feeAmount);
         if (feeAmount > 0) {
-            IERC20(token0).transfer(feeTo, feeAmount);
+            IERC20Upgradeable(token0).safeTransfer(feeTo, feeAmount);
         }
         uint256 totalRemove;
         for (uint256 i; i < chainids.length; i++) {
@@ -190,7 +200,7 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
     }
 
     function update() external override onlyTwoWay {
-        uint256 balance0 = IERC20(token0).balanceOf(address(this));
+        uint256 balance0 = IERC20Upgradeable(token0).balanceOf(address(this));
         reserve0 = balance0;
     }
 
@@ -221,16 +231,16 @@ contract SwapPair is ERC20, Ownable, ISwapPair {
         require(_reserve0 >= params.amount1, "Insuffient liquidity");
         require(params.amount1 > 0, "Swap amount should be greater than 0");
 
-        IERC20(token0).safeTransfer(params.to, params.remainAmount);
+        IERC20Upgradeable(token0).safeTransfer(params.to, params.remainAmount);
         if (params.feeAmountFix > 0) {
-            IERC20(token0).safeTransfer(params.feeToDev, params.feeAmountFix);
+            IERC20Upgradeable(token0).safeTransfer(params.feeToDev, params.feeAmountFix);
         }
         // IBoringToken(token1).mint(address(this), amount1 * diff0);
         reserve1s[params.chainID] += params.amount1 * diff0;
         totalReserve1s += params.amount1 * diff0;
 
         // current balance
-        uint256 balance0 = IERC20(token0).balanceOf(address(this));
+        uint256 balance0 = IERC20Upgradeable(token0).balanceOf(address(this));
 
         reserve0 = balance0;
 

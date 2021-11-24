@@ -2,12 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import "../interface/ISwapPair.sol";
 import "../interface/IBoringToken.sol";
 import "../ProposalVote.sol";
@@ -15,11 +16,12 @@ import "./TwoWayToll.sol";
 
 import "./struct.sol";
 
-contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
-    using SafeERC20 for IERC20;
-    using SafeMath for uint256;
-    using Math for uint256;
+contract TwoWay is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ProposalVote, TwoWayToll {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
+    using SafeMathUpgradeable for uint256;
+    using MathUpgradeable for uint256;
 
+    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant CROSSER_ROLE = "CROSSER_ROLE";
 
     // tokenInThisChain => mapping(targetChainId=>tokenInTargetChain)
@@ -35,63 +37,21 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
     // chainid of this blockchain, for chain which not support block.chainid variable
     uint256 public chainid;
 
-    //================= Event ==================//
-    // token0 is token in this chain, token1 is token in target chain
-    // so 0 represent current chain that the contract be deployed
-    event CrossBurn(
-        address token0,
-        address token1,
-        uint256 chainID0,
-        uint256 chainID1,
-        address from,
-        address to,
-        uint256 amount
-    );
-    event Lock(
-        address token0,
-        address token1,
-        uint256 chainID0,
-        uint256 chainID1,
-        address from,
-        address to,
-        uint256 amount
-    );
-    event Unlock(
-        address token0,
-        address token1,
-        uint256 chianID0,
-        uint256 chainID1,
-        address from,
-        address to,
-        uint256 amount,
-        string txid
-    );
-    event Rollback(
-        address token0,
-        address token1,
-        uint256 chainID0,
-        uint256 chainID1,
-        address from,
-        address to,
-        uint256 amount,
-        string txid
-    );
-    event Rollbacked(address token0, address from, uint256 amount, string txid);
-    event CrossIn(
-        address token0,
-        address token1,
-        uint256 chianID0,
-        uint256 chainID1,
-        address from,
-        address to,
-        uint256 amount,
-        string txid
-    );
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
 
-    constructor(address _feeToDev, uint256 _chainid) TwoWayToll(_feeToDev) {
+    function initialize(address _feeToDev, uint256 _chainid) public initializer {
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
+
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(UPGRADER_ROLE, msg.sender);
+
         chainid = _chainid;
+        feeToDev = _feeToDev;
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
 
     /**
         @param chainId target chainid 
@@ -143,7 +103,7 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
     ) public returns (uint256 liquidity) {
         address pair = pairs[token0];
         require(pair != address(0), "not soupport pair");
-        IERC20(token0).safeTransferFrom(msg.sender, pair, amount);
+        IERC20Upgradeable(token0).safeTransferFrom(msg.sender, pair, amount);
         liquidity = ISwapPair(pair).mint(to);
     }
 
@@ -217,7 +177,7 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         uint256 out = getMaxToken1AmountOut(token0, chainID) / pair.diff0();
         uint256 burnAmount = amount.min(out);
         if (burnAmount > 0) {
-            IERC20(token0).safeTransferFrom(msg.sender, address(pair), burnAmount);
+            IERC20Upgradeable(token0).safeTransferFrom(msg.sender, address(pair), burnAmount);
             pair.swapOut(to, burnAmount, chainID);
             emit CrossBurn(
                 token0,
@@ -230,7 +190,7 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
             );
         }
         if (amount > out) {
-            IERC20(token0).safeTransferFrom(msg.sender, address(this), amount - burnAmount);
+            IERC20Upgradeable(token0).safeTransferFrom(msg.sender, address(this), amount - burnAmount);
             emit Lock(
                 token0,
                 supportToken[token0][chainID],
@@ -287,7 +247,7 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         bool result = _vote(token0, from, from, amount, txid);
         if (result) {
             txRollbacked[txid] = true;
-            IERC20(token0).safeTransfer(from, amount / ISwapPair(pairs[token0]).diff0());
+            IERC20Upgradeable(token0).safeTransfer(from, amount / ISwapPair(pairs[token0]).diff0());
             emit Rollbacked(token0, from, amount / ISwapPair(pairs[token0]).diff0(), txid);
         }
     }
@@ -308,7 +268,7 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
                 _handleFee(token0, chainID, amountDiffHandle, to);
                 ISwapPair(pairs[token0]).update();
             } else {
-                IERC20(token0).safeTransfer(to, amountDiffHandle);
+                IERC20Upgradeable(token0).safeTransfer(to, amountDiffHandle);
             }
             emit Unlock(token0, supportToken[token0][chainID], chainid, chainID, from, to, amountDiffHandle, txid);
         }
@@ -325,10 +285,10 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
             chainID,
             amountDiffHandle
         );
-        IERC20(token0).safeTransfer(to, remainAmount);
-        IERC20(token0).safeTransfer(pairs[token0], feeAmountRatio);
+        IERC20Upgradeable(token0).safeTransfer(to, remainAmount);
+        IERC20Upgradeable(token0).safeTransfer(pairs[token0], feeAmountRatio);
         if (feeAmountFix > 0) {
-            IERC20(token0).safeTransfer(feeToDev, feeAmountFix);
+            IERC20Upgradeable(token0).safeTransfer(feeToDev, feeAmountFix);
         }
     }
 
@@ -391,7 +351,7 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         require(token0s.length == chainIDs.length, "len not match");
         require(token0s.length == feeAmounts.length, "len not match");
         require(token0s.length == feeRatios.length, "len not match");
-        for (uint i; i < token0s.length; i++) {
+        for (uint256 i; i < token0s.length; i++) {
             setFee(token0s[i], chainIDs[i], feeAmounts[i], feeRatios[i]);
         }
     }
@@ -435,4 +395,57 @@ contract TwoWay is ProposalVote, AccessControl, TwoWayToll {
         require(txRollbacked[_txid] == false, "TwoWay: tx rollbacked");
         _;
     }
+
+    //================= Event ==================//
+    // token0 is token in this chain, token1 is token in target chain
+    // so 0 represent current chain that the contract be deployed
+    event CrossBurn(
+        address token0,
+        address token1,
+        uint256 chainID0,
+        uint256 chainID1,
+        address from,
+        address to,
+        uint256 amount
+    );
+    event Lock(
+        address token0,
+        address token1,
+        uint256 chainID0,
+        uint256 chainID1,
+        address from,
+        address to,
+        uint256 amount
+    );
+    event Unlock(
+        address token0,
+        address token1,
+        uint256 chianID0,
+        uint256 chainID1,
+        address from,
+        address to,
+        uint256 amount,
+        string txid
+    );
+    event Rollback(
+        address token0,
+        address token1,
+        uint256 chainID0,
+        uint256 chainID1,
+        address from,
+        address to,
+        uint256 amount,
+        string txid
+    );
+    event Rollbacked(address token0, address from, uint256 amount, string txid);
+    event CrossIn(
+        address token0,
+        address token1,
+        uint256 chianID0,
+        uint256 chainID1,
+        address from,
+        address to,
+        uint256 amount,
+        string txid
+    );
 }

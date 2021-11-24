@@ -19,9 +19,9 @@ contract TwoWayToll {
     event FeeToRemoved(address token, uint256 chainID, address account);
     event FeeToChanged(address token, uint256 chainID, address account);
 
-    constructor(address _feeToDev) {
-        feeToDev = _feeToDev;
-    }
+    // constructor(address _feeToDev) {
+    //     feeToDev = _feeToDev;
+    // }
 
     function _setFeeToDev(address _feeToDev) internal {
         feeToDev = _feeToDev;

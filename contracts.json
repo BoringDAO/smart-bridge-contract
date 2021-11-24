@@ -121,5 +121,17 @@
     "BoringChef": "0xB98863f0a0cFE367496bFa393dA4D408Bee0A5Bf",
     "SwapPair": "0xB238a595e9797E009eFD5f938C9918181662066C",
     "oBTC": "0x18d7ddc3583C03d7912593A07f353f0279668964"
+  },
+  "10": {
+    "network_name": "op",
+    "TwoWay": "0xD01a5051253007ae0b7123b50410E3B5A3f6cF95",
+    "SwapPair": "0x68D97B7A961a5239B9F911DA8dEb57F6eF6e5e28",
+    "USDT": "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58"
+  },
+  "42161": {
+    "network_name": "arbi",
+    "USDT": "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9",
+    "TwoWay": "0x11E4BED429b239a1A0C594ADEB71b99e8Fa1011A",
+    "SwapPair": "0xe4aF65953eeB4b868B7b7ff33808E22069B09916"
   }
 }

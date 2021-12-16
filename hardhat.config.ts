@@ -30,14 +30,15 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       forking: {
+        url: `https://kovan.infura.io/v3/${projectId}`,
         // url: `https://mainnet.infura.io/v3/${projectId}`,
-        url: "https://bsc-dataseed.binance.org",
+        // url: "https://bsc-dataseed.binance.org",
       },
       // accounts: [privateKeyBSC],
       accounts: {
         mnemonic: mnemonic
       },
-      chainId: 56
+      chainId: 42
     },
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,

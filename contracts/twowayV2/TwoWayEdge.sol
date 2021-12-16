@@ -44,11 +44,15 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         address token,
         uint256 chainId,
         bool status
-    ) external {
+    ) external onlyAdmin {
         require(chainSupported[token][chainId] != status, "status error");
         chainSupported[token][chainId] = status;
         decimalDiff[token] = 10**(18 - IERC20MetadataUpgradeable(token).decimals());
         emit Supported(token, chainId, status);
+    }
+
+    function addSupport(address token) external onlyAdmin {
+        tokenSupported[token] = true;
     }
 
     function deposit(address token, uint256 amount) external {

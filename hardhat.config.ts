@@ -160,8 +160,7 @@ const config: HardhatUserConfig = {
       }
     },
     xdai: {
-      // url: "https://rpc.xdaichain.com",
-      url: "https://apis.ankr.com/db0ac96bc02b4f2e9dbfcc5b5c36df0d/6bd74b1c858dfcb71bb064bfd2007766/xdai/fast/main",
+      url: "https://rpc.xdaichain.com",
       chainId: 100,
       accounts: [privateKeyAVAX],
       timeout: 600000
@@ -178,8 +177,7 @@ const config: HardhatUserConfig = {
       chainId: 1285
     },
     arbi: {
-      // url: "https://arb1.arbitrum.io/rpc",
-      url: "https://arb-mainnet.g.alchemy.com/v2/X2f0Oz14kffPgL2sTddBDWoSdMoQLP9j",
+      url: "https://arb1.arbitrum.io/rpc",
       chainId: 42161,
       accounts: [privateKeyAVAX],
     },
@@ -202,6 +200,11 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: mnemonic
       }
+    },
+    boba: {
+      url: "https://mainnet.boba.network/",
+      chainId: 288,
+      accounts: [privateKeyAVAX]
     },
     t1: {
       url: "http://127.0.0.1:8545",

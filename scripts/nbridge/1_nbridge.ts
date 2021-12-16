@@ -18,12 +18,12 @@ async function main() {
 	// let networkToChange = ['okex_test', 'avax_test', 'harmony_test', 'heco_test', 'fantom_test', 'xdai_test']
 	// let networkToChange = ['okex_test', 'avax_test', 'heco_test', 'fantom_test', 'xdai_test']
 	// let networkToChange = ["bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai"]
-	let networkToChange = [ "mainnet"]
+	let networkToChange = [ "arbi", "op", "boba"]
 	// let networkToChange = ["avax", "matic", "heco", "fantom", "xdai"]
 	// let networkToChange = ["bsc"]
 	let contracts = JSON.parse(getContractsAddress())
 	let originChainId = '1'
-	let tokenName = 'oBTC'
+	let tokenName = 'BORING'
 	let originToken = contracts[originChainId][tokenName]
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)
@@ -33,7 +33,7 @@ async function main() {
 	for (const n of networkToChange) {
 		hre.changeNetwork(n)
 		let chainid = network.config.chainId!
-		console.log(`network name ${network.name} ${network.config.chainId!}`)
+		console.log(`network name ${network.name} ${network.config.chainId!} originToken ${originToken}`)
 		let nb: NBridge
 		if (contracts[chainid.toString()]['nbridge'] != undefined) {
 			// if (network.config.chainId == 100) {
@@ -101,7 +101,7 @@ async function setupNBridge(nb: NBridge, originToken: string, originChainId: num
 	console.log(`grantRole crosser ${tx5.hash}`)
 	await tx5.wait()
 	if (network.config.chainId! != originChainId) {
-		let txMinCross = await nb.setMinCrossAmount(originToken, originChainId, parseEther("10000"))
+		let txMinCross = await nb.setMinCrossAmount(originToken, originChainId, parseEther("100000"))
 		console.log(`tx minCrossAmount ${txMinCross.hash} ${network.config.chainId}`)
 	}
 }

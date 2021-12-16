@@ -146,10 +146,12 @@ export function getChainIdByName(chainName: string): number {
             return 1666600000
         case 'avax':
             return 43114
-        case 'arbitrum':
+        case 'arbi':
             return 42161
         case 'op':
             return 10
+		case 'boba':
+			return 288
         default:
             console.error('not known network');
             process.exit(-1);

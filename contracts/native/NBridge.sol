@@ -28,6 +28,9 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
     mapping(uint256 => mapping(address => TokenInfo)) public supportedTokens;
     mapping(string => bool) public txHandled;
     mapping(address => mapping(uint256 => uint256)) public minCrossAmount;
+    mapping(address => mapping(uint256 => uint256)) public fixFees;
+    mapping(address => mapping(uint256 => uint256)) public ratioFees;
+    using SafeDecimalMath for uint256;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
@@ -85,21 +88,26 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
         address to,
         uint256 amount
     ) external {
-        require(amount > 0, "cross amount 0");
+        require(amount > fixFees[_token][toChainID], "cross amount 0");
         TokenInfo memory ti = supportedTokens[chainId][_token];
         require(ti.isSupported, "not support token");
-        uint256 minAmount = minCrossAmount[ti.mirrorAddress][toChainID];
-        if (minAmount != 0) {
-            require(amount >= minAmount, "amount less than minAmount");
-        }
+        (uint256 fixAmount, uint256 ratioAmount, uint256 remainAmount) = calculateFee(_token, toChainID, amount);
+        require(remainAmount > 0, "remainAmount = 0");
+        uint256 feeAmount = fixAmount + ratioAmount;
         if (ti.tokenType == 1) {
             // lock
-            IERC20Upgradeable(_token).safeTransferFrom(msg.sender, address(this), amount);
-            emit CrossOut(_token, chainId, chainId, toChainID, msg.sender, to, amount);
+            IERC20Upgradeable(_token).safeTransferFrom(msg.sender, address(this), remainAmount);
+            if (feeAmount > 0) {
+                IERC20Upgradeable(_token).safeTransferFrom(msg.sender, feeTo, feeAmount);
+            }
+            emit CrossOut(_token, chainId, chainId, toChainID, msg.sender, to, remainAmount);
         } else if (ti.tokenType == 2) {
             // burn
-            IToken(_token).burn(msg.sender, amount);
-            emit CrossOut(ti.mirrorAddress, ti.mirrorChainId, chainId, toChainID, msg.sender, to, amount);
+            IToken(_token).burn(msg.sender, remainAmount);
+            if (feeAmount > 0) {
+                IERC20Upgradeable(_token).safeTransferFrom(msg.sender, feeTo, feeAmount);
+            }
+            emit CrossOut(ti.mirrorAddress, ti.mirrorChainId, chainId, toChainID, msg.sender, to, remainAmount);
         }
     }
 
@@ -111,23 +119,15 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
         require(p.toChainId == chainId, "chainId error");
         TokenInfo memory ti = supportedTokens[p._originChainId][p._originToken];
         require(ti.isSupported, "not support token");
-
         bool result = _vote(p);
         if (result) {
             txHandled[p.txid] = true;
-            (uint256 feeAmount, uint256 remainAmount) = calculateFee(p._originToken, p.amount);
             if (ti.tokenType == 1) {
                 // unlock
-                IERC20Upgradeable(ti.mirrorAddress).safeTransfer(p.to, remainAmount);
-                if (feeAmount > 0) {
-                    IERC20Upgradeable(ti.mirrorAddress).safeTransfer(feeTo, feeAmount);
-                }
+                IERC20Upgradeable(ti.mirrorAddress).safeTransfer(p.to, p.amount);
             } else if (ti.tokenType == 2) {
                 // mint
-                IToken(ti.mirrorAddress).mint(p.to, remainAmount);
-                if (feeAmount > 0) {
-                    IToken(ti.mirrorAddress).mint(feeTo, feeAmount);
-                }
+                IToken(ti.mirrorAddress).mint(p.to, p.amount);
             }
             emit CrossIn(p._originToken, p._originChainId, p.fromChainId, p.toChainId, p.from, p.to, p.amount);
         }
@@ -141,8 +141,51 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
         _setFeeTo(account);
     }
 
-    function setFee(address token, uint256 _feeRatio) external onlyAdmin {
-        _setFee(token, _feeRatio);
+    // function setFee(address token, uint256 _feeRatio) external onlyAdmin {
+    //     _setFee(token, _feeRatio);
+    // }
+
+    function setFee(
+        address token,
+        uint256 toChainId,
+        uint256 _feeFix,
+        uint256 _feeRatio
+    ) public onlyAdmin {
+        fixFees[token][toChainId] = _feeFix;
+        ratioFees[token][toChainId] = _feeRatio;
+    }
+
+    function setFees(
+        address[] memory tokens,
+        uint256[] memory toChainIds,
+        uint256[] memory _feeFixMulti,
+        uint256[] memory _feeRatioMulti
+    ) external {
+        require(tokens.length == toChainIds.length, "not match");
+        require(tokens.length == _feeFixMulti.length, "not match");
+        require(tokens.length == _feeRatioMulti.length, "not match");
+        for (uint256 i; i < tokens.length; i++) {
+            setFee(tokens[i], toChainIds[i], _feeFixMulti[i], _feeRatioMulti[i]);
+        }
+    }
+
+    function calculateFee(
+        address token,
+        uint256 toChainId,
+        uint256 amount
+    )
+        public
+        view
+        returns (
+            uint256 fixAmount,
+            uint256 ratioAmount,
+            uint256 remainAmount
+        )
+    {
+        fixAmount = fixFees[token][toChainId];
+        uint256 r1 = amount - fixAmount;
+        ratioAmount = ratioFees[token][toChainId].multiplyDecimal(r1);
+        remainAmount = amount - fixAmount - ratioAmount;
     }
 
     modifier whenNotHandled(string memory _txid) {

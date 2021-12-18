@@ -69,8 +69,7 @@ const config: HardhatUserConfig = {
     bsc: {
       url: "https://bsc-dataseed.binance.org",
       chainId: 56,
-      accounts: [privateKeyBSC],
-      gas: 10000000
+      accounts: [privateKeyBSC]
     },
     okex_test: {
       url: "https://exchaintestrpc.okex.org",
@@ -83,8 +82,7 @@ const config: HardhatUserConfig = {
     avax: {
       url: "https://api.avax.network/ext/bc/C/rpc",
       chainId: 43114,
-      accounts: [privateKeyAVAX],
-      gas: 8000000
+      accounts: [privateKeyAVAX]
     },
     avax_test: {
       url: "https://api.avax-test.network/ext/bc/C/rpc",
@@ -206,6 +204,18 @@ const config: HardhatUserConfig = {
       url: "https://mainnet.boba.network/",
       chainId: 288,
       accounts: [privateKeyAVAX]
+    },
+    metis: {
+      url: "https://andromeda.metis.io/?owner=1088", 
+      chainId: 1088,
+      accounts: [privateKeyAVAX]
+    },
+    metis_test: {
+      url: "https://stardust.metis.io/?owner=588",
+      chainId: 588,
+      accounts: {
+        mnemonic: mnemonic
+      }
     },
     t1: {
       url: "http://127.0.0.1:8545",

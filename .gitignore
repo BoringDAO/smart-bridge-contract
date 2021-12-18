@@ -13,5 +13,6 @@ data/
 contracts/nft/
 tw.sol
 ./*.sol
+nb.sol
 # *.sol
 token.sol

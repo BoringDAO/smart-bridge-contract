@@ -4,7 +4,6 @@ import { BigNumber as RawBigNumber } from "bignumber.js"
 
 import { ethers, network, upgrades } from "hardhat";
 import { ERC20 } from "../src/types/ERC20";
-import { BoringToken } from "../src/types/BoringToken";
 import { TwoWay } from "../src/types/TwoWay";
 import { SwapPair } from "../src/types/SwapPair";
 import { readFile, readFileSync, writeFileSync } from "fs";
@@ -152,6 +151,10 @@ export function getChainIdByName(chainName: string): number {
             return 10
 		case 'boba':
 			return 288
+		case 'metis':
+			return 1088
+		case 'metis_test':
+			return 588
         default:
             console.error('not known network');
             process.exit(-1);

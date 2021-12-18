@@ -30,14 +30,14 @@ contract NToll {
         emit FeeToChanged(account);
     }
 
-    function calculateFee(address token, uint256 amount)
-        public
-        view
-        virtual
-        returns (uint256 feeAmount, uint256 remainAmount)
-    {
-        uint256 _feeRatio = feeRatio[token];
-        feeAmount = amount.multiplyDecimal(_feeRatio);
-        remainAmount = amount - feeAmount;
-    }
+    // function calculateFee(address token, uint256 amount)
+    //     public
+    //     view
+    //     virtual
+    //     returns (uint256 feeAmount, uint256 remainAmount)
+    // {
+    //     uint256 _feeRatio = feeRatio[token];
+    //     feeAmount = amount.multiplyDecimal(_feeRatio);
+    //     remainAmount = amount - feeAmount;
+    // }
 }

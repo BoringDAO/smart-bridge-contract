@@ -30,7 +30,8 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       forking: {
-        url: `https://kovan.infura.io/v3/${projectId}`,
+      url: "https://andromeda.metis.io/?owner=1088", 
+        // url: `https://kovan.infura.io/v3/${projectId}`,
         // url: `https://mainnet.infura.io/v3/${projectId}`,
         // url: "https://bsc-dataseed.binance.org",
       },
@@ -38,7 +39,7 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: mnemonic
       },
-      chainId: 42
+      chainId: 1088
     },
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,

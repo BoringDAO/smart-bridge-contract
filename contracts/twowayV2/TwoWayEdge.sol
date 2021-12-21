@@ -58,7 +58,7 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
     function deposit(address token, uint256 amount) external {
         require(tokenSupported[token], "not supported token");
         IERC20Upgradeable(token).safeTransferFrom(msg.sender, address(this), amount);
-        emit Deposited(chainid, token, amount * decimalDiff[token]);
+        emit Deposited(chainid, token, msg.sender, amount * decimalDiff[token]);
     }
 
     function crossOut(
@@ -105,7 +105,7 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         _;
     }
 
-    event Deposited(uint fromChainId, address token, uint256 amount);
+    event Deposited(uint fromChainId, address fromToken, address from, uint256 amount);
     event CrossOuted(OutParam p);
     event CrossIned(InParam p);
     event CrossInFailed(InParam p);

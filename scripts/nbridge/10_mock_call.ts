@@ -7,20 +7,26 @@ const hre = require("hardhat")
 
 async function main() {
 	let accounts = await ethers.getSigners()
+
+	await hre.network.provider.request({
+		method: "hardhat_impersonateAccount",
+		params: ["0x53E34401091B531654b8AAEd4EE03AD3e75A0629"],
+	});
+	const signer = await ethers.getSigner("0x53E34401091B531654b8AAEd4EE03AD3e75A0629")
+
 	console.log(`network ${network.name} deployer ${await accounts[0].getAddress()} ${Number(await getChainId())}`)
 	// let networkToChange = ["xdai"]	
 	// let networkToChange = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai", 'op', 'arbi', 'boba']
-	let networkToChange = ["mainnet", "metis"]
-	// let networkToChange = ["mainnet"]
+	let networkToChange = ["hardhat"]
 	// let networkToChange = ['heco']
 	let contracts = JSON.parse(getContractsAddress())
 	let allChain = ["mainnet", "metis"]
 	let tokenSymbol = "AAVE"
 	let specialChain = "mainnet"
-	let toEthFixFee = "0.3"
-	let toLayer2FixFee = "0.05"
+	let toEthFixFee = "12"
+	let toLayer2FixFee = "2"
 	let toNormalFixFee = "0.01"
-	let ratioFee = "0.0005"
+	let ratioFee = "0.005"
 
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)
@@ -47,50 +53,14 @@ async function main() {
 			console.log("network error: nbridge not exist")
 			process.exit(-1)
 		}
-		let tokens = []
-		let toChainIds = []
-		let fixes = []
-		let ratios = []
-		for (let c of allChain) {
-			if (c == network.name) {
-				continue
-			}
-			let token = contracts[chainIdStr][tokenSymbol]
-			tokens.push(token)
-			toChainIds.push(getChainIdByName(c))
-			if (c == "mainnet") {
-				fixes.push(parseEther(toEthFixFee))
-			} else if (c == "op" || c == "arbi" || c == "boba" || c == "metis") {
-				fixes.push(parseEther(toLayer2FixFee))
-			}else {
-				fixes.push(parseEther(toNormalFixFee))
-			}
-
-			if (c == "metis") {
-				ratios.push(0)
-			} else {
-				ratios.push(parseEther(ratioFee))
-			}
-
-		}
-		for (let i=0; i < tokens.length; i++) {
-			console.log(`${tokens[i]} ${toChainIds[i]} ${fixes[i]} ${ratios[i]}`)
-		}
-		// continue
-		let txSetFees = await nb.setFees(tokens, toChainIds, fixes, ratios)
-		console.log(`txSetFees ${txSetFees.hash}`)
-		await txSetFees.wait()
+		let tokenAddr  = contracts[chainIdStr][tokenSymbol]
+		let nb2 = nb.connect(signer)
+		// let tx = await nb2.crossOut(tokenAddr, 1, await signer.getAddress(), parseEther("0.6"))
+		// tx.wait()
+		let feeTo = await nb2.feeTo()
+		console.log(feeTo)
 	}
 
-}
-
-async function setFeeTo(nb: NBridge, feeTo: string) {
-	let feeToAddr = await nb.feeTo()
-	console.log(`feeToAddr ${feeToAddr}`)
-	return
-	let tx = await nb.setFeeTo(feeTo)	
-	console.log(`set feeTo ${tx}`)
-	await tx.wait()
 }
 
 main()

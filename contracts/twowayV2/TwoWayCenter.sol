@@ -21,9 +21,8 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     using SafeDecimalMath for uint;
 
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
-    bytes32 public constant CROSSER_ROLE = keccak256("CROSSER_ROLE");
 
-    uint256 public chainid;
+    uint256 public chainId;
     address public feeTo;
     mapping(uint256 => mapping(address => address)) public toCenterToken;
     mapping(address => mapping(uint256 => address)) public toEdgeToken;
@@ -31,17 +30,18 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     mapping(string => bool) public txHandled;
     mapping(address => mapping(uint => uint)) public fixFees;
     mapping(address => mapping(uint => uint)) public ratioFees;
+    
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
 
-    function initialize(uint256 _chainid) public initializer {
+    function initialize(uint256 _chainId) public initializer {
         __AccessControl_init();
         __UUPSUpgradeable_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
-        chainid = _chainid;
+        chainId = _chainId;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
@@ -55,7 +55,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         require(toEdgeToken[_centerToken][_edgeChainId] == address(0), "edgeToken exist");
         toCenterToken[_edgeChainId][_edgeToken] = _centerToken;
         toEdgeToken[_centerToken][_edgeChainId] = _edgeToken;
-        if (_edgeChainId == chainid) {
+        if (_edgeChainId == chainId) {
             decimalDiff[_centerToken] = 10**(18 - IERC20MetadataUpgradeable(_centerToken).decimals());
         }
     }
@@ -72,11 +72,11 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     }
 
     function deposit(address token, uint256 amount) external {
-        address centerToken = toCenterToken[chainid][token];
+        address centerToken = toCenterToken[chainId][token];
         require(centerToken != address(0), "not support");
         IERC20Upgradeable(token).safeTransferFrom(msg.sender, address(this), amount);
         IToken(centerToken).mint(msg.sender, amount * decimalDiff[token]);
-        emit CenterDeposited(chainid, token, msg.sender, amount * decimalDiff[token]);
+        emit CenterDeposited(chainId, token, msg.sender, amount * decimalDiff[token]);
     }
 
     function crossOut(
@@ -85,18 +85,18 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         address to,
         uint256 amount
     ) external {
-        address _centerToken = toCenterToken[chainid][fromToken];
+        address _centerToken = toCenterToken[chainId][fromToken];
         require(_centerToken != address(0), "not support");
         address _edgeToken = toEdgeToken[_centerToken][toChainId];
         require(_edgeToken != address(0), "not support");
-		address edgeToken = toEdgeToken[toCenterToken[chainid][fromToken]][toChainId];
+		address edgeToken = toEdgeToken[toCenterToken[chainId][fromToken]][toChainId];
         (uint fixAmount, uint ratioAmount, uint remainAmount) = calculateFee(fromToken, toChainId, amount);
         IERC20Upgradeable(fromToken).safeTransferFrom(msg.sender, address(this), remainAmount);
         IERC20Upgradeable(fromToken).safeTransferFrom(msg.sender, feeTo, fixAmount+ratioAmount);
-        emit CenterCrossOuted(InParam(chainid, fromToken, msg.sender, toChainId, edgeToken, to, remainAmount * decimalDiff[fromToken]));
+        emit CenterCrossOuted(InParam(chainId, fromToken, msg.sender, toChainId, edgeToken, to, remainAmount * decimalDiff[fromToken]));
     }
 
-    function forwardCrossOut(OutParam memory p, string memory txid) external onlyCrosser whenNotHandled(txid) {
+    function forwardCrossOut(OutParam memory p, string memory txid) external onlyCrosser(toCenterToken[p.fromChainId][p.fromToken]) whenNotHandled(txid) {
         bool result = _vote(p.fromToken, p.from, p.to, p.amount, txid);
         if (result) {
             txHandled[txid] = true;
@@ -108,9 +108,9 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         }
     }
 
-    function crossIn(OutParam memory p, string memory txid) external onlyCrosser whenNotHandled(txid) {
-        require(p.toChainId == chainid, "chainid error");
-		address centerToken = toCenterToken[chainid][p.fromToken];
+    function crossIn(OutParam memory p, string memory txid) external onlyCrosser(toCenterToken[chainId][p.fromToken]) whenNotHandled(txid) {
+        require(p.toChainId == chainId, "chainId error");
+		address centerToken = toCenterToken[chainId][p.fromToken];
 		address edgeToken = toEdgeToken[centerToken][p.toChainId];
         require( centerToken != address(0), "not support");
         bool result = _vote(p.fromToken, p.from, p.to, p.amount, txid);
@@ -127,7 +127,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         }
     }
 
-    function issue(InParam memory tp, string memory txid) external onlyRole(CROSSER_ROLE) whenNotHandled(txid) {
+    function issue(InParam memory tp, string memory txid) external onlyCrosser(toCenterToken[tp.fromChainId][tp.fromToken]) whenNotHandled(txid) {
         address _centerToken = toCenterToken[tp.fromChainId][tp.fromToken];
         require(_centerToken != address(0), "centerToken exist");
         require(toEdgeToken[_centerToken][tp.fromChainId] != address(0), "edgeToken exist");
@@ -142,11 +142,11 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
 
     function rollbackCrossIn(InParam memory p, string memory txid)
         external
-        onlyRole(CROSSER_ROLE)
+        onlyCrosser(toCenterToken[p.fromChainId][p.fromToken])
         whenNotHandled(txid)
     {
-        require(p.toChainId == chainid, "chainid error");
-        require(toCenterToken[chainid][p.toToken] != address(0), "not support");
+        require(p.toChainId == chainId, "chainId error");
+        require(toCenterToken[chainId][p.toToken] != address(0), "not support");
         bool result = _vote(p.toToken, p.from, p.to, p.amount, txid);
         if (result) {
             txHandled[txid] = true;
@@ -164,14 +164,14 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         address to,
         uint256 amount
     ) external {
-		address _edgeToken = toEdgeToken[fromToken][chainid];
+		address _edgeToken = toEdgeToken[fromToken][chainId];
         IToken(fromToken).burn(msg.sender, amount);
-        if (toChainId == chainid) {
+        if (toChainId == chainId) {
             require(IERC20Upgradeable(_edgeToken).balanceOf(address(this)) >= amount, "not enough");
             IERC20Upgradeable(_edgeToken).safeTransfer(msg.sender, amount);
 			// emit CenterWithdrawed();
         } else {
-        	emit Withdrawed(InParam(chainid, fromToken, msg.sender, toChainId, _edgeToken, to, amount));
+        	emit Withdrawed(InParam(chainId, fromToken, msg.sender, toChainId, _edgeToken, to, amount));
 		}
     }
 
@@ -194,13 +194,18 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         remainAmount = amount - fixAmount - ratioAmount;
     }
 
+    function getRoleKey(address toToken) public pure returns(bytes32 key) {
+        key = keccak256(abi.encodePacked(toToken));
+    }
+
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "TwoWay: caller is not admin");
         _;
     }
 
-    modifier onlyCrosser() {
-        require(hasRole(CROSSER_ROLE, msg.sender), "TwoWay: caller is not crosser");
+    modifier onlyCrosser(address toToken) {
+        bytes32 key = getRoleKey(toToken);
+        require(hasRole(key, msg.sender), "TwoWay: caller is not crosser");
         _;
     }
 

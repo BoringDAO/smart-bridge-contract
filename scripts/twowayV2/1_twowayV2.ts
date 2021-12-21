@@ -1,6 +1,9 @@
 import { Contract } from "ethers";
-import {ethers, network } from "hardhat";
+import { parseUnits } from "ethers/lib/utils";
+import {ethers, network, upgrades } from "hardhat";
 import { TestERC20 } from "../../src/types/TestERC20";
+import { TwoWayCenter } from "../../src/types/TwoWayCenter";
+import { TwoWayEdge } from "../../src/types/TwoWayEdge";
 import { deploy, deployProxy, getContractsAddress, writeContractAddress } from "../helper";
 const hre = require("hardhat")
 
@@ -20,9 +23,9 @@ async function main() {
 		// todo
 		let twAddr: Contract
 		if (n == center_chain) {
-			twAddr = await deployProxy("TwoWayCenter", cChainId)
+			twAddr = await deployProxy<TwoWayCenter>("TwoWayCenter", cChainId)
 		} else {
-			twAddr = await deployProxy("TwoWayEdge", cChainId)
+			twAddr = await deployProxy<TwoWayEdge>("TwoWayEdge", cChainId)
 		}
 		contracts[cChainIdStr]['TwoWayV2'] = twAddr.address
 		writeContractAddress(JSON.stringify(contracts))

@@ -15,7 +15,7 @@ async function main() {
 	let contracts = JSON.parse(getContractsAddress())
 	console.log(`deployer ${await accounts[0].getAddress()} in network ${network.name}`)
 	let usdtToken: TestERC20
-	let networkToChange = ['kovan']
+	let networkToChange = ['matic_test', 'kovan', 'bsc_test']
 	let center_chain = "matic_test"
 	let tokenSymbol = "USDT"
 	for (let n of networkToChange) {
@@ -25,7 +25,13 @@ async function main() {
 		console.log(network.name, cChainId)
 		// todo
 		if (n == center_chain) {
+
+
 			let tw = await attach("TwoWayCenter", contracts[cChainIdStr]['TwoWayV2']) as TwoWayCenter
+			let chainidCenter = await tw.chainId()
+			console.log(`chainid center ${ethers.utils.formatUnits(chainidCenter, 0)} tw ${tw.address}`)
+			continue
+
 			let oToken = await deployProxy("TwoWayCenterToken", "oUSDT", "oUSDT") as TwoWayCenterToken
 			contracts[cChainIdStr]['oUSDT'] = oToken.address
 			for (let edgeChain of networkToChange) {
@@ -36,11 +42,16 @@ async function main() {
 
 		} else {
 			let tw = await attach("TwoWayEdge", contracts[cChainIdStr]['TwoWayV2']) as TwoWayEdge
+
+			let chainidCenter = await tw.chainId()
+			console.log(`chainid center ${ethers.utils.formatUnits(chainidCenter, 0)} tw ${tw.address}`)
+			continue
 			let rawTokenAddr = contracts[cChainIdStr][tokenSymbol]
 			let rawToken = await attach("ERC20", contracts[cChainIdStr][tokenSymbol]) as ERC20
 			let txApprove = await rawToken.approve(tw.address, ethers.constants.MaxInt256)
 			await txApprove.wait()
 			await deposit(tw, rawTokenAddr)
+
 		}
 	}
 

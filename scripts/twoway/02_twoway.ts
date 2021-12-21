@@ -4,7 +4,6 @@ import { TestERC20 } from '../../src/types/TestERC20';
 import { TwoWay } from '../../src/types/TwoWay';
 import { SwapPair } from '../../src/types/SwapPair';
 import { ERC20 } from '../../src/types/ERC20';
-import { BoringToken } from '../../src/types/BoringToken';
 import { parseEther } from '@ethersproject/units';
 import { config } from 'node:process';
 const hre = require("hardhat")
@@ -28,7 +27,8 @@ async function main() {
     console.log(network.name, 'target chain', targetChains);
     // let chains = ['bsc', 'matic', 'mainnet', 'okex', 'avax', 'fantom', 'xdai', 'heco', 'harmony', 'arbi', 'op']
     // let networkToChange = ['op']
-    let networkToChange = ['boba', 'op']
+    // let networkToChange = ['boba', 'op']
+    let networkToChange = ['fantom', 'xdai', 'heco', 'harmony', 'arbi', 'op', 'boba']
     for (let n of networkToChange) {
 		hre.changeNetwork(n)
 		let number = await ethers.provider.getBlockNumber()
@@ -44,12 +44,12 @@ async function main() {
         let usdtAddr = contracts[cchainid]['USDT']
         console.log(`twoway ${twowayAddr}, usdtAddr ${usdtAddr}`)
         let tw = await ethers.getContractAt('TwoWay', twowayAddr) as TwoWay
-        await setRemoveFeeAmount(tw, usdtAddr)
+        // await setRemoveFeeAmount(tw, usdtAddr)
 
         // let tw = await ethers.getContractAt('TwoWay', twowayAddr) as TwoWay
 
-        // let chains = ['bsc', 'matic', 'mainnet', 'okex', 'avax', 'fantom', 'xdai', 'heco', 'harmony', 'arbi', 'op']
-        // await checkFee(tw, chains)
+        let chains = ['bsc', 'matic', 'mainnet', 'okex', 'avax', 'fantom', 'xdai', 'heco', 'harmony', 'arbi', 'op', 'boba']
+        await checkFee(tw, network.name, chains)
     }
     return
     // switch (network.name) {
@@ -471,25 +471,38 @@ async function setRemoveFeeAmount(tw: TwoWay, usdt: string) {
     await tx.wait()
 }
 
-async function checkFee(tw: TwoWay, chainIds: string[]) {
-    let usdt = getUsdt("boba")
+async function checkFee(tw: TwoWay, cChainName: string, chainIds: string[]) {
+    let usdt = getUsdt(cChainName)
+    let usdtToken = await ethers.getContractAt('ERC20', usdt) as ERC20
     let token0s = []
     let chainNumbers = []
     let fixAmounts = []
     let ratioAmounts = []
     for (const chainIdString of chainIds) {
+        if (cChainName == chainIdString) {
+            continue
+        }
+        if (!(chainIdString == 'boba' || chainIdString == 'op' || chainIdString == 'arbi')) {
+            continue
+        }
         let chainId = getChainId(chainIdString)
         let fixFee = await tw.feeAmountM(usdt, chainId)
-        console.log(`fix fee ${ethers.utils.formatEther(fixFee)}`)
+        console.log(`${cChainName} from ${chainIdString} fix fee ${ethers.utils.formatEther(fixFee)}`)
         let ratioFee = await tw.feeRatioM(usdt, chainId)
         console.log(`ratio fee ${ethers.utils.formatEther(ratioFee)}`)
         token0s.push(usdt)
         chainNumbers.push(chainId)
-        fixAmounts.push(0)
-        ratioAmounts.push(0)
+        if (cChainName == 'mainnet') {
+            fixAmounts.push(ethers.utils.parseUnits("100", await usdtToken.decimals()))
+        } else if (cChainName == 'boba' || cChainName == 'op' || cChainName == 'arbi'){
+            fixAmounts.push(ethers.utils.parseUnits("10", await usdtToken.decimals()))
+        } else {
+            fixAmounts.push(ethers.utils.parseUnits("2", await usdtToken.decimals()))
+        }
+        // fixAmounts.push(0)
+        ratioAmounts.push(ethers.utils.parseEther("0.005"))
     }
     console.log(token0s, chainNumbers, fixAmounts, ratioAmounts)
-    // return
     let tx = await tw.setFees(token0s, chainNumbers, fixAmounts, ratioAmounts)
     console.log(tx.hash, token0s, chainNumbers, fixAmounts, ratioAmounts)
     await tx.wait()

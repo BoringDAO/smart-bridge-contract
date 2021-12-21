@@ -59,6 +59,9 @@ async function main() {
 		// tx.wait()
 		let feeTo = await nb2.feeTo()
 		console.log(feeTo)
+
+		let chainId = await nb.chainId()
+		console.log(`chainId ${chainId}`)
 	}
 
 }

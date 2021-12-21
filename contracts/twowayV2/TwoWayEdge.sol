@@ -18,37 +18,36 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
-    bytes32 public constant CROSSER_ROLE = keccak256("CROSSER_ROLE");
 
     mapping(address => mapping(uint256 => bool)) public chainSupported;
     mapping(address => bool) public tokenSupported;
     mapping(address => uint256) public decimalDiff;
     mapping(string => bool) public txHandled;
-    uint256 public chainid;
+    uint256 public chainId;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
 
-    function initialize(uint256 _chainid) public initializer {
+    function initialize(uint256 _chainId) public initializer {
         __AccessControl_init();
         __UUPSUpgradeable_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
-        _chainid = chainid;
+        chainId = _chainId;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
 
     function changeSupport(
         address token,
-        uint256 chainId,
+        uint256 _chainId,
         bool status
     ) external onlyAdmin {
-        require(chainSupported[token][chainId] != status, "status error");
+        require(chainSupported[token][_chainId] != status, "status error");
         chainSupported[token][chainId] = status;
         decimalDiff[token] = 10**(18 - IERC20MetadataUpgradeable(token).decimals());
-        emit Supported(token, chainId, status);
+        emit Supported(token, _chainId, status);
     }
 
     function addSupport(address token) external onlyAdmin {
@@ -58,7 +57,7 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
     function deposit(address token, uint256 amount) external {
         require(tokenSupported[token], "not supported token");
         IERC20Upgradeable(token).safeTransferFrom(msg.sender, address(this), amount);
-        emit Deposited(chainid, token, msg.sender, amount * decimalDiff[token]);
+        emit Deposited(chainId, token, msg.sender, amount * decimalDiff[token]);
     }
 
     function crossOut(
@@ -70,11 +69,11 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         require(tokenSupported[fromToken], "not supported token");
         require(chainSupported[fromToken][toChainId], "not supported chain");
         IERC20Upgradeable(fromToken).safeTransferFrom(msg.sender, address(this), amount);
-        emit CrossOuted(OutParam(chainid, fromToken, msg.sender, toChainId, to, amount * decimalDiff[fromToken]));
+        emit CrossOuted(OutParam(chainId, fromToken, msg.sender, toChainId, to, amount * decimalDiff[fromToken]));
     }
 
-    function crossIn(InParam memory p, string memory txid) external onlyCrosser whenNotHandled(txid) {
-        require(p.toChainId == chainid, "chianid not support");
+    function crossIn(InParam memory p, string memory txid) external onlyCrosser(p.toToken) whenNotHandled(txid) {
+        require(p.toChainId == chainId, "chianid not support");
         require(tokenSupported[p.toToken], "not supported token");
         require(chainSupported[p.toToken][p.fromChainId], "not supported chain");
         bool result = _vote(p.toToken, p.from, p.to, p.amount, txid);
@@ -90,13 +89,19 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         }
     }
 
+    function getRoleKey(address toToken) public pure returns(bytes32 key) {
+        key = keccak256(abi.encodePacked(toToken));
+    }
+
+
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "TwoWay: caller is not admin");
         _;
     }
 
-    modifier onlyCrosser() {
-        require(hasRole(CROSSER_ROLE, msg.sender), "TwoWay: caller is not crosser");
+    modifier onlyCrosser(address toToken) {
+        bytes32 key = getRoleKey(toToken);
+        require(hasRole(key, msg.sender), "TwoWay: caller is not crosser");
         _;
     }
 

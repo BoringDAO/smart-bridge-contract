@@ -2,70 +2,35 @@
   "manifestVersion": "3.2",
   "proxies": [
     {
-      "address": "0xFF3C67d515C5a5bEDa12e2097F5A4048a4AE6F8d",
-      "txHash": "0x152ab3fc84adbefadca7742f69a696fe2a510b0e52e0a6e61aa672bdde6d5356",
+      "address": "0x329A41213bFd96f9075b6a887edDD329976e4886",
+      "txHash": "0x8be4e58d764dde2429e8e81d5ae37185e15e7915ebf01bbb185b4495c4a1a8df",
       "kind": "uups"
     },
     {
-      "address": "0xdBDE323ee2E0b8be8e33Ff4aDAc09AFFD104c277",
-      "txHash": "0xde3efb230c8c670a137fcd0bc133eee35d953260c8aca080d343b86ce1cc1e27",
+      "address": "0xa200CFF095080B6fd5cC331D3FC175fB2Bb23115",
+      "txHash": "0xb01b4d508a78b6b555993fdabe97e2d0a74e8977a09f2b3292988a4045f0b8e9",
       "kind": "uups"
     },
     {
-      "address": "0x0057afFA48886e63Db5853D0154F0b67b7320F57",
-      "txHash": "0xdab7f9b427be8abd832fc9c78cfa78f9075dd4a46a39bdc367086071635ec02d",
+      "address": "0x6389E893cA8e8561F6BC398d4be76CC125544E84",
+      "txHash": "0xbce863fef668c5e97ee008c1965ad95f4087fc619de51892e6a936c638fb7f95",
       "kind": "uups"
     },
     {
-      "address": "0xc0Dd4B4650fBc6279a9bCd642A8795aecdd22d19",
-      "txHash": "0xd83af61bb5502187db7ac046f0de83018693ca6e0b44f2899c4c7300a5aabe08",
+      "address": "0x9D5D5dFf7de71c577c80cDDaa21bd2F76763c390",
+      "txHash": "0x1314596a75049ee26c163c0f0092d8906fbabc4b08262aaf2400cf8e2a2d3236",
       "kind": "uups"
     },
     {
-      "address": "0x8753F1938FD54707C43c35C32ccE2e23485be5d8",
-      "txHash": "0xe81803ade80e001c6e034edcea7ee2cc1d29545602c64946119d0fe1e6e3c98f",
-      "kind": "uups"
-    },
-    {
-      "address": "0x69D48129b8cFf234adB856Cd06058684119b4658",
-      "txHash": "0x22a84b117f05a0f5a7c6d2495e2e355c05c3676297c7cba4e39734e1f65bfbef",
-      "kind": "uups"
-    },
-    {
-      "address": "0x6221c696fdD89B0Ce1BD9510408bDA30E675fB47",
-      "txHash": "0x138cd647e322b6d6dd71f9a17d52fd28252bf414e87f60c77857f6397ffd6b68",
-      "kind": "uups"
-    },
-    {
-      "address": "0x6Ff4126bCB036E7743A2C548323524bd954E5C83",
-      "txHash": "0x8fcb94f8111edb26b6b2efbe0a43a0eecbeac6f626c61b0bb09aedcedf55b1fd",
-      "kind": "uups"
-    },
-    {
-      "address": "0x5a21781eB6F19F864D5518Cf31C65140e48D162c",
-      "txHash": "0xc81658cbac3e3caad5e8808c69aa636edc968a58c97c5b2b67ac1a7eb53ce4f2",
-      "kind": "uups"
-    },
-    {
-      "address": "0x91C4F79B60534591371274afa61fBC053DDc33BB",
-      "txHash": "0x00be3aa089a151a4fa791ae7b446022b4824af56b9e50b3cc4740465d5d71e4b",
-      "kind": "uups"
-    },
-    {
-      "address": "0xA273050a583F0A9288288cC438c29Ff7709e2Bf7",
-      "txHash": "0xf5c31c244a039292e7e11cfb4867d027b232acc2df27be59a9dcadbffe5b02fe",
-      "kind": "uups"
-    },
-    {
-      "address": "0xA90C6AA3Bf5944d59289ED0CC56e92e182FFDA58",
-      "txHash": "0x976929c17703af77e25a22b659ceb091b967aed272add15001b4451f729cfc12",
+      "address": "0x140F477E7557C38E8De70336C42CB2944F6A00BC",
+      "txHash": "0x4df214dcfdc29411f2fa4be12e0aba2e6cc191b6711bd1d44819f05280b3d463",
       "kind": "uups"
     }
   ],
   "impls": {
-    "75f4f07976d52111a3b0f256cc7372a36f31ddcfd94aed694e742775898bb585": {
-      "address": "0xaCb3bA0B591A9B52828df6b7F099c30Ae91490f6",
-      "txHash": "0x311c1a0569d2c80be10a8bc4c55ea395e1d8eb760ee13b0aef34a61efa74cb50",
+    "85f487706d2bdd96f716f893babbc6118c41355d5063973a8078679aa4960f54": {
+      "address": "0xDd33248c1Ee1D63B88A3F2d360F17eDa5B2E9693",
+      "txHash": "0x54f1467e9e7886ca153ea30237c8492d8b25cc8b18fa498699315ec57ffc630f",
       "layout": {
         "storage": [
           {
@@ -142,47 +107,65 @@
           },
           {
             "contract": "TwoWayCenter",
-            "label": "chainid",
+            "label": "chainId",
             "type": "t_uint256",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:24"
+            "src": "contracts/twowayV2/TwoWayCenter.sol:25"
+          },
+          {
+            "contract": "TwoWayCenter",
+            "label": "feeTo",
+            "type": "t_address",
+            "src": "contracts/twowayV2/TwoWayCenter.sol:26"
           },
           {
             "contract": "TwoWayCenter",
             "label": "toCenterToken",
             "type": "t_mapping(t_uint256,t_mapping(t_address,t_address))",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:25"
+            "src": "contracts/twowayV2/TwoWayCenter.sol:27"
           },
           {
             "contract": "TwoWayCenter",
             "label": "toEdgeToken",
             "type": "t_mapping(t_address,t_mapping(t_uint256,t_address))",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:26"
+            "src": "contracts/twowayV2/TwoWayCenter.sol:28"
           },
           {
             "contract": "TwoWayCenter",
             "label": "decimalDiff",
             "type": "t_mapping(t_address,t_uint256)",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:27"
+            "src": "contracts/twowayV2/TwoWayCenter.sol:29"
           },
           {
             "contract": "TwoWayCenter",
             "label": "txHandled",
             "type": "t_mapping(t_string_memory_ptr,t_bool)",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:28"
+            "src": "contracts/twowayV2/TwoWayCenter.sol:30"
+          },
+          {
+            "contract": "TwoWayCenter",
+            "label": "fixFees",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "contracts/twowayV2/TwoWayCenter.sol:31"
+          },
+          {
+            "contract": "TwoWayCenter",
+            "label": "ratioFees",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "contracts/twowayV2/TwoWayCenter.sol:32"
           }
         ],
         "types": {
           "t_uint256": {
             "label": "uint256"
           },
+          "t_address": {
+            "label": "address"
+          },
           "t_mapping(t_uint256,t_mapping(t_address,t_address))": {
             "label": "mapping(uint256 => mapping(address => address))"
           },
           "t_mapping(t_address,t_address)": {
             "label": "mapping(address => address)"
-          },
-          "t_address": {
-            "label": "address"
           },
           "t_mapping(t_address,t_mapping(t_uint256,t_address))": {
             "label": "mapping(address => mapping(uint256 => address))"
@@ -201,6 +184,12 @@
           },
           "t_bool": {
             "label": "bool"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(address => mapping(uint256 => uint256))"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)"
           },
           "t_mapping(t_bytes32,t_bool)": {
             "label": "mapping(bytes32 => bool)"
@@ -243,8 +232,8 @@
       }
     },
     "81f71b115c9faf2d304d8da11595833dade2e85bce6c60408e03623a4f530063": {
-      "address": "0x18558A901025B5832D4271C85200CEa9E0C92C99",
-      "txHash": "0x9895bc7319369110a5e01dde8c93e17e928f72cdee41b504cf16f7449deaa8c8",
+      "address": "0xB3Ad52584C2994a2b3cCEb6baf6ee8Ba16aaE417",
+      "txHash": "0xb0c735d26e7546fbf36a5ccf08c169eca721dd0c79d7b6b88828ccc9ed35c246",
       "layout": {
         "storage": [
           {
@@ -381,543 +370,6 @@
           },
           "t_array(t_uint256)45_storage": {
             "label": "uint256[45]"
-          }
-        }
-      }
-    },
-    "794c53a6fbe6abeceb7870a83561036a17a5a612c7b2a74245c2dcc747bff75c": {
-      "address": "0x5849AA6137f140aB0BC6cb0EF3982e1bf5A62C9f",
-      "txHash": "0xf440f17f86dc31578bf092d5939702c799c0df0e621e89a6fae92bed1ceaa76d",
-      "layout": {
-        "storage": [
-          {
-            "contract": "Initializable",
-            "label": "_initialized",
-            "type": "t_bool",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:37"
-          },
-          {
-            "contract": "Initializable",
-            "label": "_initializing",
-            "type": "t_bool",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:42"
-          },
-          {
-            "contract": "ContextUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:31"
-          },
-          {
-            "contract": "ERC165Upgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:36"
-          },
-          {
-            "contract": "AccessControlUpgradeable",
-            "label": "_roles",
-            "type": "t_mapping(t_bytes32,t_struct(RoleData)43_storage)",
-            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:64"
-          },
-          {
-            "contract": "AccessControlUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)49_storage",
-            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:232"
-          },
-          {
-            "contract": "ERC1967UpgradeUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:215"
-          },
-          {
-            "contract": "UUPSUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:81"
-          },
-          {
-            "contract": "ProposalVote",
-            "label": "threshold",
-            "type": "t_mapping(t_address,t_uint256)",
-            "src": "contracts/ProposalVote.sol:10"
-          },
-          {
-            "contract": "ProposalVote",
-            "label": "isFinished",
-            "type": "t_mapping(t_bytes32,t_bool)",
-            "src": "contracts/ProposalVote.sol:12"
-          },
-          {
-            "contract": "ProposalVote",
-            "label": "isVoted",
-            "type": "t_mapping(t_bytes32,t_mapping(t_address,t_bool))",
-            "src": "contracts/ProposalVote.sol:13"
-          },
-          {
-            "contract": "ProposalVote",
-            "label": "counter",
-            "type": "t_mapping(t_bytes32,t_uint256)",
-            "src": "contracts/ProposalVote.sol:14"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "chainid",
-            "type": "t_uint256",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:24"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "toCenterToken",
-            "type": "t_mapping(t_uint256,t_mapping(t_address,t_address))",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:25"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "toEdgeToken",
-            "type": "t_mapping(t_address,t_mapping(t_uint256,t_address))",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:26"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "decimalDiff",
-            "type": "t_mapping(t_address,t_uint256)",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:27"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "txHandled",
-            "type": "t_mapping(t_string_memory_ptr,t_bool)",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:28"
-          }
-        ],
-        "types": {
-          "t_uint256": {
-            "label": "uint256"
-          },
-          "t_mapping(t_uint256,t_mapping(t_address,t_address))": {
-            "label": "mapping(uint256 => mapping(address => address))"
-          },
-          "t_mapping(t_address,t_address)": {
-            "label": "mapping(address => address)"
-          },
-          "t_address": {
-            "label": "address"
-          },
-          "t_mapping(t_address,t_mapping(t_uint256,t_address))": {
-            "label": "mapping(address => mapping(uint256 => address))"
-          },
-          "t_mapping(t_uint256,t_address)": {
-            "label": "mapping(uint256 => address)"
-          },
-          "t_mapping(t_address,t_uint256)": {
-            "label": "mapping(address => uint256)"
-          },
-          "t_mapping(t_string_memory_ptr,t_bool)": {
-            "label": "mapping(string => bool)"
-          },
-          "t_string_storage": {
-            "label": "string"
-          },
-          "t_bool": {
-            "label": "bool"
-          },
-          "t_mapping(t_bytes32,t_bool)": {
-            "label": "mapping(bytes32 => bool)"
-          },
-          "t_bytes32": {
-            "label": "bytes32"
-          },
-          "t_mapping(t_bytes32,t_mapping(t_address,t_bool))": {
-            "label": "mapping(bytes32 => mapping(address => bool))"
-          },
-          "t_mapping(t_address,t_bool)": {
-            "label": "mapping(address => bool)"
-          },
-          "t_mapping(t_bytes32,t_uint256)": {
-            "label": "mapping(bytes32 => uint256)"
-          },
-          "t_array(t_uint256)50_storage": {
-            "label": "uint256[50]"
-          },
-          "t_mapping(t_bytes32,t_struct(RoleData)43_storage)": {
-            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)"
-          },
-          "t_struct(RoleData)43_storage": {
-            "label": "struct AccessControlUpgradeable.RoleData",
-            "members": [
-              {
-                "label": "members",
-                "type": "t_mapping(t_address,t_bool)"
-              },
-              {
-                "label": "adminRole",
-                "type": "t_bytes32"
-              }
-            ]
-          },
-          "t_array(t_uint256)49_storage": {
-            "label": "uint256[49]"
-          }
-        }
-      }
-    },
-    "90c78d708ffd51ab7d6a3e1cf8d8caa0f46c4e35f33b0662d976ef75fa7f52e3": {
-      "address": "0xEa239402B6735C57354e36cDE8a4475Ac19F3Cb8",
-      "txHash": "0xe7b104cc5270322ad4c6865c412e5334c35d9d13b98423d12595859863333d3f",
-      "layout": {
-        "storage": [
-          {
-            "contract": "Initializable",
-            "label": "_initialized",
-            "type": "t_bool",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:37"
-          },
-          {
-            "contract": "Initializable",
-            "label": "_initializing",
-            "type": "t_bool",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:42"
-          },
-          {
-            "contract": "ContextUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:31"
-          },
-          {
-            "contract": "ERC165Upgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:36"
-          },
-          {
-            "contract": "AccessControlUpgradeable",
-            "label": "_roles",
-            "type": "t_mapping(t_bytes32,t_struct(RoleData)43_storage)",
-            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:64"
-          },
-          {
-            "contract": "AccessControlUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)49_storage",
-            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:232"
-          },
-          {
-            "contract": "ERC1967UpgradeUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:215"
-          },
-          {
-            "contract": "UUPSUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:81"
-          },
-          {
-            "contract": "ProposalVote",
-            "label": "threshold",
-            "type": "t_mapping(t_address,t_uint256)",
-            "src": "contracts/ProposalVote.sol:10"
-          },
-          {
-            "contract": "ProposalVote",
-            "label": "isFinished",
-            "type": "t_mapping(t_bytes32,t_bool)",
-            "src": "contracts/ProposalVote.sol:12"
-          },
-          {
-            "contract": "ProposalVote",
-            "label": "isVoted",
-            "type": "t_mapping(t_bytes32,t_mapping(t_address,t_bool))",
-            "src": "contracts/ProposalVote.sol:13"
-          },
-          {
-            "contract": "ProposalVote",
-            "label": "counter",
-            "type": "t_mapping(t_bytes32,t_uint256)",
-            "src": "contracts/ProposalVote.sol:14"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "chainid",
-            "type": "t_uint256",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:24"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "toCenterToken",
-            "type": "t_mapping(t_uint256,t_mapping(t_address,t_address))",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:25"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "toEdgeToken",
-            "type": "t_mapping(t_address,t_mapping(t_uint256,t_address))",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:26"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "decimalDiff",
-            "type": "t_mapping(t_address,t_uint256)",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:27"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "txHandled",
-            "type": "t_mapping(t_string_memory_ptr,t_bool)",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:28"
-          }
-        ],
-        "types": {
-          "t_uint256": {
-            "label": "uint256"
-          },
-          "t_mapping(t_uint256,t_mapping(t_address,t_address))": {
-            "label": "mapping(uint256 => mapping(address => address))"
-          },
-          "t_mapping(t_address,t_address)": {
-            "label": "mapping(address => address)"
-          },
-          "t_address": {
-            "label": "address"
-          },
-          "t_mapping(t_address,t_mapping(t_uint256,t_address))": {
-            "label": "mapping(address => mapping(uint256 => address))"
-          },
-          "t_mapping(t_uint256,t_address)": {
-            "label": "mapping(uint256 => address)"
-          },
-          "t_mapping(t_address,t_uint256)": {
-            "label": "mapping(address => uint256)"
-          },
-          "t_mapping(t_string_memory_ptr,t_bool)": {
-            "label": "mapping(string => bool)"
-          },
-          "t_string_storage": {
-            "label": "string"
-          },
-          "t_bool": {
-            "label": "bool"
-          },
-          "t_mapping(t_bytes32,t_bool)": {
-            "label": "mapping(bytes32 => bool)"
-          },
-          "t_bytes32": {
-            "label": "bytes32"
-          },
-          "t_mapping(t_bytes32,t_mapping(t_address,t_bool))": {
-            "label": "mapping(bytes32 => mapping(address => bool))"
-          },
-          "t_mapping(t_address,t_bool)": {
-            "label": "mapping(address => bool)"
-          },
-          "t_mapping(t_bytes32,t_uint256)": {
-            "label": "mapping(bytes32 => uint256)"
-          },
-          "t_array(t_uint256)50_storage": {
-            "label": "uint256[50]"
-          },
-          "t_mapping(t_bytes32,t_struct(RoleData)43_storage)": {
-            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)"
-          },
-          "t_struct(RoleData)43_storage": {
-            "label": "struct AccessControlUpgradeable.RoleData",
-            "members": [
-              {
-                "label": "members",
-                "type": "t_mapping(t_address,t_bool)"
-              },
-              {
-                "label": "adminRole",
-                "type": "t_bytes32"
-              }
-            ]
-          },
-          "t_array(t_uint256)49_storage": {
-            "label": "uint256[49]"
-          }
-        }
-      }
-    },
-    "870cc2c4106cb714246e73b6712a524813b9c6ce5ec4d8bbbf99d69d3db5fd11": {
-      "address": "0x5649023B05C9E7Be2831F2BD5aB98de6ce9963D4",
-      "txHash": "0x3f94fbde994167451481fecb435276583f2bcdc2351ec9b974e10960dc2d7531",
-      "layout": {
-        "storage": [
-          {
-            "contract": "Initializable",
-            "label": "_initialized",
-            "type": "t_bool",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:37"
-          },
-          {
-            "contract": "Initializable",
-            "label": "_initializing",
-            "type": "t_bool",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:42"
-          },
-          {
-            "contract": "ContextUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:31"
-          },
-          {
-            "contract": "ERC165Upgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:36"
-          },
-          {
-            "contract": "AccessControlUpgradeable",
-            "label": "_roles",
-            "type": "t_mapping(t_bytes32,t_struct(RoleData)43_storage)",
-            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:64"
-          },
-          {
-            "contract": "AccessControlUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)49_storage",
-            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:232"
-          },
-          {
-            "contract": "ERC1967UpgradeUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:215"
-          },
-          {
-            "contract": "UUPSUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:81"
-          },
-          {
-            "contract": "ProposalVote",
-            "label": "threshold",
-            "type": "t_mapping(t_address,t_uint256)",
-            "src": "contracts/ProposalVote.sol:10"
-          },
-          {
-            "contract": "ProposalVote",
-            "label": "isFinished",
-            "type": "t_mapping(t_bytes32,t_bool)",
-            "src": "contracts/ProposalVote.sol:12"
-          },
-          {
-            "contract": "ProposalVote",
-            "label": "isVoted",
-            "type": "t_mapping(t_bytes32,t_mapping(t_address,t_bool))",
-            "src": "contracts/ProposalVote.sol:13"
-          },
-          {
-            "contract": "ProposalVote",
-            "label": "counter",
-            "type": "t_mapping(t_bytes32,t_uint256)",
-            "src": "contracts/ProposalVote.sol:14"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "chainid",
-            "type": "t_uint256",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:24"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "toCenterToken",
-            "type": "t_mapping(t_uint256,t_mapping(t_address,t_address))",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:25"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "toEdgeToken",
-            "type": "t_mapping(t_address,t_mapping(t_uint256,t_address))",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:26"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "decimalDiff",
-            "type": "t_mapping(t_address,t_uint256)",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:27"
-          },
-          {
-            "contract": "TwoWayCenter",
-            "label": "txHandled",
-            "type": "t_mapping(t_string_memory_ptr,t_bool)",
-            "src": "contracts/twowayV2/TwoWayCenter.sol:28"
-          }
-        ],
-        "types": {
-          "t_uint256": {
-            "label": "uint256"
-          },
-          "t_mapping(t_uint256,t_mapping(t_address,t_address))": {
-            "label": "mapping(uint256 => mapping(address => address))"
-          },
-          "t_mapping(t_address,t_address)": {
-            "label": "mapping(address => address)"
-          },
-          "t_address": {
-            "label": "address"
-          },
-          "t_mapping(t_address,t_mapping(t_uint256,t_address))": {
-            "label": "mapping(address => mapping(uint256 => address))"
-          },
-          "t_mapping(t_uint256,t_address)": {
-            "label": "mapping(uint256 => address)"
-          },
-          "t_mapping(t_address,t_uint256)": {
-            "label": "mapping(address => uint256)"
-          },
-          "t_mapping(t_string_memory_ptr,t_bool)": {
-            "label": "mapping(string => bool)"
-          },
-          "t_string_storage": {
-            "label": "string"
-          },
-          "t_bool": {
-            "label": "bool"
-          },
-          "t_mapping(t_bytes32,t_bool)": {
-            "label": "mapping(bytes32 => bool)"
-          },
-          "t_bytes32": {
-            "label": "bytes32"
-          },
-          "t_mapping(t_bytes32,t_mapping(t_address,t_bool))": {
-            "label": "mapping(bytes32 => mapping(address => bool))"
-          },
-          "t_mapping(t_address,t_bool)": {
-            "label": "mapping(address => bool)"
-          },
-          "t_mapping(t_bytes32,t_uint256)": {
-            "label": "mapping(bytes32 => uint256)"
-          },
-          "t_array(t_uint256)50_storage": {
-            "label": "uint256[50]"
-          },
-          "t_mapping(t_bytes32,t_struct(RoleData)43_storage)": {
-            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)"
-          },
-          "t_struct(RoleData)43_storage": {
-            "label": "struct AccessControlUpgradeable.RoleData",
-            "members": [
-              {
-                "label": "members",
-                "type": "t_mapping(t_address,t_bool)"
-              },
-              {
-                "label": "adminRole",
-                "type": "t_bytes32"
-              }
-            ]
-          },
-          "t_array(t_uint256)49_storage": {
-            "label": "uint256[49]"
           }
         }
       }

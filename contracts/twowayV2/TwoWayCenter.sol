@@ -4,11 +4,8 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-// import "../interface/ISwapPair.sol";
-// import "../interface/IBoringToken.sol";
 import "../ProposalVote.sol";
 import "../interface/IToken.sol";
-
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
@@ -16,34 +13,46 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./TwParams.sol";
 import "../lib/SafeDecimalMath.sol";
 
+/// @notice center chain is also a special edge chain
 contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ProposalVote {
     using SafeERC20Upgradeable for IERC20Upgradeable;
-    using SafeDecimalMath for uint;
+    using SafeDecimalMath for uint256;
 
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 
     uint256 public chainId;
     address public feeTo;
+    address public treasuryTo;
+    /// @notice centerToken is oToken which issue by boringDAO.
+    /// @notice edge chain's chainId => edge chain token => oToken
     mapping(uint256 => mapping(address => address)) public toCenterToken;
+    /// @notice oToken => edge chainid => edgeChain token
     mapping(address => mapping(uint256 => address)) public toEdgeToken;
+    /// edge token in center chian
     mapping(address => uint256) public decimalDiff;
     mapping(string => bool) public txHandled;
-    mapping(address => mapping(uint => uint)) public fixFees;
-    mapping(address => mapping(uint => uint)) public ratioFees;
-    // ousdt => targetchainId => amount
-    mapping(address => mapping(uint => uint)) public lockBalances;
-    
+    /// @notice oToken => edge chainid => amount
+    mapping(address => mapping(uint256 => uint256)) public fixFees;
+    mapping(address => mapping(uint256 => uint256)) public ratioFees;
+    // oToken => edgeChainId => amount
+    mapping(address => mapping(uint256 => uint256)) public lockBalances;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
 
-    function initialize(uint256 _chainId) public initializer {
+    function initialize(
+        uint256 _chainId,
+        address _feeTo,
+        address _treasuryTo
+    ) public initializer {
         __AccessControl_init();
         __UUPSUpgradeable_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
         chainId = _chainId;
+        feeTo = _feeTo;
+        treasuryTo = _treasuryTo;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
@@ -73,13 +82,23 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         delete toEdgeToken[_centerToken][_edgeChainId];
     }
 
+    function setFeeTo(address _feeTo) external onlyAdmin {
+        require(_feeTo != address(0), "zero address");
+        feeTo = _feeTo;
+    }
+
+    function setTreasuryTo(address _treasuryTo) external onlyAdmin {
+        require(_treasuryTo != address(0), "zero address");
+        treasuryTo = _treasuryTo;
+    }
+
     function deposit(address token, uint256 amount) external {
         address centerToken = toCenterToken[chainId][token];
         require(centerToken != address(0), "not support");
         IERC20Upgradeable(token).safeTransferFrom(msg.sender, address(this), amount);
         IToken(centerToken).mint(msg.sender, amount * decimalDiff[token]);
         lockBalances[centerToken][chainId] += amount * decimalDiff[token];
-        emit CenterDeposited(chainId, token, msg.sender, amount * decimalDiff[token]);
+        emit Deposited(chainId, token, msg.sender, amount * decimalDiff[token]);
     }
 
     function crossOut(
@@ -93,86 +112,116 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         address _edgeToken = toEdgeToken[_centerToken][toChainId];
         require(_edgeToken != address(0), "not support");
         require(lockBalances[_centerToken][toChainId] >= amount * decimalDiff[fromToken], "not enough liqui");
-		address edgeToken = toEdgeToken[toCenterToken[chainId][fromToken]][toChainId];
-        (uint fixAmount, uint ratioAmount, uint remainAmount) = calculateFee(fromToken, toChainId, amount);
-        IERC20Upgradeable(fromToken).safeTransferFrom(msg.sender, address(this), remainAmount);
-        IERC20Upgradeable(fromToken).safeTransferFrom(msg.sender, feeTo, fixAmount+ratioAmount);
-        lockBalances[_centerToken][toChainId] -= remainAmount * decimalDiff[fromToken];
-        emit CenterCrossOuted(InParam(chainId, fromToken, msg.sender, toChainId, edgeToken, to, remainAmount * decimalDiff[fromToken]));
+        address edgeToken = toEdgeToken[toCenterToken[chainId][fromToken]][toChainId];
+        // transfer
+        IERC20Upgradeable(fromToken).safeTransferFrom(msg.sender, address(this), amount);
+        // fee
+        (uint256 fixAmount, uint256 ratioAmount, uint256 remainAmount) = calculateFee(
+            fromToken,
+            toChainId,
+            amount * decimalDiff[fromToken]
+        );
+        IERC20Upgradeable(fromToken).safeTransferFrom(msg.sender, feeTo, fixAmount);
+        IERC20Upgradeable(fromToken).safeTransferFrom(msg.sender, treasuryTo, ratioAmount);
+        // lock state
+        lockBalances[_centerToken][chainId] += amount * decimalDiff[fromToken];
+        lockBalances[_centerToken][toChainId] -= remainAmount;
+
+        emit CrossOuted(
+            InParam(chainId, fromToken, msg.sender, toChainId, edgeToken, to, remainAmount * decimalDiff[fromToken])
+        );
     }
 
-    function forwardCrossOut(OutParam memory p, string memory txid) external onlyCrosser(toCenterToken[p.fromChainId][p.fromToken]) whenNotHandled(txid) {
+    function forwardCrossOut(OutParam memory p, string memory txid)
+        external
+        onlyCrosser(toCenterToken[p.fromChainId][p.fromToken])
+        whenNotHandled(txid)
+    {
         bool result = _vote(p.fromToken, p.from, p.to, p.amount, txid);
         if (result) {
             txHandled[txid] = true;
-            
+
             address centerToken = toCenterToken[p.fromChainId][p.fromToken];
             address edgeToken = toEdgeToken[centerToken][p.toChainId];
+
             lockBalances[centerToken][p.fromChainId] += p.amount;
+
             if (lockBalances[centerToken][p.toChainId] >= p.amount) {
-                (uint fixAmount, uint ratioAmount, uint remainAmount) = calculateFee(centerToken, p.toChainId, p.amount);
-                IToken(centerToken).mint(feeTo, fixAmount+ratioAmount);
+                (uint256 fixAmount, uint256 ratioAmount, uint256 remainAmount) = calculateFee(
+                    centerToken,
+                    p.toChainId,
+                    p.amount
+                );
+                IToken(centerToken).mint(feeTo, fixAmount);
+                IToken(centerToken).mint(treasuryTo, ratioAmount);
+
                 lockBalances[centerToken][p.toChainId] -= remainAmount;
-                emit CenterCrossOuted(InParam(p.fromChainId, p.fromToken, p.from, p.toChainId, edgeToken, p.to, remainAmount));
+                emit ForwardCrossOuted(
+                    InParam(p.fromChainId, p.fromToken, p.from, p.toChainId, edgeToken, p.to, remainAmount)
+                );
             } else {
                 IToken(centerToken).mint(p.to, p.amount);
+                emit ForwardCrossOutFailed(
+                    InParam(p.fromChainId, p.fromToken, p.from, p.toChainId, edgeToken, p.to, p.amount)
+                );
             }
         }
     }
 
-    function crossIn(OutParam memory p, string memory txid) external onlyCrosser(toCenterToken[chainId][p.fromToken]) whenNotHandled(txid) {
+    function crossIn(OutParam memory p, string memory txid)
+        external
+        onlyCrosser(toCenterToken[chainId][p.fromToken])
+        whenNotHandled(txid)
+    {
         require(p.toChainId == chainId, "chainId error");
-		address centerToken = toCenterToken[chainId][p.fromToken];
-		address edgeToken = toEdgeToken[centerToken][p.toChainId];
-        require( centerToken != address(0), "not support");
+        address centerToken = toCenterToken[chainId][p.fromToken];
+        address edgeToken = toEdgeToken[centerToken][p.toChainId];
+        require(centerToken != address(0), "not support");
         bool result = _vote(p.fromToken, p.from, p.to, p.amount, txid);
         if (result) {
             txHandled[txid] = true;
             uint256 amountAdjust = p.amount / decimalDiff[edgeToken];
             lockBalances[centerToken][p.fromChainId] += p.amount;
             if (IERC20Upgradeable(edgeToken).balanceOf(address(this)) >= amountAdjust) {
+                // transfer
                 IERC20Upgradeable(edgeToken).safeTransfer(p.to, amountAdjust);
-                lockBalances[centerToken][chainId] -= p.amount;
-                emit CrossIned(InParam(p.fromChainId, p.fromToken, p.from, p.toChainId, edgeToken, p.to, p.amount));
-            }else {
-				IToken(centerToken).mint(p.to, p.amount);
-				emit CenterCrossInFailed(InParam(p.fromChainId, p.fromToken, p.from, p.toChainId, edgeToken, p.to, p.amount));
-			}
+                // fee
+                (uint256 fixAmount, uint256 ratioAmount, uint256 remainAmount) = calculateFee(
+                    centerToken,
+                    p.toChainId,
+                    p.amount
+                );
+                IToken(centerToken).mint(feeTo, fixAmount);
+                IToken(centerToken).mint(treasuryTo, ratioAmount);
+                lockBalances[centerToken][p.toChainId] -= remainAmount;
+                emit CrossIned(InParam(p.fromChainId, p.fromToken, p.from, p.toChainId, edgeToken, p.to, remainAmount));
+            } else {
+                IToken(centerToken).mint(p.to, p.amount);
+                emit CrossInFailed(InParam(p.fromChainId, p.fromToken, p.from, p.toChainId, edgeToken, p.to, p.amount));
+            }
         }
     }
 
-    function issue(InParam memory tp, string memory txid) external onlyCrosser(toCenterToken[tp.fromChainId][tp.fromToken]) whenNotHandled(txid) {
+    function issue(InParam memory tp, string memory txid)
+        external
+        onlyCrosser(toCenterToken[tp.fromChainId][tp.fromToken])
+        whenNotHandled(txid)
+    {
         address _centerToken = toCenterToken[tp.fromChainId][tp.fromToken];
         require(_centerToken != address(0), "centerToken exist");
         require(toEdgeToken[_centerToken][tp.fromChainId] != address(0), "edgeToken exist");
+
         bool result = _vote(tp.fromToken, tp.from, tp.to, tp.amount, txid);
         if (result) {
             txHandled[txid] = true;
-            IToken twt = IToken(_centerToken);
-            twt.mint(tp.to, tp.amount);
+            IToken(_centerToken).mint(tp.to, tp.amount);
             lockBalances[_centerToken][tp.fromChainId] += tp.amount;
-            emit Issued(address(twt), tp.to, tp.amount);
+            emit Issued(_centerToken, tp.to, tp.amount);
         }
     }
 
-    // function rollbackCrossIn(InParam memory p, string memory txid)
-    //     external
-    //     onlyCrosser(toCenterToken[p.fromChainId][p.fromToken])
-    //     whenNotHandled(txid)
-    // {
-    //     require(p.toChainId == chainId, "chainId error");
-    //     require(toCenterToken[chainId][p.toToken] != address(0), "not support");
-    //     bool result = _vote(p.toToken, p.from, p.to, p.amount, txid);
-    //     if (result) {
-    //         txHandled[txid] = true;
-    //         address _centerToken = toCenterToken[p.fromChainId][p.fromToken];
-    //         IToken twt = IToken(_centerToken);
-    //         twt.mint(p.to, p.amount);
-    //         emit RollbackCrossIned(p);
-    //     }
-    // }
-
-    /// twt => two way token
+    /// @param fromToken oToken on CenterChain
+    /// @param amount amount of fromToken
     function withdraw(
         address fromToken,
         uint256 toChainId,
@@ -180,16 +229,19 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         uint256 amount
     ) external {
         require(lockBalances[fromToken][toChainId] >= amount, "not enough liqui");
-		address _edgeToken = toEdgeToken[fromToken][chainId];
+        address _edgeToken = toEdgeToken[fromToken][chainId];
+        // fee
+        (uint256 fixAmount, uint256 ratioAmount, uint256 remainAmount) = calculateFee(fromToken, toChainId, amount);
+        IToken(fromToken).mint(feeTo, fixAmount);
+        IToken(fromToken).mint(treasuryTo, ratioAmount);
         IToken(fromToken).burn(msg.sender, amount);
-        if (toChainId == chainId) {
-            require(IERC20Upgradeable(_edgeToken).balanceOf(address(this)) >= amount, "not enough");
-            IERC20Upgradeable(_edgeToken).safeTransfer(msg.sender, amount);
-			// emit CenterWithdrawed();
-        } else {
-        	emit Withdrawed(InParam(chainId, fromToken, msg.sender, toChainId, _edgeToken, to, amount));
-		}
         lockBalances[fromToken][toChainId] -= amount;
+        if (toChainId == chainId) {
+            IERC20Upgradeable(_edgeToken).safeTransfer(msg.sender, amount / decimalDiff[_edgeToken]);
+            emit WithdrawedToCenter(InParam(chainId, fromToken, msg.sender, toChainId, _edgeToken, to, remainAmount));
+        } else {
+            emit Withdrawed(InParam(chainId, fromToken, msg.sender, toChainId, _edgeToken, to, remainAmount));
+        }
     }
 
     function calculateFee(
@@ -211,7 +263,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         remainAmount = amount - fixAmount - ratioAmount;
     }
 
-    function getRoleKey(address toToken) public pure returns(bytes32 key) {
+    function getRoleKey(address toToken) public pure returns (bytes32 key) {
         key = keccak256(abi.encodePacked(toToken));
     }
 
@@ -231,15 +283,15 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         _;
     }
 
+    event Deposited(uint256 fromChainId, address fromToken, address from, uint256 amount);
+    event Issued(address token, address to, uint256 amount);
     event Withdrawed(InParam p);
-    event CenterDeposited(uint256 fromChainId, address fromToken, address from,  uint256 amount);
-    event CrossOuted(OutParam p);
-    event CenterCrossOuted(InParam p);
-    event TwtCrossOuted();
+    // token which withdrawed in center chain
+    event WithdrawedToCenter(InParam p);
+    event CrossOuted(InParam p);
+    event ForwardCrossOuted(InParam p);
+    event ForwardCrossOutFailed(InParam p);
     event CrossIned(InParam p);
     event CrossInFailed(InParam p);
-    event CenterCrossInFailed(InParam p);
-    // event RollbackCrossIned(InParam p);
     event Supported(address token, uint256 chainId, bool status);
-    event Issued(address token, address to, uint256 amount);
 }

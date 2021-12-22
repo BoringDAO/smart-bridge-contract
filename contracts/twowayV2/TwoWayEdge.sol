@@ -60,6 +60,7 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         emit Deposited(chainId, token, msg.sender, amount * decimalDiff[token]);
     }
 
+    /// @notice edge chain dont know  token address of toChain
     function crossOut(
         address fromToken,
         uint256 toChainId,
@@ -72,27 +73,23 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         emit CrossOuted(OutParam(chainId, fromToken, msg.sender, toChainId, to, amount * decimalDiff[fromToken]));
     }
 
+    /// @notice crosser of one token to call this
     function crossIn(InParam memory p, string memory txid) external onlyCrosser(p.toToken) whenNotHandled(txid) {
-        require(p.toChainId == chainId, "chianid not support");
+        require(p.toChainId == chainId, "chianid error");
         require(tokenSupported[p.toToken], "not supported token");
         require(chainSupported[p.toToken][p.fromChainId], "not supported chain");
         bool result = _vote(p.toToken, p.from, p.to, p.amount, txid);
         if (result) {
             txHandled[txid] = true;
             uint256 amountAdjust = p.amount / decimalDiff[p.toToken];
-            if (IERC20Upgradeable(p.toToken).balanceOf(address(this)) >= amountAdjust) {
-                IERC20Upgradeable(p.toToken).safeTransfer(p.to, amountAdjust);
-                emit CrossIned(p);
-            } else {
-                emit CrossInFailed(p);
-            }
+            IERC20Upgradeable(p.toToken).safeTransfer(p.to, amountAdjust);
+            emit CrossIned(p);
         }
     }
 
-    function getRoleKey(address toToken) public pure returns(bytes32 key) {
+    function getRoleKey(address toToken) public pure returns (bytes32 key) {
         key = keccak256(abi.encodePacked(toToken));
     }
-
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "TwoWay: caller is not admin");
@@ -110,9 +107,8 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         _;
     }
 
-    event Deposited(uint fromChainId, address fromToken, address from, uint256 amount);
+    event Deposited(uint256 fromChainId, address fromToken, address from, uint256 amount);
     event CrossOuted(OutParam p);
     event CrossIned(InParam p);
-    event CrossInFailed(InParam p);
     event Supported(address token, uint256 chainId, bool status);
 }

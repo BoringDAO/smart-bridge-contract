@@ -45,7 +45,7 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         bool status
     ) external onlyAdmin {
         require(chainSupported[token][_chainId] != status, "status error");
-        chainSupported[token][chainId] = status;
+        chainSupported[token][_chainId] = status;
         decimalDiff[token] = 10**(18 - IERC20MetadataUpgradeable(token).decimals());
         emit Supported(token, _chainId, status);
     }
@@ -85,6 +85,10 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
             IERC20Upgradeable(p.toToken).safeTransfer(p.to, amountAdjust);
             emit CrossIned(p);
         }
+    }
+
+    function setThreshold(address token0, uint256 _threshold) external onlyAdmin {
+        _setThreshold(token0, _threshold);
     }
 
     function getRoleKey(address toToken) public pure returns (bytes32 key) {

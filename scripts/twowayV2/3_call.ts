@@ -15,7 +15,8 @@ async function main() {
 	let contracts = JSON.parse(getContractsAddress())
 	console.log(`deployer ${await accounts[0].getAddress()} in network ${network.name}`)
 	let usdtToken: TestERC20
-	let networkToChange = ['matic_test', 'kovan', 'bsc_test']
+	// let networkToChange = ['matic_test', 'kovan', 'bsc_test']
+	let networkToChange = ['matic_test']
 	let center_chain = "matic_test"
 	let tokenSymbol = "USDT"
 	for (let n of networkToChange) {
@@ -30,6 +31,22 @@ async function main() {
 			let tw = await attach("TwoWayCenter", contracts[cChainIdStr]['TwoWayV2']) as TwoWayCenter
 			let chainidCenter = await tw.chainId()
 			console.log(`chainid center ${ethers.utils.formatUnits(chainidCenter, 0)} tw ${tw.address}`)
+			let centerToken = await tw.toCenterToken(42, "0x35D50cbc648c533A5DA29f4899955bd116fC738C")
+			console.log(`center token ${centerToken}`)
+			let roleKey = await tw.getRoleKey(centerToken)
+			console.log(`roleKey ${roleKey}`)
+			let hasRole = await tw.hasRole(roleKey, "0x79a1215469fab6f9c63c1816b45183ad3624be34")
+			console.log(`has role ${hasRole}`)
+			let [sender1, sender2] = await tw.getMsgSender()
+			console.log(`sender ${sender1}`)
+
+			let oUSDTAddr = contracts[cChainIdStr]['oUSDT']
+			let oUSDT = await attach("TwoWayCenterToken", oUSDTAddr) as TwoWayCenterToken
+			let minterRoleKey = await oUSDT.MINTER_ROLE()
+			let burnerRoleKey = await oUSDT.BURNER_ROLE()
+			let txSetBurner = await oUSDT.grantRole(burnerRoleKey, tw.address)
+			console.log(`txSetBurner ${txSetBurner.hash}`)
+			await txSetBurner.wait()
 			continue
 
 			let oToken = await deployProxy("TwoWayCenterToken", "oUSDT", "oUSDT") as TwoWayCenterToken

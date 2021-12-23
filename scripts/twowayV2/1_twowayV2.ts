@@ -9,6 +9,8 @@ const hre = require("hardhat")
 
 async function main() {
 	const accounts = await ethers.getSigners();
+	let feeTo = "0x09587012B3670D75a90930be9282d98063E402a2"
+	let treasuryTo = "0xf26b49Dd3EfBC46e4272611898f9d0e42BAD9A6b"
 
 	let contracts = JSON.parse(getContractsAddress())
 	console.log(`deployer ${await accounts[0].getAddress()} in network ${network.name}`)
@@ -23,7 +25,7 @@ async function main() {
 		// todo
 		let twAddr: Contract
 		if (n == center_chain) {
-			twAddr = await deployProxy<TwoWayCenter>("TwoWayCenter", cChainId)
+			twAddr = await deployProxy<TwoWayCenter>("TwoWayCenter", cChainId, feeTo, treasuryTo)
 		} else {
 			twAddr = await deployProxy<TwoWayEdge>("TwoWayEdge", cChainId)
 		}

@@ -11,7 +11,8 @@ async function main() {
 	let contracts = JSON.parse(getContractsAddress())
 	console.log(`deployer ${await accounts[0].getAddress()} in network ${network.name}`)
 	let usdtToken: TestERC20
-	let networkToChange = ['matic_test', 'kovan', 'bsc_test']
+	// let networkToChange = ['matic_test', 'kovan', 'bsc_test']
+	let networkToChange = ['matic_test']
 	let center_chain = "matic_test"
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)
@@ -23,6 +24,10 @@ async function main() {
 		if (n == center_chain) {
 			let centerFac = await ethers.getContractFactory("TwoWayCenter")
 			await upgrades.upgradeProxy(twAddr, centerFac)
+
+			// let centerTokenFac = await ethers.getContractFactory("TwoWayCenterToken")
+			// let oUSDTAddr = contracts[cChainIdStr]['oUSDT']
+			// await upgrades.upgradeProxy(oUSDTAddr, centerTokenFac)
 		} else {
 			let centerEdge = await ethers.getContractFactory("TwoWayEdge")
 			await upgrades.upgradeProxy(twAddr, centerEdge)

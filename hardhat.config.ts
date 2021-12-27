@@ -12,7 +12,7 @@ import "hardhat-change-network";
 
 import { ethers } from "hardhat";
 
-const { polygonTestUrl, polygonURL, mnemonic, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX, privateKeyMatic } = require("./.secret.json");
+const { polygonTestUrl, polygonURL, mnemonic, mnemonicMainnet, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX, privateKeyMatic } = require("./.secret.json");
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -30,8 +30,9 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       forking: {
+      url: polygonURL,
       // url: "https://rpc-mumbai.maticvigil.com",
-      url: "https://matic-mumbai.chainstacklabs.com",
+      // url: "https://matic-mumbai.chainstacklabs.com",
       // url: polygonTestUrl,
       // url: "https://andromeda.metis.io/?owner=1088", 
         // url: `https://kovan.infura.io/v3/${projectId}`,
@@ -42,7 +43,8 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: mnemonic
       },
-      chainId: 80001
+      // chainId: 80001
+      chainId: 137 
     },
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,
@@ -98,7 +100,11 @@ const config: HardhatUserConfig = {
     okex: {
       url: "https://exchainrpc.okex.org",
       chainId: 66,
-      accounts: [privateKeyOkex]
+      accounts: {
+        mnemonic: mnemonicMainnet,
+        count: 30,
+        initialIndex: 25
+      }
     },
     harmony: {
       url: "https://api.harmony.one",
@@ -127,8 +133,7 @@ const config: HardhatUserConfig = {
       // url: "https://rpc-mainnet.maticvigil.com",
       url: polygonURL,
       chainId: 137,
-      accounts: [privateKeyMatic],
-      timeout: 600000
+      accounts: [privateKeyMatic]
     },
     heco_test: {
       url: "https://http-testnet.hecochain.com",
@@ -140,7 +145,11 @@ const config: HardhatUserConfig = {
     heco: {
       url: "https://http-mainnet-node.huobichain.com",
       chainId: 128,
-      accounts: [privateKeyAVAX]
+      accounts: {
+        mnemonic: mnemonicMainnet,
+        initialIndex: 25,
+        count: 30
+      }
     },
     fantom: {
       // url: "https://rpcapi.fantom.network",
@@ -223,11 +232,14 @@ const config: HardhatUserConfig = {
     },
     t1: {
       url: "http://127.0.0.1:8545",
-      chainId: 31337
+      // chainId: 31337
     },
     t2: {
       url: "http://127.0.0.1:8546",
       // chainId: 31338
+    },
+    t3: {
+      url: "http://127.0.0.1:8547"
     }
   },
   namedAccounts: {

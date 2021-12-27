@@ -28,15 +28,17 @@ contract TwoWayChef is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
 
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 
-    address public dispatcher;
     IERC20Upgradeable public rewardToken;
+    address public dispatcher;
+    uint256 public totalAllocPoint;
     uint256 public rewardPerSecond;
     uint256 public startTS;
+
     PoolInfo[] public poolInfo;
     mapping(uint256 => mapping(address => UserInfo)) public userInfo;
-    uint256 public totalAllocPoint;
 
     mapping(uint256 => IStakingReward) public stakingRewards;
+    mapping(uint => uint) public totalDeposit;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
@@ -59,8 +61,10 @@ contract TwoWayChef is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         startTS = _startTS;
     }
 
-    function depositToken(uint256 _pid) external view override returns (address) {
-        return address(poolInfo[_pid].depositToken);
+    function depositTokenAmount(uint256 _pid, address user) external view override returns (uint supply, uint userAmount) {
+        // supply = poolInfo[_pid].depositToken.balanceOf(address(this));
+        supply = totalDeposit[_pid];
+        userAmount = userInfo[_pid][user].depositAmount;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
@@ -81,17 +85,17 @@ contract TwoWayChef is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         rewardToken.safeTransferFrom(dispatcher, _to, _amount);
     }
 
-    function pendingReward(uint256 _pid, address _user) public view returns (uint256) {
+    function pendingReward(uint256 _pid, address _user) public view returns (uint256 pending) {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][_user];
         uint256 arp = pool.accRewardPerShare;
-        uint256 totalDeposit = pool.depositToken.balanceOf(address(this));
-        if (block.timestamp > pool.lastRewardTS && totalDeposit != 0) {
+        // uint256 totalDeposit = pool.depositToken.balanceOf(address(this));
+        if (block.timestamp > pool.lastRewardTS && totalDeposit[_pid] != 0) {
             uint256 period = block.timestamp - pool.lastRewardTS;
             uint256 reward = (period * rewardPerSecond * pool.allocPoint) / totalAllocPoint;
-            arp += reward.divideDecimal(totalDeposit);
+            arp += reward.divideDecimal(totalDeposit[_pid]);
         }
-        return user.depositAmount.multiplyDecimal(arp) - user.rewardDebt;
+        pending = user.depositAmount.multiplyDecimal(arp) - user.rewardDebt;
     }
 
     function earned(uint256 _pid, address user) external view returns (uint256, uint256) {
@@ -110,11 +114,16 @@ contract TwoWayChef is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
             uint256 pending = user.depositAmount.multiplyDecimal(pool.accRewardPerShare) - user.rewardDebt;
             dispatcherTransfer(msg.sender, pending);
         }
+        // update debt
         if (_amount > 0) {
             pool.depositToken.safeTransferFrom(msg.sender, address(this), _amount);
             user.depositAmount += _amount;
-            user.rewardDebt = user.depositAmount.multiplyDecimal(pool.accRewardPerShare);
+            totalDeposit[_pid] += _amount;
         }
+
+        user.rewardDebt = user.depositAmount.multiplyDecimal(pool.accRewardPerShare);
+        emit Deposited(msg.sender, _pid, _amount);
+        
         chefReward(_pid);
     }
 
@@ -125,6 +134,7 @@ contract TwoWayChef is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
     }
 
     function withdraw(uint256 _pid, uint256 _amount) external {
+        require(_amount > 0, "withdraw amount should > 0");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(user.depositAmount >= _amount, "withdraw: not enough");
@@ -136,8 +146,10 @@ contract TwoWayChef is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         user.depositAmount -= _amount;
         user.rewardDebt = user.depositAmount.multiplyDecimal(pool.accRewardPerShare);
         pool.depositToken.safeTransfer(msg.sender, _amount);
-
+        totalDeposit[_pid] -= _amount;
         chefReward(_pid);
+
+        emit Withdrawed(msg.sender, _pid, _amount);
     }
 
     function addPool(
@@ -158,6 +170,7 @@ contract TwoWayChef is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
                 accRewardPerShare: 0
             })
         );
+        emit PoolAdded(poolInfo.length - 1, _allocPoint, _depositToken);
     }
 
     function setPool(
@@ -170,6 +183,7 @@ contract TwoWayChef is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         }
         totalAllocPoint = totalAllocPoint - poolInfo[_pid].allocPoint + _allocPoint;
         poolInfo[_pid].allocPoint = _allocPoint;
+        emit AllocPointChanged(_pid, _allocPoint);
     }
 
     function massUpdatePools() public {
@@ -185,14 +199,14 @@ contract TwoWayChef is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         if (block.timestamp <= pool.lastRewardTS) {
             return;
         }
-        uint256 totalDeposit = pool.depositToken.balanceOf(address(this));
-        if (totalDeposit == 0) {
+        // uint256 totalDeposit = pool.depositToken.balanceOf(address(this));
+        if (totalDeposit[_pid] == 0) {
             pool.lastRewardTS = block.timestamp;
             return;
         }
         uint256 period = block.timestamp - pool.lastRewardTS;
         uint256 reward = (period * rewardPerSecond * pool.allocPoint) / totalAllocPoint;
-        pool.accRewardPerShare += reward.divideDecimal(totalDeposit);
+        pool.accRewardPerShare += reward.divideDecimal(totalDeposit[_pid]);
         pool.lastRewardTS = block.timestamp;
     }
 
@@ -203,4 +217,9 @@ contract TwoWayChef is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         rewardPerSecond = _rewardPerSecond;
         // emit NewRewardPerSecond(_rewardPerSecond);
     }
+
+    event Deposited(address indexed user, uint256 indexed pid, uint256 amount);
+    event Withdrawed(address indexed user, uint256 indexed pid, uint256 amount);
+    event PoolAdded(uint256 pid, uint256 point, address _depositToken);
+    event AllocPointChanged(uint256 pid, uint256 point);
 }

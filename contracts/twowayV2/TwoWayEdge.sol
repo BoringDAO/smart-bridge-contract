@@ -69,6 +69,7 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
     ) external {
         require(tokenSupported[fromToken], "not supported token");
         require(chainSupported[fromToken][toChainId], "not supported chain");
+        require(toChainId != chainId, "toChainId error");
         IERC20Upgradeable(fromToken).safeTransferFrom(msg.sender, address(this), amount);
         emit CrossOuted(OutParam(chainId, fromToken, msg.sender, toChainId, to, amount * decimalDiff[fromToken]));
     }

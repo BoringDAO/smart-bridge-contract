@@ -9,13 +9,16 @@ const hre = require("hardhat")
 
 async function main() {
 	const accounts = await ethers.getSigners();
-	let crosser_test = "0x79a1215469FaB6f9c63c1816b45183AD3624bE34"
+	// let crosser_test = "0x79a1215469FaB6f9c63c1816b45183AD3624bE34"
+	let crosser_test = "0x9037772a588A2b6725fe2360c0356B7f0140b5d2"
 	let whiteAddress = "0xcDfEb124CFc9649D9C33df9B69AeA0C094b3EF5E"
 	let contracts = JSON.parse(getContractsAddress())
 	console.log(`deployer ${await accounts[0].getAddress()} in network ${network.name}`)
 	let usdtToken: TestERC20
-	let networkToChange = ['matic_test', 'kovan', 'bsc_test']
-	let center_chain = "matic_test"
+	// let networkToChange = ['matic_test', 'kovan', 'bsc_test']
+	// let center_chain = "matic_test"
+	let networkToChange = ['matic', 'heco', 'okex']
+	let center_chain = "matic"
 	let tokenSymbol = "USDT"
 	let ratioHigh = ethers.utils.parseEther("0.01")
 	let ratioMedium = ethers.utils.parseEther("0.003")
@@ -79,7 +82,7 @@ async function main() {
 			console.log(`tx setThreshold ${txSetThreshold.hash}`)
 			await txSetThreshold.wait()
 			// whiteaddress
-			let txSetWhiteAddress = await tw.setWhitelist(whiteAddress, true)
+			let txSetWhiteAddress = await tw.setWhitelist(oToken.address, whiteAddress, true)
 			console.log(`tx set white address ${txSetWhiteAddress.hash}`)
 			await txSetWhiteAddress.wait()
 

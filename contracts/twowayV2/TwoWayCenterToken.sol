@@ -15,7 +15,7 @@ contract TwoWayCenterToken is Initializable, ERC20Upgradeable, AccessControlUpgr
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
 
-    function initialize(string memory _name, string memory _symbol) initializer public {
+    function initialize(string memory _name, string memory _symbol) public initializer {
         __ERC20_init(_name, _symbol);
         __AccessControl_init();
         __UUPSUpgradeable_init();
@@ -24,20 +24,19 @@ contract TwoWayCenterToken is Initializable, ERC20Upgradeable, AccessControlUpgr
         _grantRole(UPGRADER_ROLE, msg.sender);
     }
 
-	function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) returns(bool) {
+    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) returns (bool) {
         _mint(to, amount);
+        return true;
     }
-	function burn(address to, uint256 amount) public onlyRole(BURNER_ROLE) returns(bool){
+
+    function burn(address to, uint256 amount) public onlyRole(BURNER_ROLE) returns (bool) {
         _burn(to, amount);
+        return true;
     }
 
-    function _authorizeUpgrade(address newImplementation)
-        internal
-        onlyRole(UPGRADER_ROLE)
-        override
-    {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
 
-	function _beforeTokenTransfer(
+    function _beforeTokenTransfer(
         address from,
         address to,
         uint256 amount
@@ -45,5 +44,4 @@ contract TwoWayCenterToken is Initializable, ERC20Upgradeable, AccessControlUpgr
         require(to != address(this), "Token::to should not be token contract");
         super._beforeTokenTransfer(from, to, amount);
     }
-
 }

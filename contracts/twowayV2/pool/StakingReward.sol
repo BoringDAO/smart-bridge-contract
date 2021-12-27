@@ -2,49 +2,83 @@
 
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "../../interface/IStakingReward.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./IChef.sol";
 
-contract StakingReward is IStakingReward, ReentrancyGuard {
-    using SafeMath for uint256;
-    using Math for uint256;
-    using SafeERC20 for IERC20;
+// contract StakingReward is IStakingReward, ReentrancyGuard {
+contract StakingReward is
+    Initializable,
+    AccessControlUpgradeable,
+    UUPSUpgradeable,
+    IStakingReward,
+    ReentrancyGuardUpgradeable
+{
+    using SafeMathUpgradeable for uint256;
+    using MathUpgradeable for uint256;
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
-    address public rewardsDistribution;
-    IERC20 public rewardsToken;
-    uint256 public periodFinish = 0;
-    uint256 public override rewardRate = 0;
+    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+    bytes32 public constant CHEF_ROLE = keccak256("CHEF_ROLE");
+    bytes32 public constant CENTER_ROLE = keccak256("CENTER_ROLE");
+
+    address public chef;
+    IERC20Upgradeable public rewardsToken;
+    uint256 public periodFinish;
+    uint256 public override rewardRate;
     uint256 public rewardsDuration;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
+    uint256 public pid;
+    uint public supply;
 
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
-    uint256 public pid;
+    mapping(address => uint) private balanceOf_;
 
-    constructor(address _rewardsDistribution, address _rewardsToken, uint _pid) {
-        rewardsToken = IERC20(_rewardsToken);
-        rewardsDistribution = _rewardsDistribution;
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    function initialize(
+        address _rewardsToken,
+        address _chef,
+        uint256 _pid
+    ) public initializer {
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
+
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(UPGRADER_ROLE, msg.sender);
+
+        rewardsToken = IERC20Upgradeable(_rewardsToken);
+        chef = _chef;
         pid = _pid;
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
 
     /* ========== VIEWS ========== */
 
     function totalSupply() public view returns (uint256) {
-        return IERC20(IChef(rewardsDistribution).depositToken(pid)).balanceOf(rewardsDistribution);
+        // (uint256 supply, ) = IChef(chef).depositTokenAmount(pid, address(0));
+        return supply;
     }
 
     function balanceOf(address account) public view returns (uint256) {
-        return IERC20(IChef(rewardsDistribution).depositToken(pid)).balanceOf(account);
+        // (, uint256 userAmount) = IChef(chef).depositTokenAmount(pid, account);
+        // return userAmount;
+        return balanceOf_[account];
     }
 
     function lastTimeRewardApplicable() public view returns (uint256) {
-        return Math.min(block.timestamp, periodFinish);
+        return MathUpgradeable.min(block.timestamp, periodFinish);
     }
 
     function rewardPerToken() public view returns (uint256) {
@@ -57,7 +91,7 @@ contract StakingReward is IStakingReward, ReentrancyGuard {
             );
     }
 
-    function earned(address account) override public view returns (uint256) {
+    function earned(address account) public view override returns (uint256) {
         return balanceOf(account).mul(rewardPerToken().sub(userRewardPerTokenPaid[account])).div(1e18);
     }
 
@@ -67,21 +101,24 @@ contract StakingReward is IStakingReward, ReentrancyGuard {
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function onChefReward(address user) external override onlyRewardsDistribution updateReward(user) {
+    function onChefReward(address user) external override onlyRole(CHEF_ROLE) updateReward(user) {
         uint256 reward = rewards[user];
+        (uint _supply, uint256 userAmount) = IChef(chef).depositTokenAmount(pid, user);
+        balanceOf_[user] = userAmount;
+        supply = _supply;
         if (reward > 0) {
             rewards[user] = 0;
             rewardsToken.safeTransfer(user, reward);
             emit RewardPaid(user, reward);
         }
-	}
+    }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
 
     function notifyRewardAmount(uint256 reward, uint256 duration)
         external
         override
-        onlyRewardsDistribution
+        onlyRole(CENTER_ROLE)
         updateReward(address(0))
     {
         rewardsDuration = duration;
@@ -114,11 +151,6 @@ contract StakingReward is IStakingReward, ReentrancyGuard {
             rewards[account] = earned(account);
             userRewardPerTokenPaid[account] = rewardPerTokenStored;
         }
-        _;
-    }
-
-    modifier onlyRewardsDistribution() {
-        require(msg.sender == rewardsDistribution, "Caller is not RewardsDistribution contract");
         _;
     }
 

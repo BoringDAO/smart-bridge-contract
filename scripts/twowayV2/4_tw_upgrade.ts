@@ -12,8 +12,8 @@ async function main() {
 	console.log(`deployer ${await accounts[0].getAddress()} in network ${network.name}`)
 	let usdtToken: TestERC20
 	// let networkToChange = ['matic_test', 'kovan', 'bsc_test']
-	let networkToChange = ['matic_test']
-	let center_chain = "matic_test"
+	let networkToChange = ['matic']
+	let center_chain = "matic"
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)
 		let cChainId = network.config.chainId!

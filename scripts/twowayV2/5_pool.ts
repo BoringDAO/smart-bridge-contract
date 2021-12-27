@@ -6,23 +6,21 @@ import { NBridge } from "../../src/types/NBridge"
 import { TwoWayCenter } from "../../src/types/TwoWayCenter"
 import { TwoWayEdge } from "../../src/types/TwoWayEdge"
 import { TwoWayChef } from "../../src/types/TwoWayChef"
+import { StakingReward } from "../../src/types/StakingReward"
 import { attach, deploy, deployProxy, getChainIdByName, getContractsAddress, writeContractAddress } from "../helper"
 
 const hre = require("hardhat")
 
 async function main() {
-	let accounts = await ethers.getSigners()
-	let dispatcher = accounts[0]
 
-	console.log(`network ${network.name} deployer ${await accounts[0].getAddress()} ${Number(await getChainId())}`)
 	// let networkToChange = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai", 'op', 'arbi', 'boba']
-	let networkToChange = ["matic_test"]
+	let networkToChange = ["matic"]
 	let contracts = JSON.parse(getContractsAddress())
 	let boringSymbol = "BORING"
 	let feeRewardSymbol = "oUSDT"
-	let dispatcherAddr = await accounts[0].getAddress()
-	let rewardPerSec = ethers.utils.parseEther("1")
-	let startTS = 1000000
+	let rewardPerSec = ethers.utils.parseEther("0.0003")
+	let startTS = Math.round(Date.now() / 1000)
+	console.log(`startTS ${startTS}`)
 
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)
@@ -32,6 +30,9 @@ async function main() {
 
 	for (const n of networkToChange) {
 		hre.changeNetwork(n)
+		let accounts = await ethers.getSigners()
+		console.log(`network ${network.name} deployer ${await accounts[0].getAddress()} ${Number(await getChainId())}`)
+		let dispatcherAddr = await accounts[0].getAddress()
 		let chainid = network.config.chainId!
 		let chainIdStr = network.config.chainId!.toString()
 		console.log(`network name ${network.name} ${network.config.chainId!}`)
@@ -56,7 +57,17 @@ async function main() {
 		await txApprove.wait()
 
 		// deploy staking reward
-		let sr = await deploy("StakingReward", chef.address, feeRewardTokenAddr, 0)
+		let sr = await deployProxy<StakingReward>("StakingReward", feeRewardTokenAddr, chef.address, 0)
+
+		let chefRoleKey = await sr.CHEF_ROLE()
+		let txGrantChefRole = await sr.grantRole(chefRoleKey, chef.address)
+		console.log(`txGrantChefRole ${txGrantChefRole.hash}`)
+		await txGrantChefRole.wait()
+
+		let centerRoleKey = await sr.CENTER_ROLE()
+		let txCenterRoleKey = await sr.grantRole(centerRoleKey, tw.address)
+		console.log(`txCenterRoleKey ${txCenterRoleKey.hash}`)
+		await txCenterRoleKey.wait()
 
 		// chef setting of sr
 		let txSetSR = await chef.setStakingReward(0, sr.address)

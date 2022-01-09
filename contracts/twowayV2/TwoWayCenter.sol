@@ -45,6 +45,8 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     /// oToken => amount
     mapping(address => uint256) public remainHigh;
     mapping(address => uint256) public remainLow;
+    /// oToken => stakingReward
+    mapping(address => address) public srs;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
@@ -91,9 +93,18 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         delete toEdgeToken[_centerToken][_edgeChainId];
     }
 
-    function setStakingReward(IStakingReward _isr) external onlyAdmin {
-        require(address(_isr) != address(0), "zero address");
-        sr = _isr;
+    function setStakingRewards(address[] memory oTokens, address[] memory _srs) external onlyAdmin {
+        require(oTokens.length == _srs.length, "not match");
+        for (uint i; i < oTokens.length; i++) {
+            require(oTokens[i] != address(0), "zero address");
+            require(_srs[i] != address(0), "zero address");
+            srs[oTokens[i]] = _srs[i];
+        }
+    }
+
+    function resetStakingReward(address _oToken) external onlyAdmin {
+        delete srs[_oToken];
+        emit StakingRewardReseted(_oToken);
     }
 
     /// @param token oToken address
@@ -187,13 +198,13 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
             IToken(centerToken).mint(feeTo, fixAmount);
         }
         if (ratioAmount > 0) {
-            if (address(sr) == address(0)) {
+            if (srs[centerToken] == address(0)) {
                 IToken(centerToken).mint(treasuryTo, ratioAmount);
             } else {
                 uint halfFee = ratioAmount / 2;
                 IToken(centerToken).mint(treasuryTo, halfFee);
-                IToken(centerToken).mint(address(sr), halfFee);
-                sr.notifyRewardAmount(halfFee, 24 * 3600);
+                IToken(centerToken).mint(srs[centerToken], halfFee);
+                IStakingReward(srs[centerToken]).notifyRewardAmount(halfFee, 24 * 3600);
             }
         }
     }
@@ -247,17 +258,16 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         bool result = _vote(p.fromChainId, centerToken, p.from, p.to, p.amount, txid);
         if (result) {
             txHandled[txid] = true;
-            uint256 amountAdjust = p.amount / decimalDiff[edgeToken];
             lockBalances[centerToken][p.fromChainId] += p.amount;
             if (lockBalances[centerToken][chainId] >= p.amount) {
-                // transfer
-                IERC20Upgradeable(edgeToken).safeTransfer(p.to, amountAdjust);
                 // fee
                 (uint256 fixAmount, uint256 ratioAmount, uint256 remainAmount) = calculateFee(
                     centerToken,
                     p.toChainId,
                     p.amount
                 );
+                // transfer
+                IERC20Upgradeable(edgeToken).safeTransfer(p.to, remainAmount / decimalDiff[edgeToken]);
                 _handleFeeByMint(centerToken, fixAmount, ratioAmount);
                 lockBalances[centerToken][p.toChainId] -= remainAmount;
                 emit CrossIned(InParam(p.fromChainId, p.fromToken, p.from, p.toChainId, edgeToken, p.to, remainAmount));
@@ -384,4 +394,5 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     event CrossIned(InParam p);
     event CrossInFailed(InParam p);
     event Supported(address token, uint256 chainId, bool status);
+    event StakingRewardReseted(address oToken);
 }

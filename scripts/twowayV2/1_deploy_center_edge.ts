@@ -17,7 +17,11 @@ async function main() {
 	let usdtToken: TestERC20
 	// let networkToChange = ['matic_test', 'kovan', 'bsc_test']
 	// let center_chain = "matic_test"
-	let networkToChange = ['matic', 'heco', 'okex']
+	// let networkToChange = ['mainnet', 'bsc', 'fantom', 'avax', 'xdai', 'harmony', 'op', 'arbi', 'boba']
+	// let networkToChange = ['mainnet', 'bsc', 'fantom', 'avax', 'xdai', 'harmony', 'op', 'arbi', 'metis']
+	// let networkToChange = ['mainnet', 'fantom', 'avax', 'xdai', 'harmony', 'op', 'arbi', 'metis']
+	// let networkToChange = ['op', 'arbi', 'metis']
+	let networkToChange = ['aurora']
 	let center_chain = "matic"
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)

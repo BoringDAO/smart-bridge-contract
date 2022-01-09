@@ -105,16 +105,16 @@ async function main() {
 		// let lock = await tw2.lockBalances(oUSDTAddr, 137)
 		// console.log(`lock Amount ${ethers.utils.formatEther(lock)}`)
 
-		// let [depositAmount] = await chef.userInfo(0, "0xB45C219eFf9A489Ef4287DC19fE6e942637445dE")
-		// console.log(`depositAmount ${ethers.utils.formatEther(depositAmount)}`)
-		// let dispatcher = await chef.dispatcher()
-		// console.log(`dispatcher ${dispatcher}`)
+		let [depositAmount] = await chef.userInfo(0, "0xB45C219eFf9A489Ef4287DC19fE6e942637445dE")
+		console.log(`depositAmount ${ethers.utils.formatEther(depositAmount)}`)
+		let dispatcher = await chef.dispatcher()
+		console.log(`dispatcher ${dispatcher}`)
 
 		// let txWithdraw = await chef.withdraw(0, ethers.utils.parseEther("2"))
 		// await txWithdraw.wait()
 
-		let txDeposit = await chef.deposit(0, ethers.utils.parseEther("1"))
-		await txDeposit.wait()
+		// let txDeposit = await chef.deposit(0, ethers.utils.parseEther("1"))
+		// await txDeposit.wait()
 
 	}
 

@@ -18,12 +18,13 @@ async function main() {
 	// let networkToChange = ['okex_test', 'avax_test', 'harmony_test', 'heco_test', 'fantom_test', 'xdai_test']
 	// let networkToChange = ['okex_test', 'avax_test', 'heco_test', 'fantom_test', 'xdai_test']
 	// let networkToChange = ["bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai"]
-	let networkToChange = [ "arbi", "op", "boba"]
+	// let networkToChange = [ "arbi", "op", "boba"]
+	let networkToChange = [ "bsc", "metis"]
 	// let networkToChange = ["avax", "matic", "heco", "fantom", "xdai"]
 	// let networkToChange = ["bsc"]
 	let contracts = JSON.parse(getContractsAddress())
-	let originChainId = '1'
-	let tokenName = 'BORING'
+	let originChainId = '56'
+	let tokenName = 'lowb'
 	let originToken = contracts[originChainId][tokenName]
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)

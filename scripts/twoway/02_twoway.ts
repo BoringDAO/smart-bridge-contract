@@ -328,6 +328,8 @@ function getUsdt(chainName: string): string {
             return '0x94b008aa00579c1307b0ef2c499ad98a8ce58e58'
         case 'boba':
             return "0x5DE1677344D3Cb0D7D465c10b72A8f60699C062d"
+        case 'metis':
+            return "0xbB06DCA3AE6887fAbF931640f67cab3e3a16F4dC"
         default:
             console.error('not known network');
             process.exit(-1);

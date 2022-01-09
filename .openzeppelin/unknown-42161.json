@@ -15,6 +15,11 @@
       "address": "0x9d8bDAa1dDE16da55c86cCaF12C81647ff9858B8",
       "txHash": "0x86c19fcc4295e1e4e2202dee4130c59864500ffcf2989f64dbba4f4c6390c9bc",
       "kind": "uups"
+    },
+    {
+      "address": "0x2e220E3ab85fC4A46F770A34eF2CdDc8074E4689",
+      "txHash": "0xf5d72156e8010f116e6d57ac97bc9d8353049a81ec8ff804de796e57939755dd",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -834,6 +839,179 @@
           },
           "t_mapping(t_address,t_bool)": {
             "label": "mapping(address => bool)"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)43_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)"
+          },
+          "t_struct(RoleData)43_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "members",
+                "type": "t_mapping(t_address,t_bool)"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32"
+              }
+            ]
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          }
+        }
+      }
+    },
+    "e1096e816a5f7cb7586efc4b00c7b1ef55999a051c78ad0a0ee48a401916fb70": {
+      "address": "0x603f0d26DA2c245D892300A4c3c86b5AD95C96be",
+      "txHash": "0xeb8ba282872010d2695920f1c69743688eb8a28bb43e35584726a119ad121672",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:37"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:42"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:31"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:36"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "_roles",
+            "type": "t_mapping(t_bytes32,t_struct(RoleData)43_storage)",
+            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:64"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:232"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:215"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:81"
+          },
+          {
+            "contract": "ProposalVote",
+            "label": "threshold",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "contracts/ProposalVote.sol:10"
+          },
+          {
+            "contract": "ProposalVote",
+            "label": "isFinished",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "src": "contracts/ProposalVote.sol:12"
+          },
+          {
+            "contract": "ProposalVote",
+            "label": "isVoted",
+            "type": "t_mapping(t_bytes32,t_mapping(t_address,t_bool))",
+            "src": "contracts/ProposalVote.sol:13"
+          },
+          {
+            "contract": "ProposalVote",
+            "label": "counter",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "src": "contracts/ProposalVote.sol:14"
+          },
+          {
+            "contract": "TwoWayEdge",
+            "label": "chainSupported",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_bool))",
+            "src": "contracts/twowayV2/TwoWayEdge.sol:22"
+          },
+          {
+            "contract": "TwoWayEdge",
+            "label": "tokenSupported",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "contracts/twowayV2/TwoWayEdge.sol:23"
+          },
+          {
+            "contract": "TwoWayEdge",
+            "label": "decimalDiff",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "contracts/twowayV2/TwoWayEdge.sol:24"
+          },
+          {
+            "contract": "TwoWayEdge",
+            "label": "txHandled",
+            "type": "t_mapping(t_string_memory_ptr,t_bool)",
+            "src": "contracts/twowayV2/TwoWayEdge.sol:25"
+          },
+          {
+            "contract": "TwoWayEdge",
+            "label": "chainId",
+            "type": "t_uint256",
+            "src": "contracts/twowayV2/TwoWayEdge.sol:26"
+          }
+        ],
+        "types": {
+          "t_mapping(t_address,t_mapping(t_uint256,t_bool))": {
+            "label": "mapping(address => mapping(uint256 => bool))"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_mapping(t_string_memory_ptr,t_bool)": {
+            "label": "mapping(string => bool)"
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_mapping(t_bytes32,t_mapping(t_address,t_bool))": {
+            "label": "mapping(bytes32 => mapping(address => bool))"
           },
           "t_mapping(t_bytes32,t_uint256)": {
             "label": "mapping(bytes32 => uint256)"

@@ -20,9 +20,9 @@ async function main1() {
 	let networkToChange = ["metis"]
 	let accounts = await ethers.getSigners()
 	let deployer = await accounts[0].getAddress()
-	let originChain = "mainnet"
-	let tokenName = "Aave Token"
-	let tokenSymbol = "AAVE"
+	let originChain = "bsc"
+	let tokenName = "loser coin"
+	let tokenSymbol = "lowb"
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)
 		let number = await ethers.provider.getBlockNumber()

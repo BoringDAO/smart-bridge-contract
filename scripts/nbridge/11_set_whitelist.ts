@@ -8,19 +8,11 @@ const hre = require("hardhat")
 async function main() {
 	let accounts = await ethers.getSigners()
 	console.log(`network ${network.name} deployer ${await accounts[0].getAddress()} ${Number(await getChainId())}`)
-	// let networkToChange = ["xdai"]	
 	// let networkToChange = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai", 'op', 'arbi', 'boba']
-	let networkToChange = ["mainnet", "metis"]
-	// let networkToChange = ["mainnet"]
-	// let networkToChange = ['heco']
+	let networkToChange = ["bsc", "metis"]
 	let contracts = JSON.parse(getContractsAddress())
-	let allChain = ["mainnet", "metis"]
-	let tokenSymbol = "AAVE"
-	let specialChain = "mainnet"
-	let toEthFixFee = "0.3"
-	let toLayer2FixFee = "0.05"
-	let toNormalFixFee = "0.01"
-	let ratioFee = "0.0005"
+	let allChain = ["bsc", "metis"]
+	let tokenSymbol = "WSG"
 
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)
@@ -42,55 +34,20 @@ async function main() {
 			// }
 			// continue
 			nb = await attach("NBridge", contracts[chainid.toString()]['NBridge']) as NBridge
-			// nb.calculateFee
 		} else {
 			console.log("network error: nbridge not exist")
 			process.exit(-1)
 		}
-		let tokens = []
-		let toChainIds = []
-		let fixes = []
-		let ratios = []
-		for (let c of allChain) {
-			if (c == network.name) {
-				continue
-			}
-			let token = contracts[chainIdStr][tokenSymbol]
-			tokens.push(token)
-			toChainIds.push(getChainIdByName(c))
-			if (c == "mainnet") {
-				fixes.push(parseEther(toEthFixFee))
-			} else if (c == "op" || c == "arbi" || c == "boba" || c == "metis") {
-				fixes.push(parseEther(toLayer2FixFee))
-			}else {
-				fixes.push(parseEther(toNormalFixFee))
-			}
-
-			if (c == "metis") {
-				ratios.push(0)
-			} else {
-				ratios.push(parseEther(ratioFee))
-			}
-
-		}
-		for (let i=0; i < tokens.length; i++) {
-			console.log(`${tokens[i]} ${toChainIds[i]} ${fixes[i]} ${ratios[i]}`)
-		}
-		// continue
-		let txSetFees = await nb.setFees(tokens, toChainIds, fixes, ratios)
-		console.log(`txSetFees ${txSetFees.hash}`)
-		await txSetFees.wait()
+		let tokenAddr = contracts[chainIdStr][tokenSymbol]
+		await setWhiteList(nb, tokenAddr, "0x53E34401091B531654b8AAEd4EE03AD3e75A0629", true)
 	}
 
 }
 
-async function setFeeTo(nb: NBridge, feeTo: string) {
-	let feeToAddr = await nb.feeTo()
-	console.log(`feeToAddr ${feeToAddr}`)
-	return
-	let tx = await nb.setFeeTo(feeTo)	
-	console.log(`set feeTo ${tx}`)
-	await tx.wait()
+async function setWhiteList(nb: NBridge, token: string, user: string, state: boolean) {
+	let txSetWhitelist = await nb.setWhitelist(token, user, state)
+	console.log(`txSetWhitelist ${txSetWhitelist.hash}`)
+	await txSetWhitelist.wait()
 }
 
 main()

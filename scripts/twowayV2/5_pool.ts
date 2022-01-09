@@ -17,9 +17,10 @@ async function main() {
 	let networkToChange = ["matic"]
 	let contracts = JSON.parse(getContractsAddress())
 	let boringSymbol = "BORING"
-	let feeRewardSymbol = "oUSDT"
+	let feeRewardSymbol = "oUSDC"
 	let rewardPerSec = ethers.utils.parseEther("0.0003")
 	let startTS = Math.round(Date.now() / 1000)
+	let pid = 1
 	console.log(`startTS ${startTS}`)
 
 	for (let n of networkToChange) {
@@ -44,20 +45,33 @@ async function main() {
 		let feeRewardTokenAddr = contracts[chainIdStr][feeRewardSymbol]
 		let boringAddr = contracts[chainIdStr][boringSymbol]
 
-		// deploy chef
-		let chef = await deployProxy<TwoWayChef>("TwoWayChef", boringAddr, dispatcherAddr, rewardPerSec, startTS)
-		let txAddPool = await chef.addPool(100, feeRewardTokenAddr, true)
+		let chef
+		if (contracts[chainIdStr]["TwoWayChef"] == undefined) {
+
+			// deploy chef
+			chef = await deployProxy<TwoWayChef>("TwoWayChef", boringAddr, dispatcherAddr, rewardPerSec, startTS)
+
+			// approve for chef
+			let boring = await attach("ERC20", boringAddr) as ERC20
+			let txApprove = await boring.approve(chef.address, ethers.utils.parseEther("10000000"))
+			console.log(`txApprove ${txApprove.hash}`)
+			await txApprove.wait()
+		} else {
+			chef = await ethers.getContractAt("TwoWayChef", contracts[chainIdStr]["TwoWayChef"]) as TwoWayChef
+		}
+		console.log(`TwoWayChef ${chef.address}`)
+		let poolLength = await chef.poolLength()
+		console.log(`pool length ${poolLength}`)
+		// return
+
+
+		let txAddPool = await chef.addPool(1, feeRewardTokenAddr, true)
 		console.log(`tx add Pool ${txAddPool.hash}`)
 		await txAddPool.wait()
 
-		// approve for chef
-		let boring = await attach("ERC20", boringAddr) as ERC20
-		let txApprove = await boring.approve(chef.address, ethers.utils.parseEther("10000000"))
-		console.log(`txApprove ${txApprove.hash}`)
-		await txApprove.wait()
 
 		// deploy staking reward
-		let sr = await deployProxy<StakingReward>("StakingReward", feeRewardTokenAddr, chef.address, 0)
+		let sr = await deployProxy<StakingReward>("StakingReward", feeRewardTokenAddr, chef.address, pid)
 
 		let chefRoleKey = await sr.CHEF_ROLE()
 		let txGrantChefRole = await sr.grantRole(chefRoleKey, chef.address)
@@ -70,15 +84,15 @@ async function main() {
 		await txCenterRoleKey.wait()
 
 		// chef setting of sr
-		let txSetSR = await chef.setStakingReward(0, sr.address)
+		let txSetSR = await chef.setStakingReward(pid, sr.address)
 		console.log(`txSetSR ${txSetSR.hash}`)
 		await txSetSR.wait()
 
 		contracts[chainIdStr]["TwoWayChef"] = chef.address
-		contracts[chainIdStr]["StakingRewardForChef"] = sr.address
+		contracts[chainIdStr]["StakingRewardForChefUSDC"] = sr.address
 
 		// twowayCenter setting of sr
-		let txSetSRTW = await tw.setStakingReward(sr.address)
+		let txSetSRTW = await tw.setStakingRewards([feeRewardTokenAddr], [sr.address])
 		console.log(`tx set SR for twoway ${txSetSRTW.hash}`)
 		await txSetSRTW.wait()
 

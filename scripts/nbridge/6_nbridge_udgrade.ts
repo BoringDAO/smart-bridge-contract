@@ -7,8 +7,8 @@ const hre = require("hardhat")
 async function main() {
 	let accounts = await ethers.getSigners()
 	console.log(`network ${network.name} deployer ${await accounts[0].getAddress()} ${Number(await getChainId())}`)
-	let networkToChange = ["matic", "fantom", "op", 'arbi', 'boba']
-	// 'op', 'arbi', 'boba']
+	// let networkToChange = ["matic", "fantom", "op", 'arbi', 'boba']
+	let networkToChange = ["bsc", "metis"]
 	// let networkToChange = ['xdai']
 	let contracts = JSON.parse(getContractsAddress())
 

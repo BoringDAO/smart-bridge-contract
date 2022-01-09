@@ -31,6 +31,7 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
     mapping(address => mapping(uint256 => uint256)) public fixFees;
     mapping(address => mapping(uint256 => uint256)) public ratioFees;
     using SafeDecimalMath for uint256;
+    mapping(address => mapping(address => bool)) public isInWhitelist;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
@@ -182,6 +183,9 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
             uint256 remainAmount
         )
     {
+        if (isInWhitelist[token][msg.sender]) {
+            return (fixAmount, ratioAmount, amount);
+        }
         fixAmount = fixFees[token][toChainId];
         uint256 r1 = amount - fixAmount;
         ratioAmount = ratioFees[token][toChainId].multiplyDecimal(r1);
@@ -222,4 +226,9 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
         address to,
         uint256 amount
     );
+
+    function setWhitelist(address token, address user, bool _isInWhitelist) external onlyAdmin {
+        require(isInWhitelist[token][user] != _isInWhitelist, "error state");
+        isInWhitelist[token][user] = _isInWhitelist;
+    }
 }

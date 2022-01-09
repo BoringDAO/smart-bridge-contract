@@ -30,21 +30,26 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       forking: {
-      url: polygonURL,
+      // url: polygonURL,
       // url: "https://rpc-mumbai.maticvigil.com",
       // url: "https://matic-mumbai.chainstacklabs.com",
       // url: polygonTestUrl,
-      // url: "https://andromeda.metis.io/?owner=1088", 
+      url: "https://andromeda.metis.io/?owner=1088", 
         // url: `https://kovan.infura.io/v3/${projectId}`,
         // url: `https://mainnet.infura.io/v3/${projectId}`,
         // url: "https://bsc-dataseed.binance.org",
       },
       // accounts: [privateKeyBSC],
+      // accounts: [privateKeyAVAX],
       accounts: {
-        mnemonic: mnemonic
+        mnemonic: mnemonicMainnet,
+        initialIndex: 22,
+        count: 30
+        
       },
       // chainId: 80001
-      chainId: 137 
+      // chainId: 137 
+      chainId: 1088
     },
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,
@@ -103,7 +108,8 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: mnemonicMainnet,
         count: 30,
-        initialIndex: 25
+        // 20 deployer
+        initialIndex: 20
       }
     },
     harmony: {
@@ -147,7 +153,7 @@ const config: HardhatUserConfig = {
       chainId: 128,
       accounts: {
         mnemonic: mnemonicMainnet,
-        initialIndex: 25,
+        initialIndex: 24,
         count: 30
       }
     },
@@ -175,7 +181,8 @@ const config: HardhatUserConfig = {
       url: "https://rpc.xdaichain.com",
       chainId: 100,
       accounts: [privateKeyAVAX],
-      timeout: 600000
+      timeout: 600000,
+      // gasPrice: 199999999200
     },
     moonriver_test: {
       url: "https://rpc.testnet.moonbeam.network",
@@ -226,6 +233,18 @@ const config: HardhatUserConfig = {
     metis_test: {
       url: "https://stardust.metis.io/?owner=588",
       chainId: 588,
+      accounts: {
+        mnemonic: mnemonic
+      }
+    },
+    aurora: {
+      url: "https://mainnet.aurora.dev",
+      chainId: 1313161554,
+      accounts: [privateKeyAVAX]
+    },
+    aurora_test: {
+      url: "https://testnet.aurora.dev",
+      chainId: 1313161555,
       accounts: {
         mnemonic: mnemonic
       }

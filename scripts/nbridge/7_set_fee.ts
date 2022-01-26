@@ -9,14 +9,14 @@ async function main() {
 	let accounts = await ethers.getSigners()
 	console.log(`network ${network.name} deployer ${await accounts[0].getAddress()} ${Number(await getChainId())}`)
 	// let networkToChange = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai", 'op', 'arbi', 'boba']
-	let networkToChange = ["bsc", "metis"]
+	let networkToChange = ["bsc", "mainnet"]
 	let contracts = JSON.parse(getContractsAddress())
-	let allChain = ["bsc", "metis"]
-	let tokenSymbol = "lowb"
-	let toEthFixFee = "1800000"
-	let toLayer2FixFee = "180000"
-	let toNormalFixFee = "100000"
-	let ratioFee = "0.0005"
+	let allChain = ["bsc", "mainnet"]
+	let tokenSymbol = "FIRE"
+	let toEthFixFee = "6000"
+	let toLayer2FixFee = "1000"
+	let toNormalFixFee = "200"
+	let ratioFee = "0.005"
 
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)

@@ -89,7 +89,9 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
         address to,
         uint256 amount
     ) external {
-        require(amount > fixFees[_token][toChainID], "cross amount 0");
+        if (!isInWhitelist[_token][msg.sender]) {
+            require(amount > fixFees[_token][toChainID], "cross amount 0");
+        }
         TokenInfo memory ti = supportedTokens[chainId][_token];
         require(ti.isSupported, "not support token");
         (uint256 fixAmount, uint256 ratioAmount, uint256 remainAmount) = calculateFee(_token, toChainID, amount);

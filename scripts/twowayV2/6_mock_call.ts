@@ -17,17 +17,17 @@ async function main() {
 	// let mock_user = "0x0b2Ee5331f04cB8FCcb76CDd134Ec878A61d4429"
 	// let mock_user = "0x79a1215469FaB6f9c63c1816b45183AD3624bE34"
 	// let mock_user = "0xB45C219eFf9A489Ef4287DC19fE6e942637445dE"
-	let mock_user = "0x53E34401091B531654b8AAEd4EE03AD3e75A0629"
-	await hre.network.provider.request({
-		method: "hardhat_impersonateAccount",
-		params: [mock_user],
-	});
-	const signer = await ethers.getSigner(mock_user)
+	// let mock_user = "0x53E34401091B531654b8AAEd4EE03AD3e75A0629"
+	// await hre.network.provider.request({
+	// 	method: "hardhat_impersonateAccount",
+	// 	params: [mock_user],
+	// });
+	// const signer = await ethers.getSigner(mock_user)
 
 	console.log(`network ${network.name} deployer ${await accounts[0].getAddress()} ${Number(await getChainId())}`)
 	// let networkToChange = ["xdai"]	
 	// let networkToChange = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai", 'op', 'arbi', 'boba']
-	let networkToChange = ["hardhat"]
+	let networkToChange = ["matic"]
 	// let networkToChange = ['heco']
 	let contracts = JSON.parse(getContractsAddress())
 	let allChain = ["mainnet", "metis"]
@@ -62,9 +62,9 @@ async function main() {
 			process.exit(-1)
 		}
 		let tokenAddr  = contracts[chainIdStr][tokenSymbol]
-		let tw2 = tw.connect(signer)
-		let token = await ethers.getContractAt("ERC20", tokenAddr) as ERC20
-		token = token.connect(signer)
+		// let tw2 = tw.connect(signer)
+		// let token = await ethers.getContractAt("ERC20", tokenAddr) as ERC20
+		// token = token.connect(signer)
 		// let tx = await nb2.crossOut(tokenAddr, 1, await signer.getAddress(), parseEther("0.6"))
 		// tx.wait()
 		// let tx = await token.approve(tw2.address, ethers.constants.MaxUint256)
@@ -99,22 +99,28 @@ async function main() {
 
 		let chefAddr = contracts[chainIdStr]["TwoWayChef"]
 		let chef = await ethers.getContractAt("TwoWayChef", chefAddr) as TwoWayChef
-		chef = chef.connect(signer)
+		// chef = chef.connect(signer)
 		
 		// let oUSDTAddr = contracts[chainIdStr]['oUSDT']
 		// let lock = await tw2.lockBalances(oUSDTAddr, 137)
 		// console.log(`lock Amount ${ethers.utils.formatEther(lock)}`)
 
-		let [depositAmount] = await chef.userInfo(0, "0xB45C219eFf9A489Ef4287DC19fE6e942637445dE")
-		console.log(`depositAmount ${ethers.utils.formatEther(depositAmount)}`)
-		let dispatcher = await chef.dispatcher()
-		console.log(`dispatcher ${dispatcher}`)
+		// let [depositAmount] = await chef.userInfo(0, "0xB45C219eFf9A489Ef4287DC19fE6e942637445dE")
+		// console.log(`depositAmount ${ethers.utils.formatEther(depositAmount)}`)
+		// let dispatcher = await chef.dispatcher()
+		// console.log(`dispatcher ${dispatcher}`)
 
 		// let txWithdraw = await chef.withdraw(0, ethers.utils.parseEther("2"))
 		// await txWithdraw.wait()
 
 		// let txDeposit = await chef.deposit(0, ethers.utils.parseEther("1"))
 		// await txDeposit.wait()
+		// let oTokenAddr = contracts[chainIdStr]['oUSDC']
+		// let locks = await tw.lockBalances(oTokenAddr, 56)
+		// console.log(`${ethers.utils.formatEther(locks)}`)
+
+		const [one, two] = await chef.perSecond(1)
+		console.log(`two ${ethers.utils.formatEther(two)}`)
 
 	}
 

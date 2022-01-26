@@ -19,19 +19,31 @@ async function main() {
 	// let networkToChange = ['mainnet', 'bsc', 'okex', 'heco' , 'fantom', 'avax', 'xdai', 'op', 'arbi', 'metis', 'harmony']
 	// let networkToChange = ['bsc', 'fantom', 'avax', 'xdai', 'op', 'arbi', 'metis', 'harmony']
 	// let networkToChange = ['op', 'arbi', 'metis', 'harmony', 'aurora']
-	let networkToChange = ['aurora']
-	let networkToChange2 = ['matic', 'mainnet', 'bsc', 'okex', 'heco', 'fantom', 'avax', 'xdai', 'op', 'arbi', 'metis', 'harmony', 'aurora']
+	let networkToChange = ['matic', 'okex', 'mainnet']
+	let networkToChange2 = ['matic','okex', 'mainnet']
+	// let networkToChange2 = ['matic', 'mainnet', 'bsc', 'okex', 'heco', 'fantom', 'avax', 'xdai', 'op', 'arbi', 'metis', 'harmony', 'aurora']
 	// let networkToChange2 = ['bsc', 'okex', 'heco', 'fantom', 'avax', 'xdai', 'op', 'arbi', 'metis', 'harmony', 'aurora']
 	// let networkToChange2 = ['heco', 'okex']
 	// let networkToChange2 = ['arbi', 'metis', 'harmony']
 	let center_chain = "matic"
-	let tokenSymbol = " LOL"
-	let oTokenSymbol = "oLOL"
+	let tokenSymbol = "FIN"
+	let oTokenSymbol = "o"+tokenSymbol
+	let tokenPriece = 0.16
+	let lowAmount = (100000 / tokenPriece).toString()
+	let highAmount = (500000 / tokenPriece).toString()
+	let fixFeeToETH = (60 / tokenPriece).toString()
+	let fixFeeToL2 = (10 / tokenPriece).toString()
+	let fixFeeToNormal = (2 / tokenPriece).toString()
+	console.log(`lowAmount ${lowAmount} highAmount ${highAmount}`)
+	console.log(`fixFeeToETH ${fixFeeToETH} fixFeeToL2 ${fixFeeToL2} fixFeeToNormal ${fixFeeToNormal}`)
+	console.log(`gooooo`)
 	let ratioHigh = ethers.utils.parseEther("0.01")
 	let ratioMedium = ethers.utils.parseEther("0.003")
 	let ratioLow = ethers.utils.parseEther("0.0005")
-	let remainLow = ethers.utils.parseEther("100000")
-	let remainHigh = ethers.utils.parseEther("500000")
+
+	let remainLow = ethers.utils.parseEther(lowAmount)
+	let remainHigh = ethers.utils.parseEther(highAmount)
+
 
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)
@@ -47,7 +59,6 @@ async function main() {
 			let oToken
 			if (contracts[cChainIdStr][oTokenSymbol] == undefined || contracts[cChainIdStr][oTokenSymbol] == "") {
 				oToken = await deployProxy("TwoWayCenterToken", oTokenSymbol, oTokenSymbol) as TwoWayCenterToken
-
 				let minterRole = await oToken.MINTER_ROLE()
 				let burnerRole = await oToken.BURNER_ROLE()
 				let txSetMinter = await oToken.grantRole(minterRole, tw.address)
@@ -58,9 +69,10 @@ async function main() {
 				await txSetBurner.wait()
 
 				await setting_crosser(tw, oToken.address, crosser_test)
+
 				// set rawToken
-				let rawTokenAddr = contracts[cChainIdStr][tokenSymbol]
-				await setting_crosser(tw, rawTokenAddr, crosser_test)
+				// let rawTokenAddr = contracts[cChainIdStr][tokenSymbol]
+				// await setting_crosser(tw, rawTokenAddr, crosser_test)
 				// threshold
 				let txSetThreshold = await tw.setThreshold(oToken.address, 1);
 				console.log(`tx setThreshold ${txSetThreshold.hash}`)
@@ -86,16 +98,19 @@ async function main() {
 				// if (n == edgeChain) {
 				// 	continue
 				// }
+				console.log(`edge chain ${edgeChain}`)
+				console.log(`${oToken.address}`)
+				console.log(`${contracts[getChainIdByName(edgeChain)][tokenSymbol]}`)
 				let tx = await tw.addToken(oToken.address, getChainIdByName(edgeChain), contracts[getChainIdByName(edgeChain)][tokenSymbol])
 				console.log(`add token ${tx.hash}`)
 				await tx.wait()
 				toChainIds.push(getChainIdByName(edgeChain))
 				if (edgeChain == "mainnet" || edgeChain == "kovan") {
-					fixFees.push(ethers.utils.parseEther("50"))
+					fixFees.push(ethers.utils.parseEther(fixFeeToETH))
 				} else if (edgeChain == "boba" || edgeChain == "op" || edgeChain == "arbi" || edgeChain == "metis") {
-					fixFees.push(ethers.utils.parseEther("10"))
+					fixFees.push(ethers.utils.parseEther(fixFeeToL2))
 				} else {
-					fixFees.push(ethers.utils.parseEther("2"))
+					fixFees.push(ethers.utils.parseEther(fixFeeToNormal))
 				}
 				ratioFeesHigh.push(ratioHigh)
 				ratioFeesMedium.push(ratioMedium)

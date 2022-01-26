@@ -9,10 +9,11 @@ async function main() {
 	let accounts = await ethers.getSigners()
 	console.log(`network ${network.name} deployer ${await accounts[0].getAddress()} ${Number(await getChainId())}`)
 	// let networkToChange = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai", 'op', 'arbi', 'boba']
-	let networkToChange = ["bsc", "metis"]
+	let networkToChange = ["bsc", "mainnet"]
 	let contracts = JSON.parse(getContractsAddress())
-	let allChain = ["bsc", "metis"]
-	let tokenSymbol = "WSG"
+	// let allChain = ["bsc", "mainnet"]
+	let tokenSymbol = "FIRE"
+	let whiteAddress = "0x61405A9f9Ff7b525d5Dd17D54b429593E5379359"
 
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)
@@ -39,7 +40,7 @@ async function main() {
 			process.exit(-1)
 		}
 		let tokenAddr = contracts[chainIdStr][tokenSymbol]
-		await setWhiteList(nb, tokenAddr, "0x53E34401091B531654b8AAEd4EE03AD3e75A0629", true)
+		await setWhiteList(nb, tokenAddr, whiteAddress, true)
 	}
 
 }

@@ -9,12 +9,14 @@ async function main() {
 	console.log(`network ${network.name} ${Number(await getChainId())}`)
 	// let crosser = "0xC63573cB77ec56e0A1cb40199bb85838D71e4dce" // test
 	let crosser = "0xbC41ef18DfaE72b665694B034f608E6Dfe170149"
+	// let crosser = "0x2353178C6c05378812f024A783541857634A1e82" // test
 	let feeTo = "0x09587012B3670D75a90930be9282d98063E402a2"
-	let networkToChange = ["bsc", "metis"]
-	let allChain = ["bsc",'metis']	
+	let networkToChange = ["mainnet"]
+	let allChain = ['bsc','mainnet']	
 	let contracts = JSON.parse(getContractsAddress())
 	let originChainId = getChainIdByName("bsc")
-	let tokenSymbol = 'lowb'
+	let tokenSymbol = 'FIRE'
+	let isDeployedByMe = false
 	let originToken = contracts[originChainId][tokenSymbol]
 
 	for (let n of networkToChange) {
@@ -49,25 +51,27 @@ async function main() {
 			default:
 				let tokenAddr = contracts[chainid.toString()][tokenSymbol]
 				await setupNBridge(nb, originToken, Number(originChainId), crosserKey, crosser, feeTo, allChain, tokenSymbol)
-				await grantMinterBurner(nb, tokenAddr)
-				await addDeriveSupportToken(nb, originToken, Number(originChainId), tokenAddr, chainid)
+				// await grantMinterBurner(nb, tokenAddr, isDeployedByMe)
+				// await addDeriveSupportToken(nb, originToken, Number(originChainId), tokenAddr, chainid)
 		}
 	}
 }
 
 
-async function grantMinterBurner(nb: NBridge, tokenAddr: string) {
+async function grantMinterBurner(nb: NBridge, tokenAddr: string, isDeployedByMe: boolean) {
 	console.log(`token ${tokenAddr} grant minter and burner`)
 	let token = await attach("Token", tokenAddr) as Token
 	console.log(`grant role to bridge ${nb.address}`)
 	const minter = ethers.utils.formatBytes32String("MINTER_ROLE")
 	const burner = ethers.utils.formatBytes32String("BURNER_ROLE")
-	let tx = await token.grantRole(minter, nb.address)
-	console.log(`tx ${tx.hash} grant minter`)
-	await tx.wait()
-	let txBurn = await token.grantRole(burner, nb.address)
-	console.log(`tx ${txBurn.hash} grant burner`)
-	await txBurn.wait()
+	if (isDeployedByMe) {
+		let tx = await token.grantRole(minter, nb.address)
+		console.log(`tx ${tx.hash} grant minter`)
+		await tx.wait()
+		let txBurn = await token.grantRole(burner, nb.address)
+		console.log(`tx ${txBurn.hash} grant burner`)
+		await txBurn.wait()
+	}
 }
 
 async function setupNBridge(nb: NBridge, originToken: string, originChainId: number, crosserKey: string, crosser: string, feeTo: string, allChain: string[], tokenSymbol: string) {
@@ -107,38 +111,6 @@ async function changeCrosser(nb: NBridge, crosser1: string, crosser2: string, or
 	console.log("grant role")
 	await txGrant.wait()
 }
-
-// async function setFees(nb: NBridge, allChain: string[], tokenSymbol: string) {
-// 	let contracts = JSON.parse(getContractsAddress())
-// 	let chainId = network.config.chainId!
-// 	let chainIdStr = chainId.toString()
-// 	let tokens = []
-// 		let toChainIds = []
-// 		let fixes = []
-// 		let ratios = []
-// 		for (let c of allChain) {
-// 			if (c == network.name) {
-// 				continue
-// 			}
-// 			let token = contracts[chainIdStr][tokenSymbol]
-// 			tokens.push(token)
-// 			toChainIds.push(getChainIdByName(c))
-// 			if (c == "mainnet") {
-// 				fixes.push(parseEther("1000"))
-// 			} else {
-// 				fixes.push(parseEther("50"))
-// 			}
-// 			ratios.push(parseEther("0.005"))
-
-// 		}
-// 		for (let i=0; i < tokens.length; i++) {
-// 			console.log(`${tokens[i]} ${toChainIds[i]} ${fixes[i]} ${ratios[i]}`)
-// 		}
-// 		let txSetFees = await nb.setFees(tokens, toChainIds, fixes, ratios)
-// 		console.log(`txSetFees ${txSetFees.hash}`)
-// 		await txSetFees.wait()
-	
-// }
 
 main()
 	.then(() => process.exit(0))

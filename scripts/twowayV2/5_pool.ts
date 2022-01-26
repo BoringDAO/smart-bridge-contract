@@ -17,10 +17,11 @@ async function main() {
 	let networkToChange = ["matic"]
 	let contracts = JSON.parse(getContractsAddress())
 	let boringSymbol = "BORING"
-	let feeRewardSymbol = "oUSDC"
+	let feeRewardSymbol = "oFIN"
 	let rewardPerSec = ethers.utils.parseEther("0.0003")
 	let startTS = Math.round(Date.now() / 1000)
-	let pid = 1
+	let pid = 4
+	let pool_point = 0
 	console.log(`startTS ${startTS}`)
 
 	for (let n of networkToChange) {
@@ -62,10 +63,11 @@ async function main() {
 		console.log(`TwoWayChef ${chef.address}`)
 		let poolLength = await chef.poolLength()
 		console.log(`pool length ${poolLength}`)
+
 		// return
 
 
-		let txAddPool = await chef.addPool(1, feeRewardTokenAddr, true)
+		let txAddPool = await chef.addPool(pool_point, feeRewardTokenAddr, true)
 		console.log(`tx add Pool ${txAddPool.hash}`)
 		await txAddPool.wait()
 
@@ -88,8 +90,8 @@ async function main() {
 		console.log(`txSetSR ${txSetSR.hash}`)
 		await txSetSR.wait()
 
-		contracts[chainIdStr]["TwoWayChef"] = chef.address
-		contracts[chainIdStr]["StakingRewardForChefUSDC"] = sr.address
+		// contracts[chainIdStr]["TwoWayChef"] = chef.address
+		contracts[chainIdStr]["StakingRewardForChef"+feeRewardSymbol] = sr.address
 
 		// twowayCenter setting of sr
 		let txSetSRTW = await tw.setStakingRewards([feeRewardTokenAddr], [sr.address])

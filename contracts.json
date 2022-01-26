@@ -19,7 +19,9 @@
         "AAVE": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
         "CRV": "0xD533a949740bb3306d119CC777fa900bA034cd52",
         "TwoWayV2": "0xecaD1ab3464ECcC7536af6aFeE414dF873495616",
-        "USDC": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+        "USDC": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "FIRE": "0x0f0Dd5E2c0e0c4A41F8908D73D36B8D142F6745a",
+        "iZi": "0x9ad37205d608b8b219e6a2573f922094cec5c200"
     },
     "10": {
         "network_name": "op",
@@ -35,13 +37,14 @@
     "42": {
         "network_name": "kovan",
         "BORING": "0x55FB3193F6e42D6753691c8aA38800B2753FB7d0",
-        "NBridge": "0x14dcF56cbf4C437449FE3811228D2E853B23E55f",
         "xVEMP": "0x2cEa1A4cc4aEBd76e448Bb894345D294c53853f2",
         "VEMP": "0xe179a674CF3785be513E1620aEBB944e68147D3F",
         "BoringChefLock": "0xF1b30254d16E1c5d900057BFE6CF0CBe3aebe7bf",
         "USDT": "0x35D50cbc648c533A5DA29f4899955bd116fC738C",
         "TwoWayLP": "0x4407FBB5c11A689B5FEfD1a9169Da598Aa4bCD65",
-        "TwoWayV2": "0x15624E9d0442D1039C335BC1aeB5F6A876a9bb72"
+        "TwoWayV2": "0x15624E9d0442D1039C335BC1aeB5F6A876a9bb72",
+        "FIRE": "0x7eFC12F4b6A577393c98465FB90E280f2EBC5995",
+        "NBridge": "0x65b373a72e09A445cd547eD57d399c99FBC3C03C"
     },
     "56": {
         "network_name": "bsc",
@@ -60,7 +63,8 @@
         "TwoWayV2": "0x0075Ac0C662a5B655060d1519fF739D834078705",
         "USDC": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
         "lowb": "0x843d4a358471547f51534e3e51fae91cb4dc3f28",
-        "LOL": "0x55E3f23B563769426f8Aa4059e9977689c74B47E"
+        "LOL": "0x55E3f23B563769426f8Aa4059e9977689c74B47E",
+        "FIRE": "0x0f0Dd5E2c0e0c4A41F8908D73D36B8D142F6745a"
     },
     "65": {
         "network_name": "okex_test",
@@ -74,7 +78,8 @@
         "BoringChef": "0xef002868F3Ee02a20ac6d7fd8381A83a8C127005",
         "SwapPair": "0x232c6B4e2e0833b1E6E07c9a37898203E7DD7b24",
         "oBTC": "0x6ef2968f539E9cBe5043F62dAdE97EAfd92EC53d",
-        "FIN": "0x2B21237BA30deF78EC551a10C99d656F90Eb10fC",
+        "FIN": "0x8d3573f24c0aa3819a2f5b02b2985dd82b487715",
+        "WrapFIN": "0x2B21237BA30deF78EC551a10C99d656F90Eb10fC",
         "BoringChefUsdtLP": "0xAd2F796199ff714AfE4f6716C50fF6dc431322C8",
         "blockInterval": 4,
         "TwoWay": "0x39b107D2d810954507e7Cd70403fDa4Ae12a192e",
@@ -92,12 +97,13 @@
     "97": {
         "network_name": "bsc_test",
         "BORING": "0xC2769060Ea91EC67bca1e6Bedb02e3017a7C0d32",
-        "NBridge": "0x7B8C0668F4B5f3d8D4695864041F1f0C31e2F86C",
         "VEMP": "0x337c6fC30eEACe049017fc180D259e95eAe1c960",
         "xVEMP": "0x4852931e56B6bBf1f5a26eF62d85B0C56595DCE5",
         "USDT": "0x17b0C74E06407b06CE10B86021ceC571aDc8Dfb8",
         "TwoWayLP": "0xece9f7BDa207d16C7936191472A9B33Ef7f57dDb",
-        "TwoWayV2": "0xFaf3aD46dA9670910e340073FFd31aA4D04B2f5a"
+        "TwoWayV2": "0xFaf3aD46dA9670910e340073FFd31aA4D04B2f5a",
+        "FIRE": "0xd2F2dfb575dDffDDDCbEd1A436cF53f6C3e73B0f",
+        "NBridge": "0x6C0B1613863D3e734e1fd5e610fdd8997298b428"
     },
     "100": {
         "network_name": "xdai",
@@ -141,10 +147,18 @@
         "TwoWayV2": "0x6dc551088AFAf828b95a9c9Ad590AeFE797c8e87",
         "oUSDT": "0x413cfE1C41F98879365D665CACB7E79a60001fEE",
         "TwoWayChef": "0xB225cC2207FECC82806042cEB386eF2b23E2464c",
-        "StakingRewardForChefUSDT": "0x421A538234aF050c77eF735b23A1Db03243B0e4b",
+        "StakingRewardForChefoUSDT": "0x421A538234aF050c77eF735b23A1Db03243B0e4b",
         "USDC": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
         "oUSDC": "0x8DE93f998b6b0ddA780Ee12B97dde1F2fADd3B1d",
-        "StakingRewardForChefUSDC": "0xBb5eA9b628f8A93c653c0eaC986238407930059d"
+        "StakingRewardForChefoUSDC": "0xBb5eA9b628f8A93c653c0eaC986238407930059d",
+        "oLOL": "0x0D9ceFE09299C8c3Cbe1F2706fbcEdBc35d73052",
+        "StakingRewardForChefoLOL": "0x70dfE627c3b04FDF8E8C9572FcEC9E098FeD552d",
+        "iZi": "0x60d01ec2d5e98ac51c8b4cf84dfcce98d527c747",
+        "oiZi": "0x79904eC9De1FCCF7ca50fE3f8430e922d53e07e6",
+        "StakingRewardForChefoiZi": "0x091C23C213945b1F96e4BA660bdee1FD61663d11",
+        "FIN": "0x576c990a8a3e7217122e9973b2230a3be9678e94",
+        "oFIN": "0x4D98192A8A078D0937c8FCa144C07e741364BdcA",
+        "StakingRewardForChefoFIN": "0x6B906d17301447117C83F12DEc183331Ac3BCaa5"
     },
     "250": {
         "network_name": "fantom",
@@ -197,6 +211,9 @@
         "network_name": "fantom_test",
         "BORING": "0xE2D268AD9c53d8ad0A0791C9a9C12Fb183856b46",
         "NBridge": "0xE804626120222Ff41a1dC5945822B50cAB400637"
+    },
+    "8217": {
+        "network_name": "klaytn"
     },
     "42161": {
         "network_name": "arbi",

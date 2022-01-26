@@ -11,6 +11,7 @@ import "hardhat-abi-exporter";
 import "hardhat-change-network";
 
 import { ethers } from "hardhat";
+import { count } from 'console';
 
 const { polygonTestUrl, polygonURL, mnemonic, mnemonicMainnet, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX, privateKeyMatic } = require("./.secret.json");
 
@@ -31,10 +32,11 @@ const config: HardhatUserConfig = {
     hardhat: {
       forking: {
       // url: polygonURL,
+      // blockNumber: 23635986,
       // url: "https://rpc-mumbai.maticvigil.com",
-      // url: "https://matic-mumbai.chainstacklabs.com",
+      url: "https://matic-mumbai.chainstacklabs.com",
       // url: polygonTestUrl,
-      url: "https://andromeda.metis.io/?owner=1088", 
+      // url: "https://andromeda.metis.io/?owner=1088", 
         // url: `https://kovan.infura.io/v3/${projectId}`,
         // url: `https://mainnet.infura.io/v3/${projectId}`,
         // url: "https://bsc-dataseed.binance.org",
@@ -48,8 +50,8 @@ const config: HardhatUserConfig = {
         
       },
       // chainId: 80001
-      // chainId: 137 
-      chainId: 1088
+      chainId: 137 
+      // chainId: 1088
     },
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,
@@ -81,6 +83,11 @@ const config: HardhatUserConfig = {
       url: "https://bsc-dataseed.binance.org",
       chainId: 56,
       accounts: [privateKeyBSC]
+      // accounts: {
+      //   mnemonic: mnemonicMainnet,
+      //   initialIndex: 22,
+      //   count: 30
+      // },
     },
     okex_test: {
       url: "https://exchaintestrpc.okex.org",
@@ -228,7 +235,12 @@ const config: HardhatUserConfig = {
     metis: {
       url: "https://andromeda.metis.io/?owner=1088", 
       chainId: 1088,
-      accounts: [privateKeyAVAX]
+      accounts: [privateKeyAVAX],
+      // accounts: {
+      //   mnemonic: mnemonicMainnet,
+      //   initialIndex: 22,
+      //   count: 30
+      // },
     },
     metis_test: {
       url: "https://stardust.metis.io/?owner=588",
@@ -245,6 +257,18 @@ const config: HardhatUserConfig = {
     aurora_test: {
       url: "https://testnet.aurora.dev",
       chainId: 1313161555,
+      accounts: {
+        mnemonic: mnemonic
+      }
+    },
+    klaytn: {
+      url: "https://public-node-api.klaytnapi.com/v1/cypress",
+      chainId: 8217,
+      accounts: [privateKeyAVAX]
+    },
+    klaytn_test: {
+      url: "https://api.baobab.klaytn.net:8651",
+      chainId: 1001,
       accounts: {
         mnemonic: mnemonic
       }

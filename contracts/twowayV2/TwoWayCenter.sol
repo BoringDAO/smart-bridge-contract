@@ -47,6 +47,10 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     mapping(address => uint256) public remainLow;
     /// oToken => stakingReward
     mapping(address => address) public srs;
+    /// add liqui reward fee param
+    mapping(address => uint256) public rewardRatio;
+    /// fee to treasury ratio
+    mapping(address => uint256) public feeToTreasuryRatio;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
@@ -95,7 +99,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
 
     function setStakingRewards(address[] memory oTokens, address[] memory _srs) external onlyAdmin {
         require(oTokens.length == _srs.length, "not match");
-        for (uint i; i < oTokens.length; i++) {
+        for (uint256 i; i < oTokens.length; i++) {
             require(oTokens[i] != address(0), "zero address");
             require(_srs[i] != address(0), "zero address");
             srs[oTokens[i]] = _srs[i];
@@ -142,7 +146,11 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         treasuryTo = _treasuryTo;
     }
 
-    function setWhitelist(address oToken, address user, bool _isInWhitelist) external onlyAdmin {
+    function setWhitelist(
+        address oToken,
+        address user,
+        bool _isInWhitelist
+    ) external onlyAdmin {
         require(isInWhilelist[oToken][user] != _isInWhitelist, "error state");
         isInWhilelist[oToken][user] = _isInWhitelist;
     }
@@ -152,11 +160,24 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         _setThreshold(token0, _threshold);
     }
 
+    function setRewardRatio(address _oToken, uint256 _ratio) external onlyAdmin {
+        rewardRatio[_oToken] = _ratio;
+    }
+
+    function setFeeToTreasuryRatio(address _oToken, uint256 _ratio) external onlyAdmin {
+        require(_ratio <= 1e18, "ratio error");
+        feeToTreasuryRatio[_oToken] = _ratio;
+    }
+
     function deposit(address token, uint256 amount) external {
         address centerToken = toCenterToken[chainId][token];
         require(centerToken != address(0), "not support");
         IERC20Upgradeable(token).safeTransferFrom(msg.sender, address(this), amount);
         IToken(centerToken).mint(msg.sender, amount * decimalDiff[token]);
+
+        // liquidity rewards
+        transferReward(centerToken, chainId, msg.sender, amount * decimalDiff[token]);
+
         lockBalances[centerToken][chainId] += amount * decimalDiff[token];
         emit Deposited(chainId, token, msg.sender, amount * decimalDiff[token]);
     }
@@ -201,10 +222,11 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
             if (srs[centerToken] == address(0)) {
                 IToken(centerToken).mint(treasuryTo, ratioAmount);
             } else {
-                uint halfFee = ratioAmount / 2;
-                IToken(centerToken).mint(treasuryTo, halfFee);
-                IToken(centerToken).mint(srs[centerToken], halfFee);
-                IStakingReward(srs[centerToken]).notifyRewardAmount(halfFee, 24 * 3600);
+                uint256 feeToTreasury = ratioAmount.multiplyDecimal(feeToTreasuryRatio[centerToken]);
+                uint256 feeToLP = ratioAmount - feeToTreasury;
+                IToken(centerToken).mint(treasuryTo, feeToTreasury);
+                IToken(centerToken).mint(srs[centerToken], feeToLP);
+                IStakingReward(srs[centerToken]).notifyRewardAmount(feeToLP, 24 * 3600);
             }
         }
     }
@@ -213,7 +235,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         external
         onlyCrosser(toCenterToken[p.fromChainId][p.fromToken])
         whenNotHandled(txid)
-    {   
+    {
         require(p.fromChainId != p.toChainId, "chainId error");
         address centerToken = toCenterToken[p.fromChainId][p.fromToken];
         require(centerToken != address(0), "not support centerToken");
@@ -292,8 +314,25 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         if (result) {
             txHandled[txid] = true;
             IToken(_centerToken).mint(p.to, p.amount);
+
+            // liquidity reward
+            transferReward(_centerToken, p.fromChainId, p.from, p.amount);
+
             lockBalances[_centerToken][p.fromChainId] += p.amount;
+
             emit Issued(p);
+        }
+    }
+
+    function transferReward(
+        address _centerToken,
+        uint256 _fromChainId,
+        address _to,
+        uint256 _amount
+    ) private {
+        uint256 rewardAmount = calculateReward(_centerToken, _fromChainId, _amount);
+        if (rewardAmount > 0) {
+            IERC20Upgradeable(_centerToken).safeTransferFrom(treasuryTo, _to, rewardAmount);
         }
     }
 
@@ -311,7 +350,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         // fee
         (uint256 fixAmount, uint256 ratioAmount, uint256 remainAmount) = calculateFee(oToken, toChainId, amount);
         _handleFeeByMint(oToken, fixAmount, ratioAmount);
-        
+
         IToken(oToken).burn(msg.sender, amount);
         lockBalances[oToken][toChainId] -= amount;
         if (toChainId == chainId) {
@@ -319,6 +358,52 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
             emit WithdrawedToCenter(InParam(chainId, oToken, msg.sender, toChainId, _edgeToken, to, remainAmount));
         } else {
             emit Withdrawed(InParam(chainId, oToken, msg.sender, toChainId, _edgeToken, to, remainAmount));
+        }
+    }
+
+    function calculateReward(
+        address oToken,
+        uint256 fromChainId,
+        uint256 amount
+    ) public view returns (uint256 _reward) {
+        if (rewardRatio[oToken] == 0) {
+            return 0;
+        }
+        uint256 lock = lockBalances[oToken][fromChainId];
+        if (lock >= remainHigh[oToken]) return 0;
+        uint256 newLock = lock + amount;
+        uint256 ratioHigh = ratioFeesHigh[oToken][fromChainId].multiplyDecimal(rewardRatio[oToken]);
+        uint256 ratioMedium = ratioFeesMedium[oToken][fromChainId].multiplyDecimal(rewardRatio[oToken]);
+        if (lock <= remainLow[oToken]) {
+            if (newLock <= remainLow[oToken]) {
+                // low to low
+                _reward = amount.multiplyDecimal(ratioHigh);
+            } else if (newLock <= remainHigh[oToken]) {
+                // low to medium
+                uint256 _ratioFeeLow = (remainLow[oToken] - lock).multiplyDecimal(ratioHigh);
+                uint256 _ratioFeeMedium = (newLock - remainLow[oToken]).multiplyDecimal(ratioMedium);
+                _reward = _ratioFeeLow + _ratioFeeMedium;
+            } else {
+                // low to high
+                uint256 _ratioFeeLow = (remainLow[oToken] - lock).multiplyDecimal(ratioHigh);
+                uint256 _ratioFeeMedium = (remainHigh[oToken] - remainLow[oToken]).multiplyDecimal(ratioMedium);
+                _reward = _ratioFeeLow + _ratioFeeMedium;
+            }
+        } else if (lock <= remainHigh[oToken]) {
+            if (newLock <= remainHigh[oToken]) {
+                // medium to medium
+                _reward = amount.multiplyDecimal(ratioMedium);
+            } else {
+                // medium to high
+                _reward = (remainHigh[oToken] - lock).multiplyDecimal(ratioMedium);
+            }
+        } else {
+            // high to high
+        }
+        // treasury
+        uint256 rewardSupply = IERC20Upgradeable(oToken).balanceOf(treasuryTo);
+        if (rewardSupply <= _reward) {
+            return rewardSupply;
         }
     }
 

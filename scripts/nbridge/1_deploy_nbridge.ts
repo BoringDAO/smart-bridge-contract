@@ -19,11 +19,11 @@ async function main() {
 	// let networkToChange = ['okex_test', 'avax_test', 'heco_test', 'fantom_test', 'xdai_test']
 	// let networkToChange = ["bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai"]
 	// let networkToChange = [ "arbi", "op", "boba"]
-	let networkToChange = [ "klaytn"]
+	let networkToChange = [ "oasis"]
 	// let networkToChange = ["avax", "matic", "heco", "fantom", "xdai"]
 	// let networkToChange = ["bsc"]
 	let contracts = JSON.parse(getContractsAddress())
-	let originChainId = '97'
+	let originChainId = '1'
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)
 		let number = await ethers.provider.getBlockNumber()

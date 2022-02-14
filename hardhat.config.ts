@@ -55,8 +55,14 @@ const config: HardhatUserConfig = {
     },
     mainnet: {
       url: `https://mainnet.infura.io/v3/${projectId}`,
-      accounts: [privateKeyETH],
-      chainId: 1
+      // accounts: [privateKeyETH],
+      chainId: 1,
+      accounts: {
+        mnemonic: mnemonicMainnet,
+        count: 30,
+        // 20 deployer
+        // initialIndex: 20
+      }
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${projectId}`,
@@ -269,6 +275,18 @@ const config: HardhatUserConfig = {
     klaytn_test: {
       url: "https://api.baobab.klaytn.net:8651",
       chainId: 1001,
+      accounts: {
+        mnemonic: mnemonic
+      }
+    },
+    oasis: {
+      url: "https://emerald.oasis.dev",
+      chainId: 42262,
+      accounts: [privateKeyAVAX]
+    },
+    oasis_test: {
+      url: "https://testnet.emerald.oasis.dev",
+      chainId: 42261,
       accounts: {
         mnemonic: mnemonic
       }

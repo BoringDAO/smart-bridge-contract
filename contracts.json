@@ -21,7 +21,9 @@
         "TwoWayV2": "0xecaD1ab3464ECcC7536af6aFeE414dF873495616",
         "USDC": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
         "FIRE": "0x0f0Dd5E2c0e0c4A41F8908D73D36B8D142F6745a",
-        "iZi": "0x9ad37205d608b8b219e6a2573f922094cec5c200"
+        "iZi": "0x9ad37205d608b8b219e6a2573f922094cec5c200",
+        "BoringDAOV2": "0x77F79FEa3d135847098Adb1fdc6B10A0218823F5",
+        "ParamBook": "0xbc91C117157D7c47135b13C97ec4a46Fa1CA1ab1"
     },
     "10": {
         "network_name": "op",
@@ -226,6 +228,12 @@
         "AMY": "0x8fbd420956fdd301f4493500fd0bcaaa80f2389c",
         "TwoWayV2": "0x2e220E3ab85fC4A46F770A34eF2CdDc8074E4689",
         "USDC": "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8"
+    },
+    "42262": {
+        "network_name": "oasis",
+        "BORING": "0x017Ff87AB312301aDE54f7cf9Cc5AEA28C9De024",
+        "NBridge": "0x87DD4a7Ad23B95cD9fF9C26B5cF325905CaF8663",
+        "Multicall2": "0xE9fE1cEFeD8492ccE0A72bC01C46002791644784"
     },
     "43113": {
         "network_name": "avax_test",

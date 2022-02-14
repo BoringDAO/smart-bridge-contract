@@ -163,6 +163,10 @@ export function getChainIdByName(chainName: string): number {
 			return 8217
 		case 'klaytn_test':
 			return 1001
+		case 'oasis':
+			return 42262
+		case 'oasis_test':
+			return 42261
         default:
             console.error('not known network');
             process.exit(-1);

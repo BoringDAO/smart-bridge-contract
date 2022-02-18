@@ -13,6 +13,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./TwParams.sol";
 import "../lib/SafeDecimalMath.sol";
 import "../interface/IStakingReward.sol";
+import "../interface/IWETH9.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 
 /// @notice center chain is also a special edge chain
 contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeable, TwoWayProposalVote {
@@ -51,6 +53,13 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     mapping(address => uint256) public rewardRatio;
     /// fee to treasury ratio
     mapping(address => uint256) public feeToTreasuryRatio;
+
+    mapping(address=>bool) public isCoin;
+    bool public isClosed;
+
+    // To index event
+    uint public eventIndex;
+    mapping(uint => uint) public eventHeight;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
@@ -169,10 +178,21 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         feeToTreasuryRatio[_oToken] = _ratio;
     }
 
-    function deposit(address token, uint256 amount) external {
+    function setIsCoin(address token, bool _isCoin) external onlyAdmin {
+        isCoin[token] = _isCoin;
+    }
+
+    function deposit(address token, uint256 amount) external payable addEventIndex {
         address centerToken = toCenterToken[chainId][token];
         require(centerToken != address(0), "not support");
-        IERC20Upgradeable(token).safeTransferFrom(msg.sender, address(this), amount);
+
+        if (isCoin[token]) {
+            require(amount == msg.value, "amount error");
+            IWETH9(token).deposit{value: msg.value}();
+        } else {
+            IERC20Upgradeable(token).safeTransferFrom(msg.sender, address(this), amount);
+        }
+
         IToken(centerToken).mint(msg.sender, amount * decimalDiff[token]);
 
         // liquidity rewards
@@ -187,7 +207,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         uint256 toChainId,
         address to,
         uint256 amount
-    ) external {
+    ) external payable addEventIndex {
         require(toChainId != chainId, "toChainId error");
         address _centerToken = toCenterToken[chainId][fromToken];
         require(_centerToken != address(0), "not support");
@@ -195,7 +215,12 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         require(_edgeToken != address(0), "not support");
         require(lockBalances[_centerToken][toChainId] >= amount * decimalDiff[fromToken], "not enough liqui");
         // transfer
-        IERC20Upgradeable(fromToken).safeTransferFrom(msg.sender, address(this), amount);
+        if (isCoin[fromToken]) {
+            require(msg.value == amount, "amount error");
+            IWETH9(fromToken).deposit{value: msg.value}();
+        } else {
+            IERC20Upgradeable(fromToken).safeTransferFrom(msg.sender, address(this), amount);
+        }
         // fee
         (uint256 fixAmount, uint256 ratioAmount, uint256 remainAmount) = calculateFee(
             _centerToken,
@@ -235,6 +260,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         external
         onlyCrosser(toCenterToken[p.fromChainId][p.fromToken])
         whenNotHandled(txid)
+        addEventIndex
     {
         require(p.fromChainId != p.toChainId, "chainId error");
         address centerToken = toCenterToken[p.fromChainId][p.fromToken];
@@ -271,6 +297,8 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         external
         onlyCrosser(toCenterToken[p.fromChainId][p.fromToken])
         whenNotHandled(txid)
+        reentGuard
+        addEventIndex
     {
         require(p.toChainId == chainId, "chainId error");
         address centerToken = toCenterToken[p.fromChainId][p.fromToken];
@@ -289,7 +317,12 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
                     p.amount
                 );
                 // transfer
-                IERC20Upgradeable(edgeToken).safeTransfer(p.to, remainAmount / decimalDiff[edgeToken]);
+                if (isCoin[edgeToken]) {
+                    IWETH9(edgeToken).withdraw(remainAmount / decimalDiff[edgeToken]);
+                    AddressUpgradeable.sendValue(payable(p.to), remainAmount / decimalDiff[edgeToken]);
+                } else {
+                    IERC20Upgradeable(edgeToken).safeTransfer(p.to, remainAmount / decimalDiff[edgeToken]);
+                }
                 _handleFeeByMint(centerToken, fixAmount, ratioAmount);
                 lockBalances[centerToken][p.toChainId] -= remainAmount;
                 emit CrossIned(InParam(p.fromChainId, p.fromToken, p.from, p.toChainId, edgeToken, p.to, remainAmount));
@@ -304,6 +337,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         external
         onlyCrosser(toCenterToken[p.fromChainId][p.fromToken])
         whenNotHandled(txid)
+        addEventIndex
     {
         require(p.toChainId == chainId, "chainId not match");
         address _centerToken = toCenterToken[p.fromChainId][p.fromToken];
@@ -343,7 +377,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         uint256 toChainId,
         address to,
         uint256 amount
-    ) external {
+    ) external addEventIndex {
         require(lockBalances[oToken][toChainId] >= amount, "not enough liqui");
         address _edgeToken = toEdgeToken[oToken][toChainId];
         require(_edgeToken != address(0), "edge toke not support");
@@ -462,6 +496,19 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     modifier whenNotHandled(string memory _txid) {
         require(txHandled[_txid] == false, "TwoWay: tx minted");
         _;
+    }
+
+    modifier reentGuard {
+        require(isClosed == false, "closed");
+        isClosed = true;
+        _;
+        isClosed = false;
+    }
+
+    modifier addEventIndex {
+        _;
+        eventHeight[eventIndex] = block.number;
+        eventIndex += 1;
     }
 
     function getMsgSender() external view returns (address, address) {

@@ -13,6 +13,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./TwParams.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "../interface/IWETH9.sol";
 
 contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ProposalVote {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -24,6 +26,15 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
     mapping(address => uint256) public decimalDiff;
     mapping(string => bool) public txHandled;
     uint256 public chainId;
+
+    // To support native token
+    mapping(address=>bool) public isCoin;
+    bool public isClosed;
+
+    // To index event
+    uint public eventIndex;
+    mapping(uint => uint) public eventHeight;
+
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
@@ -54,9 +65,14 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         tokenSupported[token] = true;
     }
 
-    function deposit(address token, uint256 amount) external {
+    function deposit(address token, uint256 amount) external payable addEventIndex {
         require(tokenSupported[token], "not supported token");
-        IERC20Upgradeable(token).safeTransferFrom(msg.sender, address(this), amount);
+        if (isCoin[token]) {
+            require(amount == msg.value);
+            IWETH9(token).deposit{value: msg.value}();
+        } else {
+            IERC20Upgradeable(token).safeTransferFrom(msg.sender, address(this), amount);
+        }
         emit Deposited(chainId, token, msg.sender, amount * decimalDiff[token]);
     }
 
@@ -66,16 +82,21 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         uint256 toChainId,
         address to,
         uint256 amount
-    ) external {
+    ) external payable addEventIndex{
         require(tokenSupported[fromToken], "not supported token");
         require(chainSupported[fromToken][toChainId], "not supported chain");
         require(toChainId != chainId, "toChainId error");
-        IERC20Upgradeable(fromToken).safeTransferFrom(msg.sender, address(this), amount);
+        if (isCoin[fromToken]) {
+            require(msg.value == amount, "amount error");
+            IWETH9(fromToken).deposit{value: msg.value}();
+        } else {
+            IERC20Upgradeable(fromToken).safeTransferFrom(msg.sender, address(this), amount);
+        }
         emit CrossOuted(OutParam(chainId, fromToken, msg.sender, toChainId, to, amount * decimalDiff[fromToken]));
     }
 
     /// @notice crosser of one token to call this
-    function crossIn(InParam memory p, string memory txid) external onlyCrosser(p.toToken) whenNotHandled(txid) {
+    function crossIn(InParam memory p, string memory txid) external onlyCrosser(p.toToken) whenNotHandled(txid) reentGuard addEventIndex{
         require(p.toChainId == chainId, "chianid error");
         require(tokenSupported[p.toToken], "not supported token");
         require(chainSupported[p.toToken][p.fromChainId], "not supported chain");
@@ -83,13 +104,22 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         if (result) {
             txHandled[txid] = true;
             uint256 amountAdjust = p.amount / decimalDiff[p.toToken];
-            IERC20Upgradeable(p.toToken).safeTransfer(p.to, amountAdjust);
+            if (isCoin[p.toToken]) {
+                IWETH9(p.toToken).withdraw(amountAdjust);
+                AddressUpgradeable.sendValue(payable(p.to), amountAdjust);
+            } else {
+                IERC20Upgradeable(p.toToken).safeTransfer(p.to, amountAdjust);
+            }
             emit CrossIned(p);
         }
     }
 
     function setThreshold(address token0, uint256 _threshold) external onlyAdmin {
         _setThreshold(token0, _threshold);
+    }
+
+    function setIsCoin(address token, bool _isCoin) external onlyAdmin {
+        isCoin[token] = _isCoin;
     }
 
     function getRoleKey(address toToken) public pure returns (bytes32 key) {
@@ -110,6 +140,19 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
     modifier whenNotHandled(string memory _txid) {
         require(txHandled[_txid] == false, "TwoWay: tx minted");
         _;
+    }
+
+    modifier reentGuard {
+        require(isClosed == false, "closed");
+        isClosed = true;
+        _;
+        isClosed = false;
+    }
+
+    modifier addEventIndex {
+        _;
+        eventHeight[eventIndex] = block.number;
+        eventIndex += 1;
     }
 
     event Deposited(uint256 fromChainId, address fromToken, address from, uint256 amount);

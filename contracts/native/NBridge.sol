@@ -11,6 +11,8 @@ import "../interface/IToken.sol";
 import "./NProposalVote.sol";
 import "./NToll.sol";
 import "../struct/NCrossInParams.sol";
+import "../interface/IWETH9.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 
 contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NProposalVote, NToll {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -32,6 +34,14 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
     mapping(address => mapping(uint256 => uint256)) public ratioFees;
     using SafeDecimalMath for uint256;
     mapping(address => mapping(address => bool)) public isInWhitelist;
+
+    // To support native token
+    mapping(address => bool) public isCoin;
+    bool public isClosed;
+
+    // To index event
+    uint256 public eventIndex;
+    mapping(uint256 => uint256) public eventHeight;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
@@ -88,7 +98,7 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
         uint256 toChainID,
         address to,
         uint256 amount
-    ) external {
+    ) external payable addEventIndex {
         if (!isInWhitelist[_token][msg.sender]) {
             require(amount > fixFees[_token][toChainID], "cross amount 0");
         }
@@ -99,9 +109,15 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
         uint256 feeAmount = fixAmount + ratioAmount;
         if (ti.tokenType == 1) {
             // lock
-            IERC20Upgradeable(_token).safeTransferFrom(msg.sender, address(this), remainAmount);
-            if (feeAmount > 0) {
-                IERC20Upgradeable(_token).safeTransferFrom(msg.sender, feeTo, feeAmount);
+            if (isCoin[_token]) {
+                require(msg.value == amount, "amount error");
+                IWETH9(_token).deposit{value: remainAmount}();
+                AddressUpgradeable.sendValue(payable(feeTo), feeAmount);
+            } else {
+                IERC20Upgradeable(_token).safeTransferFrom(msg.sender, address(this), remainAmount);
+                if (feeAmount > 0) {
+                    IERC20Upgradeable(_token).safeTransferFrom(msg.sender, feeTo, feeAmount);
+                }
             }
             emit CrossOut(_token, chainId, chainId, toChainID, msg.sender, to, remainAmount);
         } else if (ti.tokenType == 2) {
@@ -118,6 +134,7 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
         external
         onlyCrosser(p._originToken, p._originChainId)
         whenNotHandled(p.txid)
+        addEventIndex
     {
         require(p.toChainId == chainId, "chainId error");
         TokenInfo memory ti = supportedTokens[p._originChainId][p._originToken];
@@ -127,7 +144,12 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
             txHandled[p.txid] = true;
             if (ti.tokenType == 1) {
                 // unlock
-                IERC20Upgradeable(ti.mirrorAddress).safeTransfer(p.to, p.amount);
+                if (isCoin[ti.mirrorAddress]) {
+                    IWETH9(ti.mirrorAddress).withdraw(p.amount);
+                    AddressUpgradeable.sendValue(payable(p.to), p.amount);
+                } else {
+                    IERC20Upgradeable(ti.mirrorAddress).safeTransfer(p.to, p.amount);
+                }
             } else if (ti.tokenType == 2) {
                 // mint
                 IToken(ti.mirrorAddress).mint(p.to, p.amount);
@@ -210,6 +232,19 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
         _;
     }
 
+    modifier reentGuard() {
+        require(isClosed == false, "closed");
+        isClosed = true;
+        _;
+        isClosed = false;
+    }
+
+    modifier addEventIndex() {
+        _;
+        eventHeight[eventIndex] = block.number;
+        eventIndex += 1;
+    }
+
     event CrossOut(
         address originToken,
         uint256 originChainId,
@@ -229,7 +264,11 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
         uint256 amount
     );
 
-    function setWhitelist(address token, address user, bool _isInWhitelist) external onlyAdmin {
+    function setWhitelist(
+        address token,
+        address user,
+        bool _isInWhitelist
+    ) external onlyAdmin {
         require(isInWhitelist[token][user] != _isInWhitelist, "error state");
         isInWhitelist[token][user] = _isInWhitelist;
     }

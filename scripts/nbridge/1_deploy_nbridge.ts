@@ -12,18 +12,18 @@ async function main() {
 	let accounts = await ethers.getSigners()
 	let ti;
 	let tokenChainId;
-	let crosser = "0xbC41ef18DfaE72b665694B034f608E6Dfe170149"
+	// let crosser = "0xbC41ef18DfaE72b665694B034f608E6Dfe170149" // mainnet
+	let crosser = "0xF15F3CE67D07ab9983Fa29142855c51608252A84" // testnet
 	// let feeTo = await accounts[3].getAddress()
 	let feeTo = "0x09587012B3670D75a90930be9282d98063E402a2"
 	// let networkToChange = ['okex_test', 'avax_test', 'harmony_test', 'heco_test', 'fantom_test', 'xdai_test']
 	// let networkToChange = ['okex_test', 'avax_test', 'heco_test', 'fantom_test', 'xdai_test']
 	// let networkToChange = ["bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai"]
 	// let networkToChange = [ "arbi", "op", "boba"]
-	let networkToChange = [ "oasis"]
+	let networkToChange = [ "harmony_test", "aurora_test"]
 	// let networkToChange = ["avax", "matic", "heco", "fantom", "xdai"]
 	// let networkToChange = ["bsc"]
 	let contracts = JSON.parse(getContractsAddress())
-	let originChainId = '1'
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)
 		let number = await ethers.provider.getBlockNumber()

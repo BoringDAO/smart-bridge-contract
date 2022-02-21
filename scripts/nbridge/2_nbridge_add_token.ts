@@ -7,17 +7,18 @@ const hre = require('hardhat')
 
 async function main() {
 	console.log(`network ${network.name} ${Number(await getChainId())}`)
-	// let crosser = "0xC63573cB77ec56e0A1cb40199bb85838D71e4dce" // test
-	let crosser = "0xbC41ef18DfaE72b665694B034f608E6Dfe170149"
-	// let crosser = "0x2353178C6c05378812f024A783541857634A1e82" // test
+	// let crosser = "0xbC41ef18DfaE72b665694B034f608E6Dfe170149" // mainnet
+	let crosser = "0xF15F3CE67D07ab9983Fa29142855c51608252A84" // test
 	let feeTo = "0x09587012B3670D75a90930be9282d98063E402a2"
-	let networkToChange = ["oasis"]
-	let allChain = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai", "boba", "op","arbi", "metis", "aurora"]
+	let networkToChange = ["harmony_test", "aurora_test"]
+	// let allChain = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai", "boba", "op","arbi", "metis", "aurora"]
+	let allChain = ["harmony_test", "aurora_test"]
 	let contracts = JSON.parse(getContractsAddress())
-	let originChainId = getChainIdByName("mainnet")
-	let tokenSymbol = 'BORING'
+	let originChainId = getChainIdByName("harmony_test")
+	let tokenSymbol = 'ONE'
 	let isDeployedByMe = true
 	let originToken = contracts[originChainId][tokenSymbol]
+	let isCoin = true
 
 	for (let n of networkToChange) {
 		hre.changeNetwork(n)
@@ -47,6 +48,8 @@ async function main() {
 			case Number(originChainId):
 				await setupNBridge(nb, originToken, Number(originChainId), crosserKey, crosser, feeTo, allChain, tokenSymbol)
 				await addOriginSupportToken(nb, originToken, chainid)
+				let tx = await nb.setIsCoin(originToken, true)
+				console.log(`set is coin: ${tx.hash}`)
 				break;
 			default:
 				let tokenAddr = contracts[chainid.toString()][tokenSymbol]

@@ -9,7 +9,7 @@ async function main() {
 	console.log(`network ${network.name} deployer ${await accounts[0].getAddress()} ${Number(await getChainId())}`)
 	// upgraded: bsc metis matic fantom heco okex harmony avax xdai mainnet
 	// let networkToChange = ["matic", "fantom", "op", 'arbi', 'boba']
-	let networkToChange = ["mainnet"]
+	let networkToChange = ["harmony_test", "aurora_test"]
 	// let networkToChange = ['xdai']
 	let contracts = JSON.parse(getContractsAddress())
 

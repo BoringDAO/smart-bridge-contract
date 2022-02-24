@@ -5,6 +5,16 @@
       "address": "0xbBa69494e9812948349f31691C871A4aBA42D517",
       "txHash": "0x0bba7b380e409daf63d4c012ec25001aad375be5c1d423b8dce6d908311ec3c0",
       "kind": "uups"
+    },
+    {
+      "address": "0xd34A1c15CCC65a343128DAa6673Cb636FE4fc3c4",
+      "txHash": "0xc497c0e7ec560a893777abd8ec9e2efc5ae69748bb28b395103196fc6c1e07f4",
+      "kind": "uups"
+    },
+    {
+      "address": "0x9926bDc075434CDA3a32e7BA4FbC39e6174d286D",
+      "txHash": "0x3f41b0395dc23f22d0695d139478beade332f4253718515049b015c34188be5c",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -469,6 +479,272 @@
           },
           "t_mapping(t_address,t_bool)": {
             "label": "mapping(address => bool)"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_mapping(t_bytes32,t_mapping(t_address,t_bool))": {
+            "label": "mapping(bytes32 => mapping(address => bool))"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)43_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)"
+          },
+          "t_struct(RoleData)43_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "members",
+                "type": "t_mapping(t_address,t_bool)"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32"
+              }
+            ]
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          }
+        }
+      }
+    },
+    "7c8f1a08eba368d3ad4da20633df816c15f3983f88b77828cc1e4e4e829ca8b5": {
+      "address": "0x9eA2398d5c0252bF9aC5EA64f739E3C1A9Ca0f8f",
+      "txHash": "0x165b9feff5775fb754698d7f768c4b879ad242a8c06d8ffc994bac8f7014e155",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:37"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:42"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:31"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:36"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "_roles",
+            "type": "t_mapping(t_bytes32,t_struct(RoleData)43_storage)",
+            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:64"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:232"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:215"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:81"
+          },
+          {
+            "contract": "NProposalVote",
+            "label": "threshold",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "contracts/native/NProposalVote.sol:11"
+          },
+          {
+            "contract": "NProposalVote",
+            "label": "isFinished",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "src": "contracts/native/NProposalVote.sol:13"
+          },
+          {
+            "contract": "NProposalVote",
+            "label": "isVoted",
+            "type": "t_mapping(t_bytes32,t_mapping(t_address,t_bool))",
+            "src": "contracts/native/NProposalVote.sol:14"
+          },
+          {
+            "contract": "NProposalVote",
+            "label": "counter",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "src": "contracts/native/NProposalVote.sol:15"
+          },
+          {
+            "contract": "NToll",
+            "label": "feeRatio",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "contracts/native/NToll.sol:12"
+          },
+          {
+            "contract": "NToll",
+            "label": "feeTo",
+            "type": "t_address",
+            "src": "contracts/native/NToll.sol:14"
+          },
+          {
+            "contract": "NBridge",
+            "label": "chainId",
+            "type": "t_uint256",
+            "src": "contracts/native/NBridge.sol:20"
+          },
+          {
+            "contract": "NBridge",
+            "label": "supportedTokens",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(TokenInfo)8701_storage))",
+            "src": "contracts/native/NBridge.sol:29"
+          },
+          {
+            "contract": "NBridge",
+            "label": "txHandled",
+            "type": "t_mapping(t_string_memory_ptr,t_bool)",
+            "src": "contracts/native/NBridge.sol:30"
+          },
+          {
+            "contract": "NBridge",
+            "label": "minCrossAmount",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "contracts/native/NBridge.sol:31"
+          },
+          {
+            "contract": "NBridge",
+            "label": "fixFees",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "contracts/native/NBridge.sol:32"
+          },
+          {
+            "contract": "NBridge",
+            "label": "ratioFees",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "contracts/native/NBridge.sol:33"
+          },
+          {
+            "contract": "NBridge",
+            "label": "isInWhitelist",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "src": "contracts/native/NBridge.sol:35"
+          },
+          {
+            "contract": "NBridge",
+            "label": "isCoin",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "contracts/native/NBridge.sol:38"
+          },
+          {
+            "contract": "NBridge",
+            "label": "isClosed",
+            "type": "t_bool",
+            "src": "contracts/native/NBridge.sol:39"
+          },
+          {
+            "contract": "NBridge",
+            "label": "eventIndex0",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "src": "contracts/native/NBridge.sol:42"
+          },
+          {
+            "contract": "NBridge",
+            "label": "eventHeights0",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))",
+            "src": "contracts/native/NBridge.sol:43"
+          },
+          {
+            "contract": "NBridge",
+            "label": "eventIndex1",
+            "type": "t_uint256",
+            "src": "contracts/native/NBridge.sol:46"
+          },
+          {
+            "contract": "NBridge",
+            "label": "eventHeights1",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "src": "contracts/native/NBridge.sol:47"
+          }
+        ],
+        "types": {
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(TokenInfo)8701_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct NBridge.TokenInfo))"
+          },
+          "t_mapping(t_address,t_struct(TokenInfo)8701_storage)": {
+            "label": "mapping(address => struct NBridge.TokenInfo)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(TokenInfo)8701_storage": {
+            "label": "struct NBridge.TokenInfo",
+            "members": [
+              {
+                "label": "tokenType",
+                "type": "t_uint256"
+              },
+              {
+                "label": "mirrorAddress",
+                "type": "t_address"
+              },
+              {
+                "label": "mirrorChainId",
+                "type": "t_uint256"
+              },
+              {
+                "label": "isSupported",
+                "type": "t_bool"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_string_memory_ptr,t_bool)": {
+            "label": "mapping(string => bool)"
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(address => mapping(uint256 => uint256))"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+            "label": "mapping(address => mapping(address => bool))"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(uint256 => mapping(uint256 => uint256))"
           },
           "t_mapping(t_address,t_uint256)": {
             "label": "mapping(address => uint256)"

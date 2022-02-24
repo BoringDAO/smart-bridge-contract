@@ -11,14 +11,17 @@ async function main() {
 	// let networkToChange = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai", 'op', 'arbi', 'boba']
 	// let networkToChange = ["oasis"]
 	// let networkToChange = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai", "boba", "op","arbi"] 
-	let networkToChange = ["metis", "aurora"]
+	// let networkToChange = ["metis", "aurora"]
+	let networkToChange = ["harmony_test", "aurora_test"]
 	let contracts = JSON.parse(getContractsAddress())
 	// let allChain = ["bsc", "mainnet"]
-	let allChain = ["oasis"]
-	let tokenSymbol = "BORING"
-	let toEthFixFee = "1250"
-	let toLayer2FixFee = "250"
-	let toNormalFixFee = "50"
+	let allChain = ["harmony_test", "aurora_test"]
+	// let allChain = ["oasis"]
+	let tokenPrice = 0.12
+	let tokenSymbol = "ONE"
+	let toEthFixFee = (50 / 0.12).toFixed(2)
+	let toLayer2FixFee = (10 / tokenPrice).toFixed(2)
+	let toNormalFixFee = (2 / tokenPrice).toFixed(2)
 	let ratioFee = "0.005"
 
 	for (let n of networkToChange) {
@@ -75,7 +78,6 @@ async function main() {
 		for (let i=0; i < tokens.length; i++) {
 			console.log(`${tokens[i]} ${toChainIds[i]} ${fixes[i]} ${ratios[i]}`)
 		}
-		return
 		let txSetFees = await nb.setFees(tokens, toChainIds, fixes, ratios)
 		console.log(`txSetFees ${txSetFees.hash}`)
 		await txSetFees.wait()

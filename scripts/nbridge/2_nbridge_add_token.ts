@@ -10,7 +10,8 @@ async function main() {
 	// let crosser = "0xbC41ef18DfaE72b665694B034f608E6Dfe170149" // mainnet
 	let crosser = "0xF15F3CE67D07ab9983Fa29142855c51608252A84" // test
 	let feeTo = "0x09587012B3670D75a90930be9282d98063E402a2"
-	let networkToChange = ["harmony_test", "aurora_test"]
+	// let networkToChange = ["harmony_test", "aurora_test"]
+	let networkToChange = ["aurora_test"]
 	// let allChain = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai", "boba", "op","arbi", "metis", "aurora"]
 	let allChain = ["harmony_test", "aurora_test"]
 	let contracts = JSON.parse(getContractsAddress())
@@ -53,8 +54,8 @@ async function main() {
 				break;
 			default:
 				let tokenAddr = contracts[chainid.toString()][tokenSymbol]
-				await setupNBridge(nb, originToken, Number(originChainId), crosserKey, crosser, feeTo, allChain, tokenSymbol)
-				await grantMinterBurner(nb, tokenAddr, isDeployedByMe)
+				// await setupNBridge(nb, originToken, Number(originChainId), crosserKey, crosser, feeTo, allChain, tokenSymbol)
+				// await grantMinterBurner(nb, tokenAddr, isDeployedByMe)
 				await addDeriveSupportToken(nb, originToken, Number(originChainId), tokenAddr, chainid)
 		}
 	}
@@ -87,10 +88,10 @@ async function setupNBridge(nb: NBridge, originToken: string, originChainId: num
 }
 
 async function addDeriveSupportToken(nb: NBridge, originToken: string, originChainId: number, deriveToken: string, deriveChainId: number) {
-	let ti = { tokenType: 2, mirrorAddress: originToken, mirrorChainId: originChainId, isSupported: true }
-	let tx = await nb.addSupportToken(deriveChainId, deriveToken, ti)
-	console.log(`addSupportToken ${tx.hash}`)
-	await tx.wait(2)
+	// let ti = { tokenType: 2, mirrorAddress: originToken, mirrorChainId: originChainId, isSupported: true }
+	// let tx = await nb.addSupportToken(deriveChainId, deriveToken, ti)
+	// console.log(`addSupportToken ${tx.hash}`)
+	// await tx.wait(2)
 	let ti1 = { tokenType: 2, mirrorAddress: deriveToken, mirrorChainId: deriveChainId, isSupported: true }
 	let tx1 = await nb.addSupportToken(originChainId, originToken, ti1)
 	console.log(`addSupportToken ${tx1.hash}`)

@@ -14,7 +14,6 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./TwParams.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import "../interface/IWETH9.sol";
 
 contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ProposalVote {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -28,13 +27,16 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
     uint256 public chainId;
 
     // To support native token
-    mapping(address=>bool) public isCoin;
+    mapping(address => bool) public isCoin;
     bool public isClosed;
 
-    // To index event
-    uint public eventIndex;
-    mapping(uint => uint) public eventHeight;
+    //  index mapping 0
+    mapping(uint256 => uint256) public eventIndex0;
+    mapping(uint256 => mapping(uint256 => uint256)) public eventHeights0;
 
+    // index mapping 1
+    uint256 public eventIndex1;
+    mapping(uint256 => uint256) public eventHeights1;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
@@ -65,11 +67,10 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         tokenSupported[token] = true;
     }
 
-    function deposit(address token, uint256 amount) external payable addEventIndex {
+    function deposit(address token, uint256 amount) external payable addEventIndex0(chainId) addEventIndex1 {
         require(tokenSupported[token], "not supported token");
         if (isCoin[token]) {
-            require(amount == msg.value);
-            IWETH9(token).deposit{value: msg.value}();
+            require(amount == msg.value, "amount error");
         } else {
             IERC20Upgradeable(token).safeTransferFrom(msg.sender, address(this), amount);
         }
@@ -82,13 +83,12 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         uint256 toChainId,
         address to,
         uint256 amount
-    ) external payable addEventIndex{
+    ) external payable addEventIndex0(toChainId) addEventIndex1 {
         require(tokenSupported[fromToken], "not supported token");
         require(chainSupported[fromToken][toChainId], "not supported chain");
         require(toChainId != chainId, "toChainId error");
         if (isCoin[fromToken]) {
             require(msg.value == amount, "amount error");
-            IWETH9(fromToken).deposit{value: msg.value}();
         } else {
             IERC20Upgradeable(fromToken).safeTransferFrom(msg.sender, address(this), amount);
         }
@@ -96,7 +96,13 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
     }
 
     /// @notice crosser of one token to call this
-    function crossIn(InParam memory p, string memory txid) external onlyCrosser(p.toToken) whenNotHandled(txid) reentGuard addEventIndex{
+    function crossIn(InParam memory p, string memory txid)
+        external
+        onlyCrosser(p.toToken)
+        whenNotHandled(txid)
+        reentGuard
+        addEventIndex1
+    {
         require(p.toChainId == chainId, "chianid error");
         require(tokenSupported[p.toToken], "not supported token");
         require(chainSupported[p.toToken][p.fromChainId], "not supported chain");
@@ -105,7 +111,6 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
             txHandled[txid] = true;
             uint256 amountAdjust = p.amount / decimalDiff[p.toToken];
             if (isCoin[p.toToken]) {
-                IWETH9(p.toToken).withdraw(amountAdjust);
                 AddressUpgradeable.sendValue(payable(p.to), amountAdjust);
             } else {
                 IERC20Upgradeable(p.toToken).safeTransfer(p.to, amountAdjust);
@@ -142,17 +147,24 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         _;
     }
 
-    modifier reentGuard {
+    modifier reentGuard() {
         require(isClosed == false, "closed");
         isClosed = true;
         _;
         isClosed = false;
     }
 
-    modifier addEventIndex {
+    modifier addEventIndex0(uint256 toChainId) {
         _;
-        eventHeight[eventIndex] = block.number;
-        eventIndex += 1;
+        eventIndex0[toChainId] += 1;
+        uint256 newIndex = eventIndex0[toChainId] + 1;
+        eventHeights0[toChainId][newIndex] = block.number;
+    }
+
+    modifier addEventIndex1() {
+        _;
+        eventIndex1 += 1;
+        eventHeights1[eventIndex1] = block.number;
     }
 
     event Deposited(uint256 fromChainId, address fromToken, address from, uint256 amount);

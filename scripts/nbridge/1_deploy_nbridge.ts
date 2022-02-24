@@ -20,7 +20,8 @@ async function main() {
 	// let networkToChange = ['okex_test', 'avax_test', 'heco_test', 'fantom_test', 'xdai_test']
 	// let networkToChange = ["bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai"]
 	// let networkToChange = [ "arbi", "op", "boba"]
-	let networkToChange = [ "harmony_test", "aurora_test"]
+	// let networkToChange = [ "harmony_test", "aurora_test"]
+	let networkToChange = [ "aurora_test"]
 	// let networkToChange = ["avax", "matic", "heco", "fantom", "xdai"]
 	// let networkToChange = ["bsc"]
 	let contracts = JSON.parse(getContractsAddress())

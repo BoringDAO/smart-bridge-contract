@@ -13,7 +13,7 @@ import "hardhat-change-network";
 import { ethers } from "hardhat";
 import { count } from 'console';
 
-const { polygonTestUrl, polygonURL, mnemonic, mnemonicMainnet, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX, privateKeyMatic } = require("./.secret.json");
+const { okexEndpointAnkr, polygonTestUrl, polygonURL, mnemonic, mnemonicMainnet, projectId, privateKeyETH, privateKeyOkex, etherscanKey, privateKeyBSC, privateKeyAVAX, privateKeyMatic } = require("./.secret.json");
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -30,27 +30,28 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      forking: {
+      // forking: {
       // url: polygonURL,
       // blockNumber: 23635986,
       // url: "https://rpc-mumbai.maticvigil.com",
-      url: "https://matic-mumbai.chainstacklabs.com",
+      // url: "https://matic-mumbai.chainstacklabs.com",
       // url: polygonTestUrl,
       // url: "https://andromeda.metis.io/?owner=1088", 
         // url: `https://kovan.infura.io/v3/${projectId}`,
         // url: `https://mainnet.infura.io/v3/${projectId}`,
         // url: "https://bsc-dataseed.binance.org",
-      },
+      // },
       // accounts: [privateKeyBSC],
       // accounts: [privateKeyAVAX],
       accounts: {
-        mnemonic: mnemonicMainnet,
-        initialIndex: 22,
+        mnemonic: mnemonic,
+        initialIndex: 0,
         count: 30
         
       },
       // chainId: 80001
-      chainId: 137 
+      // chainId: 137 
+      // chainId: 42
       // chainId: 1088
     },
     mainnet: {
@@ -106,7 +107,8 @@ const config: HardhatUserConfig = {
     avax: {
       url: "https://api.avax.network/ext/bc/C/rpc",
       chainId: 43114,
-      accounts: [privateKeyAVAX]
+      accounts: [privateKeyAVAX],
+      gasPrice: 150*10**9
     },
     avax_test: {
       url: "https://api.avax-test.network/ext/bc/C/rpc",
@@ -117,6 +119,7 @@ const config: HardhatUserConfig = {
     },
     okex: {
       url: "https://exchainrpc.okex.org",
+      // url: okexEndpointAnkr,
       chainId: 66,
       accounts: {
         mnemonic: mnemonicMainnet,
@@ -174,7 +177,8 @@ const config: HardhatUserConfig = {
       // url: "https://rpcapi.fantom.network",
       url: "https://rpc.ftm.tools",
       chainId: 250,
-      accounts: [privateKeyAVAX]
+      accounts: [privateKeyAVAX],
+      gasPrice: 650*10**9
     },
     fantom_test: {
       url: "https://rpc.testnet.fantom.network",
@@ -255,6 +259,15 @@ const config: HardhatUserConfig = {
         mnemonic: mnemonic
       }
     },
+    aac: {
+      url: "https://rpc.acuteangle.com",
+      chainId: 512,
+      accounts: [privateKeyAVAX]
+    },
+    aac_test: {
+      url: "https://rpc-testnet.acuteangle.com",
+      chainId: 513
+    },
     aurora: {
       url: "https://mainnet.aurora.dev",
       chainId: 1313161554,
@@ -290,6 +303,23 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: mnemonic
       }
+    },
+    kcc: {
+      url: "https://rpc-mainnet.kcc.network",
+      chainId: 321,
+      accounts: [privateKeyAVAX]
+    },
+    kcc_test: {
+      url: "https://rpc-testnet.kcc.network",
+      chainId: 322,
+      accounts: {
+        mnemonic: mnemonic
+      }
+    },
+    iotex: {
+      url: "https://babel-api.mainnet.iotex.io",
+      chainId: 4689,
+      accounts: [privateKeyAVAX]
     },
     t1: {
       url: "http://127.0.0.1:8545",

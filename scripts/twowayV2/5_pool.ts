@@ -17,11 +17,11 @@ async function main() {
 	let networkToChange = ["matic"]
 	let contracts = JSON.parse(getContractsAddress())
 	let boringSymbol = "BORING"
-	let feeRewardSymbol = "oFIN"
+	let feeRewardSymbol = "oETH"
 	let rewardPerSec = ethers.utils.parseEther("0.0003")
 	let startTS = Math.round(Date.now() / 1000)
-	let pid = 4
-	let pool_point = 0
+	let pid = 6
+	let pool_point = 100
 	console.log(`startTS ${startTS}`)
 
 	for (let n of networkToChange) {

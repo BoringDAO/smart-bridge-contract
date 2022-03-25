@@ -36,7 +36,7 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
 
     // To support native token
     mapping(address => bool) public isCoin;
-    bool public isClosed;
+    bool public locked;
 
     //  index mapping 0
     mapping(uint256 => uint256) public eventIndex0;
@@ -101,7 +101,7 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
         uint256 toChainID,
         address to,
         uint256 amount
-    ) external payable reentGuard addEventIndex0(toChainID) addEventIndex1 {
+    ) public payable virtual reentGuard addEventIndex0(toChainID) addEventIndex1 {
         if (!isInWhitelist[_token][msg.sender]) {
             require(amount > fixFees[_token][toChainID], "cross amount 0");
         }
@@ -136,7 +136,8 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
     }
 
     function crossIn(NCrossInParams memory p)
-        external
+        public
+        virtual 
         onlyCrosser(p._originToken, p._originChainId)
         whenNotHandled(p.txid)
         reentGuard
@@ -202,6 +203,7 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
     function setIsCoin(address _token, bool _isCoin) external onlyAdmin {
         require(isCoin[_token] != _isCoin, "DNC"); // dont't need change
         isCoin[_token] = _isCoin;
+        emit CoinSeted(_token);
     }
 
     function calculateFee(
@@ -243,10 +245,10 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
     }
 
     modifier reentGuard() {
-        require(isClosed == false, "closed");
-        isClosed = true;
+        require(!locked, "No reent");
+        locked = true;
         _;
-        isClosed = false;
+        locked = false;
     }
 
     modifier addEventIndex0(uint256 toChainId) {
@@ -280,6 +282,15 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
         uint256 amount
     );
 
+    event CoinSeted(
+        address coinAddress
+    );
+
+    event WhiteAddressSeted(
+        address token,
+        address user
+    );
+
     function setWhitelist(
         address token,
         address user,
@@ -287,5 +298,6 @@ contract NBridge is Initializable, AccessControlUpgradeable, UUPSUpgradeable, NP
     ) external onlyAdmin {
         require(isInWhitelist[token][user] != _isInWhitelist, "error state");
         isInWhitelist[token][user] = _isInWhitelist;
+        emit WhiteAddressSeted(token, user);
     }
 }

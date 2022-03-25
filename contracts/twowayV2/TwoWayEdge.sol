@@ -28,7 +28,7 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
 
     // To support native token
     mapping(address => bool) public isCoin;
-    bool public isClosed;
+    bool public locked;
 
     //  index mapping 0
     mapping(uint256 => uint256) public eventIndex0;
@@ -56,11 +56,19 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
         address token,
         uint256 _chainId,
         bool status
-    ) external onlyAdmin {
+    ) public onlyAdmin {
         require(chainSupported[token][_chainId] != status, "status error");
         chainSupported[token][_chainId] = status;
         decimalDiff[token] = 10**(18 - IERC20MetadataUpgradeable(token).decimals());
         emit Supported(token, _chainId, status);
+    }
+
+    function changeMultiSupport(address[] memory tokens, uint256[] memory _chainIds, bool[] memory statuses) external {
+        uint lens = tokens.length;
+        require(lens == _chainIds.length && lens == statuses.length, "length not match");
+        for (uint i=0; i < lens; i++) {
+            changeSupport(tokens[i], _chainIds[i], statuses[i]);
+        }
     }
 
     function addSupport(address token) external onlyAdmin {
@@ -125,6 +133,9 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
 
     function setIsCoin(address token, bool _isCoin) external onlyAdmin {
         isCoin[token] = _isCoin;
+        if (_isCoin) {
+            emit CoinSeted(token);
+        }
     }
 
     function getRoleKey(address toToken) public pure returns (bytes32 key) {
@@ -148,16 +159,15 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
     }
 
     modifier reentGuard() {
-        require(isClosed == false, "closed");
-        isClosed = true;
+        require(!locked, "closed");
+        locked = true;
         _;
-        isClosed = false;
+        locked = false;
     }
 
     modifier addEventIndex0(uint256 toChainId) {
         _;
-        eventIndex0[toChainId] += 1;
-        uint256 newIndex = eventIndex0[toChainId] + 1;
+        uint256 newIndex = eventIndex0[toChainId] += 1;
         eventHeights0[toChainId][newIndex] = block.number;
     }
 
@@ -171,4 +181,5 @@ contract TwoWayEdge is Initializable, AccessControlUpgradeable, UUPSUpgradeable,
     event CrossOuted(OutParam p);
     event CrossIned(InParam p);
     event Supported(address token, uint256 chainId, bool status);
+    event CoinSeted(address coin);
 }

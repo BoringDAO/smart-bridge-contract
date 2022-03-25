@@ -8,6 +8,8 @@ import { TwoWay } from "../src/types/TwoWay";
 import { SwapPair } from "../src/types/SwapPair";
 import { readFile, readFileSync, writeFileSync } from "fs";
 
+export const ALL_CHAIN_NAME = ["mainnet", "bsc", "matic", "heco", "okex", "fantom", "avax", "xdai", "harmony", "op", "arbi", "metis", "aurora", "kcc", "aac"]
+
 export async function deploy(name: string, ...params: any[]) {
 	const contractFactory = await ethers.getContractFactory(name);
 	const con = await contractFactory.deploy(...params)
@@ -108,47 +110,47 @@ export async function setFees(usdt: ERC20,
 }
 
 export function getChainIdByName(chainName: string): number {
-    switch (chainName) {
-        case 'bsc_test':
-            return 97;
-        case 'okex_test':
-            return 65;
-        case 'matic_test':
-            return 80001;
-        case 'kovan':
-            return 42
-        case 'avax_test':
-            return 43113
-        case 'fantom_test':
-            return 4002
-        case 'xdai_test':
-            return 77
-        case 'heco_test':
-            return 256
-        case 'harmony_test':
-            return 1666700000
-        case 'mainnet':
-            return 1
-        case 'bsc':
-            return 56
-        case 'okex':
-            return 66
-        case 'heco':
-            return 128
-        case 'matic':
-            return 137
-        case 'fantom':
-            return 250
-        case 'xdai':
-            return 100
-        case 'harmony':
-            return 1666600000
-        case 'avax':
-            return 43114
-        case 'arbi':
-            return 42161
-        case 'op':
-            return 10
+	switch (chainName) {
+		case 'bsc_test':
+			return 97;
+		case 'okex_test':
+			return 65;
+		case 'matic_test':
+			return 80001;
+		case 'kovan':
+			return 42
+		case 'avax_test':
+			return 43113
+		case 'fantom_test':
+			return 4002
+		case 'xdai_test':
+			return 77
+		case 'heco_test':
+			return 256
+		case 'harmony_test':
+			return 1666700000
+		case 'mainnet':
+			return 1
+		case 'bsc':
+			return 56
+		case 'okex':
+			return 66
+		case 'heco':
+			return 128
+		case 'matic':
+			return 137
+		case 'fantom':
+			return 250
+		case 'xdai':
+			return 100
+		case 'harmony':
+			return 1666600000
+		case 'avax':
+			return 43114
+		case 'arbi':
+			return 42161
+		case 'op':
+			return 10
 		case 'boba':
 			return 288
 		case 'metis':
@@ -167,10 +169,22 @@ export function getChainIdByName(chainName: string): number {
 			return 42262
 		case 'oasis_test':
 			return 42261
-        default:
-            console.error('not known network');
-            process.exit(-1);
-    }
+		case 'arbi_test':
+			return 421611
+		case 'kcc':
+			return 321
+		case 'kcc_test':
+			return 322
+		case 'aac':
+			return 512
+		case 'aac_test':
+			return 513
+		case 'iotex':
+			return 4689
+		default:
+			console.error('not known network');
+			process.exit(-1);
+	}
 }
 
 export function getContractsAddress(): string {

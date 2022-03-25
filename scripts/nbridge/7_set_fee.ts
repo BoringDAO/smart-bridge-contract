@@ -1,7 +1,7 @@
 import { parseEther } from "ethers/lib/utils"
 import { ethers, getChainId, network, upgrades } from "hardhat"
 import { NBridge } from "../../src/types/NBridge"
-import { attach, deployProxy, getChainIdByName, getContractsAddress } from "../helper"
+import { ALL_CHAIN_NAME, attach, deployProxy, getChainIdByName, getContractsAddress } from "../helper"
 
 const hre = require("hardhat")
 
@@ -12,16 +12,16 @@ async function main() {
 	// let networkToChange = ["oasis"]
 	// let networkToChange = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai", "boba", "op","arbi"] 
 	// let networkToChange = ["metis", "aurora"]
-	let networkToChange = ["harmony_test", "aurora_test"]
+	let networkToChange = ALL_CHAIN_NAME.slice(2)
+	let allChain = ["metis"]
 	let contracts = JSON.parse(getContractsAddress())
-	// let allChain = ["bsc", "mainnet"]
-	let allChain = ["harmony_test", "aurora_test"]
+	// let allChain = ALL_CHAIN_NAME
 	// let allChain = ["oasis"]
-	let tokenPrice = 0.12
-	let tokenSymbol = "ONE"
-	let toEthFixFee = (50 / 0.12).toFixed(2)
-	let toLayer2FixFee = (10 / tokenPrice).toFixed(2)
-	let toNormalFixFee = (2 / tokenPrice).toFixed(2)
+	let tokenPrice = 0.038
+	let tokenSymbol = "BORING"
+	let toEthFixFee = (50 / tokenPrice).toFixed(8)
+	let toLayer2FixFee = (10 / tokenPrice).toFixed(8)
+	let toNormalFixFee = (2 / tokenPrice).toFixed(8)
 	let ratioFee = "0.005"
 
 	for (let n of networkToChange) {
@@ -46,7 +46,8 @@ async function main() {
 			nb = await attach("NBridge", contracts[chainid.toString()]['NBridge']) as NBridge
 		} else {
 			console.log("network error: nbridge not exist")
-			process.exit(-1)
+			continue
+			// process.exit(-1)
 		}
 		let tokens = []
 		let toChainIds = []
@@ -54,6 +55,9 @@ async function main() {
 		let ratios = []
 		for (let c of allChain) {
 			if (c == network.name) {
+				continue
+			}
+			if (contracts[chainIdStr][tokenSymbol] === undefined) {
 				continue
 			}
 			let token = contracts[chainIdStr][tokenSymbol]

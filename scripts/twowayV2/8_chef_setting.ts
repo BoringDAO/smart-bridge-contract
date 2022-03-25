@@ -26,11 +26,11 @@ async function main() {
         let chef = await attach("TwoWayChef", contracts[cChainIdStr]["TwoWayChef"]) as TwoWayChef
         let oldRPS = await chef.rewardPerSecond()
         console.log(`old RPS: ${ethers.utils.formatEther(oldRPS)}`)
-        let tx = await chef.updateRewardPerSecond(rewardPerSecond, true)
-        console.log(`tx hash: ${tx.hash}`)
-        await tx.wait()
-        let newRPS = await chef.rewardPerSecond()
-        console.log(`new RPS: ${ethers.utils.formatEther(newRPS)}`)
+        // let tx = await chef.updateRewardPerSecond(rewardPerSecond, true)
+        // console.log(`tx hash: ${tx.hash}`)
+        // await tx.wait()
+        // let newRPS = await chef.rewardPerSecond()
+        // console.log(`new RPS: ${ethers.utils.formatEther(newRPS)}`)
     }
 
 }

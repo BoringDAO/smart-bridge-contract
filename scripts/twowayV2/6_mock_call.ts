@@ -27,10 +27,11 @@ async function main() {
 	console.log(`network ${network.name} deployer ${await accounts[0].getAddress()} ${Number(await getChainId())}`)
 	// let networkToChange = ["xdai"]	
 	// let networkToChange = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai", 'op', 'arbi', 'boba']
-	let networkToChange = ["matic"]
+	let networkToChange = ["fantom"]
 	// let networkToChange = ['heco']
 	let contracts = JSON.parse(getContractsAddress())
-	let allChain = ["mainnet", "metis"]
+	// let allChain = ["mainnet", "metis"]
+	// let allChain
 	let tokenSymbol = "USDT"
 
 	for (let n of networkToChange) {
@@ -45,7 +46,7 @@ async function main() {
 		let chainIdStr = network.config.chainId!.toString()
 		console.log(`network name ${network.name} ${network.config.chainId!}`)
 		// let tw: TwoWayCenter|TwoWayEdge
-		let tw: TwoWayCenter
+		let tw: TwoWayEdge
 		if (contracts[chainid.toString()]['TwoWayV2'] != undefined) {
 			// if (network.config.chainId == 100) {
 			// 	nb = await attach("NBridge", contracts[chainid.toString()]['nbridge']) as NBridge
@@ -55,75 +56,92 @@ async function main() {
 			// continue
 			let twAddr = contracts[chainid.toString()]['TwoWayV2'];
 			console.log(`twAddr ${twAddr}`)
-			tw = await attach("TwoWayCenter", twAddr) as TwoWayCenter
+			tw = await attach("TwoWayCenter", twAddr) as TwoWayEdge
 			// nb.calculateFee
 		} else {
 			console.log("network error: nbridge not exist")
 			process.exit(-1)
 		}
-		let tokenAddr  = contracts[chainIdStr][tokenSymbol]
-		// let tw2 = tw.connect(signer)
-		// let token = await ethers.getContractAt("ERC20", tokenAddr) as ERC20
-		// token = token.connect(signer)
-		// let tx = await nb2.crossOut(tokenAddr, 1, await signer.getAddress(), parseEther("0.6"))
-		// tx.wait()
-		// let tx = await token.approve(tw2.address, ethers.constants.MaxUint256)
-		// await tx.wait()
+		// let tokenAddr  = contracts[chainIdStr][tokenSymbol]
+		// let index = await tw.eventIndex0(42)
+		// let height = await tw.eventHeights0(42, index)
+		// console.log(`index ${ethers.utils.formatUnits(index, 0)}`)
+		// console.log(`height ${ethers.utils.formatUnits(height, 0)}`)
+		// let chainid_edge = await tw.chainId()
+		// console.log(`chainid ${ethers.utils.formatUnits(chainid_edge, 0)}`)
 
-		// let [sender1, sender2] = await tw.getMsgSender()
-		// console.log(`sender ${sender1}`)
-		
-		// let txCrossOut = await tw2.crossOut(tokenAddr, 97, mock_user, ethers.utils.parseUnits("100", 6))
-		// console.log(`txCrossOut ${txCrossOut.hash}`)
-		// await txCrossOut.wait()
+		// let twChefAddr = contracts[chainid.toString()]['TwoWayChef']
+		// let twChef = await attach("TwoWayChef", twChefAddr) as TwoWayChef
+		await check_cross_index(tw, 1088)
+		// await check_1_index(tw, 1088)
+		// await check_chef(twChef)
 
-		// let param = {
-		// 	fromChainId: 42,
-		// 	fromToken: "0x35D50cbc648c533A5DA29f4899955bd116fC738C",
-		// 	from: "0x2353178C6c05378812f024A783541857634A1e82",
-		// 	toChainId: 80001,
-		// 	toToken: "0x0000000000000000000000000000000000000000",
-		// 	to: "0x2353178C6c05378812f024A783541857634A1e82",
-		// 	amount: ethers.utils.parseEther("1000")
-		// }
-		// let tx = await tw2.issue(param, "0xab522d97170ccdad815272d3492b50dd628754a7ba7b5df413b1a2256d81e185")
-		// // let tx = await tw2.issue(42, "0x35D50cbc648c533A5DA29f4899955bd116fC738C", "0x2353178C6c05378812f024A783541857634A1e82", "0x2353178C6c05378812f024A783541857634A1e82", ethers.utils.parseEther("1000"), "0x04f45e56b7670492012ee8ca2daccfe5879d26286e237b953d74bdd4dd083abb")
-		// await tx.wait()
 
-		// let srAddr = contracts[chainIdStr]['StakingRewardForChef']
-		// let sr = await ethers.getContractAt("StakingReward", srAddr) as StakingReward
-		// let srRate = await sr.rewardRate()
-		// console.log(`srRate ${ethers.utils.formatEther(srRate)}`)
-		// let earned =  await sr.earned("0x2353178C6c05378812f024A783541857634A1e82")
-		// console.log(`earned ${ethers.utils.formatEther(earned)}`)
+		// let oSymbol = "oiZi"
+		// let oTokenAddr = contracts[chainIdStr][oSymbol]
+		// await check_fee(tw, oTokenAddr, [1, 56, 137, 1088])
 
-		let chefAddr = contracts[chainIdStr]["TwoWayChef"]
-		let chef = await ethers.getContractAt("TwoWayChef", chefAddr) as TwoWayChef
-		// chef = chef.connect(signer)
-		
-		// let oUSDTAddr = contracts[chainIdStr]['oUSDT']
-		// let lock = await tw2.lockBalances(oUSDTAddr, 137)
-		// console.log(`lock Amount ${ethers.utils.formatEther(lock)}`)
 
-		// let [depositAmount] = await chef.userInfo(0, "0xB45C219eFf9A489Ef4287DC19fE6e942637445dE")
-		// console.log(`depositAmount ${ethers.utils.formatEther(depositAmount)}`)
-		// let dispatcher = await chef.dispatcher()
-		// console.log(`dispatcher ${dispatcher}`)
+		// edge_token
+		// let oTokenAddr = contracts[chainIdStr]['oMETIS']
+		// let edgeTokenAddr = contracts[chainIdStr]['METIS']
+		// let edgeToken = await tw.toEdgeToken(oTokenAddr, 1)
+		// console.log(`edgeToken ${edgeToken}`)
+		// tw.chainSupported(edgeTokenAddr, 137)
 
-		// let txWithdraw = await chef.withdraw(0, ethers.utils.parseEther("2"))
-		// await txWithdraw.wait()
 
-		// let txDeposit = await chef.deposit(0, ethers.utils.parseEther("1"))
-		// await txDeposit.wait()
-		// let oTokenAddr = contracts[chainIdStr]['oUSDC']
-		// let locks = await tw.lockBalances(oTokenAddr, 56)
-		// console.log(`${ethers.utils.formatEther(locks)}`)
-
-		const [one, two] = await chef.perSecond(1)
-		console.log(`two ${ethers.utils.formatEther(two)}`)
-
+		// check isHandled
+		// await checkTransactionIshandled(tw, "0xeb43e69e77f7076825adf73e0d340aa720aabd0033de9041548c1eb52d139750", "ForwardCrossOuted")
 	}
 
+}
+
+async function check_chef(chef: TwoWayChef) {
+	let len = await chef.poolLength()
+	console.log(`pool len: ${len}`)
+	let len_str = Number(ethers.utils.formatUnits(len, 0))
+	for (let i=0; i < len_str; i++) {
+		let info = await chef.poolInfo(i)
+		console.log(`info ${info}`)
+	}
+}
+
+async function check_cross_index(tw: TwoWayCenter|TwoWayEdge, toChainId: number) {
+	let index = await tw.eventIndex0(toChainId)	
+	let indexNumber = Number(ethers.utils.formatUnits(index, 0))
+	for (let i=214; i <= indexNumber; i++) {
+		let height = await tw.eventHeights0(toChainId, i)
+		console.log(`${toChainId} index ${i} height ${height}`)
+	}
+}
+
+
+async function check_1_index(tw: TwoWayCenter|TwoWayEdge, toChainId: number) {
+	let index = await tw.eventIndex1()	
+	let indexNumber = Number(ethers.utils.formatUnits(index, 0))
+	for (let i=1; i <= indexNumber; i++) {
+		let height = await tw.eventHeights1(i)
+		console.log(`${toChainId} index ${i} height ${height}`)
+	}
+}
+
+async function check_fee(tw: TwoWayCenter, otoken: string, edgeChainIds: number[]) {
+	for (const id of edgeChainIds) {
+		let fixFee = await tw.fixFees(otoken, id)
+		let fixFeeStr = ethers.utils.formatUnits(fixFee, 0)
+		let ratioHigh = await tw.ratioFeesHigh(otoken, id)
+		let ratioHighStr  = ethers.utils.formatUnits(ratioHigh, 0)
+		let ratioMedium = await tw.ratioFeesMedium(otoken, id)
+		let ratioMediumStr = ethers.utils.formatUnits(ratioMedium, 0)
+		let ratioLow = await tw.ratioFeesLow(otoken, id)
+		let ratioLowStr = ethers.utils.formatUnits(ratioLow, 0)
+		console.log(`fixFee ${fixFeeStr} ratioHigh ${ratioHighStr} ratioLow ${ratioLowStr}`)
+	}
+}
+
+async function checkTransactionIshandled(tw: TwoWayEdge, txid: string, eventName: string) {
+	let isHandled = await tw.txHandled(txid+"#"+eventName)
+	console.log(`isHandled: ${isHandled}`)
 }
 
 main()

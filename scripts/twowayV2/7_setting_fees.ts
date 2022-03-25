@@ -4,29 +4,38 @@ import { TestERC20 } from "../../src/types/TestERC20";
 import { TwoWayCenter } from "../../src/types/TwoWayCenter"
 import { TwoWayCenterToken } from "../../src/types/TwoWayCenterToken"
 import { TwoWayEdge } from "../../src/types/TwoWayEdge"
-import { attach, deploy, deployProxy, getChainIdByName, getContractsAddress, writeContractAddress } from "../helper";
+import { ALL_CHAIN_NAME, attach, deploy, deployProxy, getChainIdByName, getContractsAddress, writeContractAddress } from "../helper";
 const hre = require("hardhat")
 
 async function main() {
     let contracts = JSON.parse(getContractsAddress())
     let usdtToken: TestERC20
+    // let networkToChange = ['matic']
     let networkToChange = ['matic']
-    let networkToChange2 = ['matic', 'mainnet']
+	// let networkToChange2 = ['mainnet', 'bsc', 'matic', 'okex', 'heco' , 'fantom', 'harmony', 'avax', 
+	// 			'xdai', 'op', 'arbi', 'metis', 'aurora']
+    // let networkToChange2 = ['metis']
+    // let networkToChange2 = ALL_CHAIN_NAME
+    let networkToChange2 = ['metis']
     let center_chain = "matic"
-    let tokenSymbol = "iZi"
+    let tokenSymbol = "USDC"
     let oTokenSymbol = "o" + tokenSymbol
-    let tokenPriece = 0.16
-    let lowAmount = (100000 / tokenPriece).toString()
-    let highAmount = (500000 / tokenPriece).toString()
-    let fixFeeToETH = (60 / tokenPriece).toString()
-    let fixFeeToL2 = (10 / tokenPriece).toString()
-    let fixFeeToNormal = (2 / tokenPriece).toString()
+    let tokenPriece = 1
+    let lowAmount = (100000 / tokenPriece).toFixed(8)
+    let highAmount = (500000 / tokenPriece).toFixed(8)
+    let fixFeeToETH = (60 / tokenPriece).toFixed(8)
+    let fixFeeToL2 = (10 / tokenPriece).toFixed(8)
+    let fixFeeToNormal = (2 / tokenPriece).toFixed(8)
     console.log(`lowAmount ${lowAmount} highAmount ${highAmount}`)
     console.log(`fixFeeToETH ${fixFeeToETH} fixFeeToL2 ${fixFeeToL2} fixFeeToNormal ${fixFeeToNormal}`)
     console.log(`gooooo`)
-    let ratioHigh = ethers.utils.parseEther("0.003")
-    let ratioMedium = ethers.utils.parseEther("0.003")
-    let ratioLow = ethers.utils.parseEther("0.0003")
+    // let ratioHigh = ethers.utils.parseEther("0.01")
+    // let ratioMedium = ethers.utils.parseEther("0.003")
+    // let ratioLow = ethers.utils.parseEther("0.0005")
+
+    let ratioHigh = ethers.utils.parseEther("0")
+    let ratioMedium = ethers.utils.parseEther("0")
+    let ratioLow = ethers.utils.parseEther("0")
 
     let remainLow = ethers.utils.parseEther(lowAmount)
     let remainHigh = ethers.utils.parseEther(highAmount)
@@ -60,7 +69,7 @@ async function main() {
                 toChainIds.push(getChainIdByName(edgeChain))
                 if (edgeChain == "mainnet" || edgeChain == "kovan") {
                     fixFees.push(ethers.utils.parseEther(fixFeeToETH))
-                } else if (edgeChain == "boba" || edgeChain == "op" || edgeChain == "arbi" || edgeChain == "metis") {
+                } else if (edgeChain == "boba" || edgeChain == "op" || edgeChain == "arbi") {
                     fixFees.push(ethers.utils.parseEther(fixFeeToL2))
                 } else {
                     fixFees.push(ethers.utils.parseEther(fixFeeToNormal))

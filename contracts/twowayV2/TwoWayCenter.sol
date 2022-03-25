@@ -54,7 +54,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     mapping(address => uint256) public feeToTreasuryRatio;
 
     mapping(address => bool) public isCoin;
-    bool public isClosed;
+    bool public locked;
 
     //  index mapping 0
     mapping(uint256 => uint256) public eventIndex0;
@@ -148,6 +148,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         remainLow[token] = _remains[1];
     }
 
+
     function setFeeTo(address _feeTo) external onlyAdmin {
         require(_feeTo != address(0), "zero address");
         feeTo = _feeTo;
@@ -183,18 +184,19 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
 
     function setIsCoin(address token, bool _isCoin) external onlyAdmin {
         isCoin[token] = _isCoin;
+        if (_isCoin) {
+            emit CoinSeted(token);
+        }
     }
 
     function deposit(address token, uint256 amount) external payable addEventIndex1 {
         address centerToken = toCenterToken[chainId][token];
         require(centerToken != address(0), "not support");
-
         if (isCoin[token]) {
             require(amount == msg.value, "amount error");
         } else {
             IERC20Upgradeable(token).safeTransferFrom(msg.sender, address(this), amount);
         }
-
         IToken(centerToken).mint(msg.sender, amount * decimalDiff[token]);
 
         // liquidity rewards
@@ -261,7 +263,6 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         external
         onlyCrosser(toCenterToken[p.fromChainId][p.fromToken])
         whenNotHandled(txid)
-        addEventIndex0(p.toChainId)
         addEventIndex1
     {
         require(p.fromChainId != p.toChainId, "chainId error");
@@ -283,6 +284,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
                 );
                 _handleFeeByMint(centerToken, fixAmount, ratioAmount);
                 lockBalances[centerToken][p.toChainId] -= remainAmount;
+                _setEventIndex0(p.toChainId);
                 emit ForwardCrossOuted(
                     InParam(p.fromChainId, p.fromToken, p.from, p.toChainId, edgeToken, p.to, remainAmount)
                 );
@@ -354,7 +356,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
             transferReward(_centerToken, p.fromChainId, p.from, p.amount);
 
             lockBalances[_centerToken][p.fromChainId] += p.amount;
-
+            
             emit Issued(p);
         }
     }
@@ -378,7 +380,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         uint256 toChainId,
         address to,
         uint256 amount
-    ) external reentGuard addEventIndex0(toChainId) addEventIndex1 {
+    ) external reentGuard addEventIndex1 {
         require(lockBalances[oToken][toChainId] >= amount, "not enough liqui");
         address _edgeToken = toEdgeToken[oToken][toChainId];
         require(_edgeToken != address(0), "edge toke not support");
@@ -397,6 +399,7 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
             }
             emit WithdrawedToCenter(InParam(chainId, oToken, msg.sender, toChainId, _edgeToken, to, remainAmount));
         } else {
+            _setEventIndex0(toChainId);
             emit Withdrawed(InParam(chainId, oToken, msg.sender, toChainId, _edgeToken, to, remainAmount));
         }
     }
@@ -488,6 +491,16 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
         key = keccak256(abi.encodePacked(toToken));
     }
 
+    function _setEventIndex0(uint256 toChainId) private {
+        uint256 newIndex = eventIndex0[toChainId] += 1;
+        eventHeights0[toChainId][newIndex] = block.number;
+    }
+
+    function _setEventIndex1() private {
+        eventIndex1 += 1;
+        eventHeights1[eventIndex1] = block.number;
+    }
+
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "TwoWay: caller is not admin");
         _;
@@ -505,23 +518,20 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     }
 
     modifier reentGuard() {
-        require(isClosed == false, "closed");
-        isClosed = true;
+        require(!locked, "No reent");
+        locked = true;
         _;
-        isClosed = false;
+        locked = false;
     }
 
     modifier addEventIndex0(uint256 toChainId) {
         _;
-        eventIndex0[toChainId] += 1;
-        uint256 newIndex = eventIndex0[toChainId] + 1;
-        eventHeights0[toChainId][newIndex] = block.number;
+        _setEventIndex0(toChainId);
     }
 
     modifier addEventIndex1() {
         _;
-        eventIndex1 += 1;
-        eventHeights1[eventIndex1] = block.number;
+        _setEventIndex1();
     }
 
     function getMsgSender() external view returns (address, address) {
@@ -540,4 +550,5 @@ contract TwoWayCenter is Initializable, AccessControlUpgradeable, UUPSUpgradeabl
     event CrossInFailed(InParam p);
     event Supported(address token, uint256 chainId, bool status);
     event StakingRewardReseted(address oToken);
+    event CoinSeted(address coin);
 }

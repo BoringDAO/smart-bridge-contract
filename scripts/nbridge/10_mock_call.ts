@@ -18,7 +18,7 @@ async function main() {
 
 	// let networkToChange = ["xdai"]	
 	// let networkToChange = ["mainnet", "bsc", "okex", "harmony", "avax", "matic", "heco", "fantom", "xdai", 'op', 'arbi', 'boba']
-	let networkToChange = ["harmony_test"]
+	let networkToChange = ["aurora_test"]
 	// let networkToChange = ['heco']
 	let contracts = JSON.parse(getContractsAddress())
 	let allChain = ["mainnet", "metis"]
@@ -56,9 +56,9 @@ async function main() {
 			process.exit(-1)
 		}
 		let tokenAddr = contracts[chainIdStr][tokenSymbol]
-		let index = await nb.eventIndex()
+		let index = await nb.eventIndex0(1666700000)
 		console.log(ethers.utils.formatUnits(index, 0))
-		let height = await nb.eventHeight(1);
+		let height = await nb.eventHeights0(1666700000, index);
 		console.log(ethers.utils.formatUnits(height, 0));
 		// let nb2 = nb.connect(signer)
 		// let nb2 = nb
